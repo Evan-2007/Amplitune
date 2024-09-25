@@ -1,0 +1,150 @@
+.loaderOne{
+    animation: loader 1s infinite ;
+    -webkit-animation: loader 1s infinite ;
+}
+
+.loaderTwo{
+    animation-delay: 1s;
+    animation: loader 2s infinite ;
+    -webkit-animation: loader 2s infinite ;
+}
+
+.loaderThree{
+    animation-delay: 2s;
+    animation: loader 3s infinite ;
+    -webkit-animation: loader 3s infinite ;
+}
+
+
+@keyframes loader {
+    0% {
+        transform: scale(0);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0;
+    }
+}
+
+
+
+
+.dotPulse {
+    position: relative;
+    left: -9999px;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: #9880ff;
+    color: #84cc16;
+    box-shadow: 9999px 0 0 -5px;
+    animation: dotPulse 1.5s infinite linear;
+    animation-delay: 0.25s;
+  }
+  .dotPulse::before, .dotPulse::after {
+    content: "";
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: #84cc16;
+    color: #84cc16;
+  }
+  .dotPulse::before {
+    box-shadow: 9984px 0 0 -5px;
+    animation: dotPulse-before 1.5s infinite linear;
+    animation-delay: 0s;
+  }
+  .dotPulse::after {
+    box-shadow: 10014px 0 0 -5px;
+    animation: dotPulse-after 1.5s infinite linear;
+    animation-delay: 0.5s;
+  }
+  
+  @keyframes dotPulse-before {
+    0% {
+      box-shadow: 9984px 0 0 -5px;
+    }
+    30% {
+      box-shadow: 9984px 0 0 2px;
+    }
+    60%, 100% {
+      box-shadow: 9984px 0 0 -5px;
+    }
+  }
+  @keyframes dotPulse {
+    0% {
+      box-shadow: 9999px 0 0 -5px;
+    }
+    30% {
+      box-shadow: 9999px 0 0 2px;
+    }
+    60%, 100% {
+      box-shadow: 9999px 0 0 -5px;
+    }
+  }
+  @keyframes dotPulse-after {
+    0% {
+      box-shadow: 10014px 0 0 -5px;
+    }
+    30% {
+      box-shadow: 10014px 0 0 2px;
+    }
+    60%, 100% {
+      box-shadow: 10014px 0 0 -5px;
+    }
+  }
+
+
+
+
+
+
+  .dotFlashing {
+    position: relative;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: hsl(var(--card));
+    color: hsl(var(--card));
+    animation: dotFlashing 1s infinite linear alternate;
+    animation-delay: 0.5s;
+  }
+  .dotFlashing::before, .dotFlashing::after {
+    content: "";
+    display: inline-block;
+    position: absolute;
+    top: 0;
+  }
+  .dotFlashing::before {
+    left: -15px;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: hsl(var(--card));
+    color: hsl(var(--card));
+    animation: dotFlashing 1s infinite alternate;
+    animation-delay: 0s;
+  }
+  .dotFlashing::after {
+    left: 15px;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: hsl(var(--card));
+    color: hsl(var(--card));
+    animation: dotFlashing 1s infinite alternate;
+    animation-delay: 1s;
+  }
+
+
+  @keyframes dotFlashing{
+    0% {
+      background-color: hsl(var(--card));
+    }
+    50%, 100% {
+      background-color: rgba(152, 128, 255, 0.2);
+    }
+  }
