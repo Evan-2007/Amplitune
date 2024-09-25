@@ -17,7 +17,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+
       <body className={inter.className}>
+      <header className='h-10 w-screen absolute z-0'></header>
         <ThemeProvider
             attribute="class"
             defaultTheme="system"

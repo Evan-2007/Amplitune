@@ -8,7 +8,6 @@ export default function HomeLayout({
   }) {
     return(
       <div className='w-full h-screen flex flex-col bg-card'>
-        <header className='h-10 w-screen absolute z-50'></header>
         <div className='w-full h-full pr-4 pl-4 pt-4 '>
         <div className='w-full h-full border-border border rounded-xl bg-background '>
           {children}
