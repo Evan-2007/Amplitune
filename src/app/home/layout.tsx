@@ -8,6 +8,7 @@ export default function HomeLayout({
   }) {
     return(
       <div className='w-full h-screen flex flex-col'>
+        <header className='h-10 w-screen absolute z-50'></header>
         {children}
         <Player />
       </div>

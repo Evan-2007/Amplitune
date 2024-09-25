@@ -64,3 +64,7 @@
     @apply bg-background text-foreground;
   }
 }
+
+header {
+  -webkit-app-region: drag;
+}

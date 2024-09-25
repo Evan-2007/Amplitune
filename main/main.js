@@ -14,6 +14,8 @@ const createWindow = () => {
   const win = new BrowserWindow({
     width: 800,
     height: 600,
+
+    titleBarStyle: 'hidden',
     webPreferences: {
       preload: path.join(__dirname, "preload.js")
     }
@@ -40,4 +42,37 @@ app.on("window-all-closed", () => {
     if(process.platform !== "darwin"){
         app.quit();
     }
+});
+
+
+
+import { ipcMain } from 'electron';
+import Store from 'electron-store';
+
+
+const store = new Store();
+
+ipcMain.handle('electron-store-get', async (event, key) => {
+  return store.get(key);
+});
+
+ipcMain.handle('electron-store-set', async (event, { key, value }) => {
+  store.set(key, value);
+});
+
+ipcMain.handle('electron-store-delete', async (event, key) => {
+  store.delete(key);
+});
+
+ipcMain.handle('electron-store-clear', async () => {
+  store.clear();
+});
+
+ipcMain.handle('electron-store-key', async (event, index) => {
+  const keys = Object.keys(store.store);
+  return index < keys.length ? keys[index] : null;
+});
+
+ipcMain.handle('electron-store-length', async () => {
+  return Object.keys(store.store).length;
 });

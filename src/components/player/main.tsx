@@ -18,11 +18,14 @@ import {
     TooltipProvider,
     TooltipTrigger,
   } from "@/components/ui/tooltip"
+import {CrossPlatformStorage} from "@/lib/storage/cross-platform-storage";
 
-  function SearchParamsWrapper({ children }: { children: React.ReactNode }) {
+const localStorage = new CrossPlatformStorage();
+
+function SearchParamsWrapper({ children }: { children: React.ReactNode }) {
     const searchParams = useSearchParams();
     return children;
-  }
+}
 
 export function Player() { 
     return (
@@ -34,39 +37,63 @@ export function Player() {
     )
 }
 
-
 export function PlayerContent() {
-    //for testing
     const apiUrl = process.env.NEXT_PUBLIC_API_URL
 
     const [isClient, setIsClient] = useState(false)
-
     const router = useRouter();
-
     let searchParams = useSearchParams();
     const audioRef = useRef(null);
+    const [songData, setSongData] = useState<Song | null>(null);
+    const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
+    const [credentials, setCredentials] = useState<{username: string | null, password: string | null, salt: string | null}>({username: null, password: null, salt: null});
+
+    useEffect (() => {
+        getCredentials();
+    } , [])
+
+    async function getCredentials() {
+        const username = await localStorage.getItem('username');
+        const password = await localStorage.getItem('password');
+        const salt = await localStorage.getItem('salt');
+        setCredentials({username, password, salt});
+    }
 
     useEffect(() => {
-        //set currently playing from search params
-        if (searchParams.get('playing')) {
-            const playing = searchParams.get('playing') || '';
-            localStorage.setItem('currentlyPlaying', playing);
+        setIsClient(true);
+        const initializePlayer = async () => {
+            if (searchParams.get('playing')) {
+                const playing = searchParams.get('playing') || '';
+                await localStorage.setItem('currentlyPlaying', playing);
+                setCurrentlyPlaying(playing);
+            } else {
+                const storedPlaying = await localStorage.getItem('currentlyPlaying');
+                setCurrentlyPlaying(storedPlaying);
+            }
+        };
+        initializePlayer();
+    }, [searchParams]);
+
+    useEffect(() => {
+        if (isClient && currentlyPlaying) {
+            setParams();
         }
-    } , [searchParams.get('playing')]);
+    }, [isClient, currentlyPlaying]);
 
-    useEffect(() => {
-        //set search params to currently playing for link sharing
-        if (localStorage.getItem('currentlyPlaying') !== searchParams.get('playing') ) {
-            router.push(`/home/?playing=${localStorage.getItem('currentlyPlaying')}`);
+    async function setParams() {
+        if (currentlyPlaying !== searchParams.get('playing')) {
+            router.push(`/home/?playing=${currentlyPlaying}`);
         }
         fetchSongData();
-    }, [isClient && localStorage.getItem('currentlyPlaying')]);
-
-    const [songData, setSongData] = useState<Song | null>(null);
+    }
 
     async function fetchSongData() {
         try {
-            const fetchSongData = await fetch(`${apiUrl}/rest/getSong?u=${localStorage.getItem('username')}&t=${localStorage.getItem('password')}&s=${localStorage.getItem('salt')}&v=1.13.0&c=myapp&f=json&id=${localStorage.getItem('currentlyPlaying')}`, {
+            const username = await localStorage.getItem('username');
+            const password = await localStorage.getItem('password');
+            const salt = await localStorage.getItem('salt');
+            
+            const fetchSongData = await fetch(`${apiUrl}/rest/getSong?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${currentlyPlaying}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -82,9 +109,10 @@ export function PlayerContent() {
             console.error(error);
         }   
     }
+
     
 
-    if (songData == null) {
+    if (songData == null || credentials.username == null || credentials.password == null || credentials.salt == null) {
         return (
             <div className="h-[100px] w-screen bg-card border-border border-t sticky flex">
                 <div className='flex h-full justify-center items-center'>
@@ -114,7 +142,7 @@ export function PlayerContent() {
                     </div>
                     <div className='h-full p-3'>
                         <img 
-                            src={`${apiUrl}/rest/getCoverArt?u=${localStorage.getItem('username')}&t=${localStorage.getItem('password')}&s=${localStorage.getItem('salt')}&v=1.13.0&c=myapp&f=json&id=${songData.coverArt}`} 
+                            src={`${apiUrl}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${songData.coverArt}`} 
                             alt="Album Cover" className='h-full rounded-lg group-hover:blur-xs transition-all duration-700' 
                         />
                     </div>
@@ -147,83 +175,81 @@ export function PlayerContent() {
                 <RightControls audioRef={audioRef} />
             </div>
             <audio ref={audioRef} id="music" preload="all">
-                <source src={`${apiUrl}/rest/stream?u=${localStorage.getItem('username')}&t=${localStorage.getItem('password')}&s=${localStorage.getItem('salt')}&v=1.13.0&c=myapp&f=json&id=${localStorage.getItem('currentlyPlaying')}`} />
+                <source src={`${apiUrl}/rest/stream?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${currentlyPlaying}`} />
             </audio>
         </div>
     );
 }
 
 const Controls: React.FC<{ songData: Song, audioRef : any }> = ({ songData, audioRef  }) => {
-
-      const formatTime = (time: number): string => {
+    const formatTime = (time: number): string => {
         const minutes = Math.floor(time / 60);
         const seconds = Math.floor(time % 60);
         return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-      };
-        const [playing, setPlaying] = useState(false);
-        const [repeat, setRepeat] = useState(0);
-        const [shuffle, setShuffle] = useState(false);
-        const [sliderTimestamp, setSliderTimestamp] = useState('0:00');
-        const [timestamp, setTimestamp] = useState('0:00');
-        const [sliderValue, setSliderValue] = useState(0);
-        const [sliderActive, setSliderActive] = useState(false);
-      
-        const length = songData.duration;
-        const currentTimestamp = parseInt(timestamp.split(':')[0]) * 60 + parseInt(timestamp.split(':')[1]);
-        const timeLeft = length - currentTimestamp;
-      
-        const timeLeftString = `-${formatTime(timeLeft)}`;
-        const durationString = formatTime(length - currentTimestamp);
-      
-        const handleSliderChange = (value: number) => {
-          const time = (length * value) / 1000;
-          setSliderTimestamp(formatTime(time));
-            setSliderValue(value);
-        };
-      
-        const handleSliderCommit = (value: number) => {
-          const time = (length * value) / 1000;
-          setTimestamp(formatTime(time));
-            setSliderActive(false);
-            setSliderValue(value);
+    };
 
-            if (audioRef.current) {
-                audioRef.current.currentTime = time;
-            }
-        };
+    const [playing, setPlaying] = useState(false);
+    const [repeat, setRepeat] = useState(0);
+    const [shuffle, setShuffle] = useState(false);
+    const [sliderTimestamp, setSliderTimestamp] = useState('0:00');
+    const [timestamp, setTimestamp] = useState('0:00');
+    const [sliderValue, setSliderValue] = useState(0);
+    const [sliderActive, setSliderActive] = useState(false);
+  
+    const length = songData.duration;
+    const currentTimestamp = parseInt(timestamp.split(':')[0]) * 60 + parseInt(timestamp.split(':')[1]);
+    const timeLeft = length - currentTimestamp;
+  
+    const timeLeftString = `-${formatTime(timeLeft)}`;
+    const durationString = formatTime(length - currentTimestamp);
+  
+    const handleSliderChange = (value: number) => {
+      const time = (length * value) / 1000;
+      setSliderTimestamp(formatTime(time));
+        setSliderValue(value);
+    };
+  
+    const handleSliderCommit = (value: number) => {
+      const time = (length * value) / 1000;
+      setTimestamp(formatTime(time));
+        setSliderActive(false);
+        setSliderValue(value);
 
-        useEffect(() => {
-            if (playing && audioRef.current) {
-                audioRef.current.play().catch((error: unknown) => console.error('Error playing audio:', error));
-              } else if (audioRef.current) {
-                audioRef.current.pause();
-              }
-        }, [playing])
-        
-        useEffect(() => {
-            if (audioRef.current) {
-                audioRef.current.loop = repeat === 2;
-              }
-        }, [repeat])
+        if (audioRef.current) {
+            audioRef.current.currentTime = time;
+        }
+    };
 
-        useEffect(() => {
-            if (audioRef.current) {
-                audioRef.current?.addEventListener('timeupdate', () => {
-                    const time = audioRef.current?.currentTime;
-                    setTimestamp(formatTime(time));
-                } , false);
-              }
-        }, [])
+    useEffect(() => {
+        if (playing && audioRef.current) {
+            audioRef.current.play().catch((error: unknown) => console.error('Error playing audio:', error));
+          } else if (audioRef.current) {
+            audioRef.current.pause();
+          }
+    }, [playing])
+    
+    useEffect(() => {
+        if (audioRef.current) {
+            audioRef.current.loop = repeat === 2;
+          }
+    }, [repeat])
 
-        useEffect (() => {
-            if (sliderActive) {
-                return;
-            }
-            setSliderValue((currentTimestamp / length) * 1000);
-            setSliderTimestamp(formatTime(currentTimestamp));
+    useEffect(() => {
+        if (audioRef.current) {
+            audioRef.current?.addEventListener('timeupdate', () => {
+                const time = audioRef.current?.currentTime;
+                setTimestamp(formatTime(time));
+            } , false);
+          }
+    }, [])
 
-        }, [timestamp])
-
+    useEffect (() => {
+        if (sliderActive) {
+            return;
+        }
+        setSliderValue((currentTimestamp / length) * 1000);
+        setSliderTimestamp(formatTime(currentTimestamp));
+    }, [timestamp])
 
 
     return (
@@ -313,12 +339,16 @@ function RightControls({audioRef}: {audioRef: any}) {
     }
 
     useEffect (() => {
-        if (audioRef.current) {
-            audioRef.current.volume = localStorage.getItem('volume') !== null ? parseInt(localStorage.getItem('volume') || '100') / 1000 : 1;
-            setVolume(localStorage.getItem('volume') !== null ? parseInt(localStorage.getItem('volume') || '100')/ 10 : 100);
-            console.log(localStorage.getItem('volume') !== null ? parseInt(localStorage.getItem('volume') || '100') / 1000 : 1)
-        }
+        updateVolume();
     } , [audioRef.current])
+
+    async function updateVolume() {
+        if (audioRef.current) {
+            audioRef.current.volume = await localStorage.getItem('volume') !== null ? parseInt(await localStorage.getItem('volume') || '100') / 1000 : 1;
+            setVolume(await localStorage.getItem('volume') !== null ? parseInt(await localStorage.getItem('volume') || '100')/ 10 : 100);
+            console.log(await localStorage.getItem('volume') !== null ? parseInt(await localStorage.getItem('volume') || '100') / 1000 : 1)
+        }
+    }
 
     return (
         <div className='flex flex-row justify-center items-center mb-4 h-full absolute z-20 right-4'>
@@ -327,8 +357,7 @@ function RightControls({audioRef}: {audioRef: any}) {
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <Slider defaultValue={[
-                            localStorage.getItem('volume') !== null ? parseInt(localStorage.getItem('volume') || '100') : 100
-                        ]} max={1000} step={1} className='w-36 mr-2 ml-2' onValueChange = {(e: number[]) => onChange(e)} />
+                        ]} max={1000} step={1} className='w-36 mr-2 ml-2' onValueChange = {(e: number[]) => onChange(e)} value={[volume * 10]} />
                     </TooltipTrigger>
                     <TooltipContent sideOffset={4}>{Math.round(volume)}%</TooltipContent>
                 </Tooltip>
