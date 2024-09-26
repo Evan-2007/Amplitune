@@ -19,6 +19,7 @@ import {
     TooltipTrigger,
   } from "@/components/ui/tooltip"
 import {CrossPlatformStorage} from "@/lib/storage/cross-platform-storage";
+import FullScreenPlayer from "./full-player";
 
 const localStorage = new CrossPlatformStorage();
 
@@ -27,24 +28,59 @@ function SearchParamsWrapper({ children }: { children: React.ReactNode }) {
     return children;
 }
 
-export function Player() { 
+export function Player({
+    audioRef,
+    setAudioUrl,
+    audioUrl,
+    setFullScreen,
+    songData,
+    setSongData,
+    imageUrl,
+    setImageUrl
+}: {
+    audioRef: React.RefObject<HTMLAudioElement>,
+    setAudioUrl: (url: string) => void,
+    audioUrl: string,
+    setFullScreen: (state: boolean) => void,
+    songData: Song | null,
+    setSongData: (song: Song) => void,
+    imageUrl: string | null,
+    setImageUrl: (url: string) => void
+}) { 
     return (
         <Suspense fallback={<div>Loading...</div>}>
             <SearchParamsWrapper>
-                <PlayerContent />
+                <PlayerContent audioRef={audioRef} setAudioUrl={setAudioUrl} audioUrl={audioUrl} setFullScreen={setFullScreen} songData={songData} setSongData={setSongData} imageUrl={imageUrl} setImageUrl={setImageUrl}/>
             </SearchParamsWrapper>
         </Suspense>
     )
 }
 
-export function PlayerContent() {
+export function PlayerContent({
+    audioRef,
+    setAudioUrl,
+    audioUrl,
+    setFullScreen,
+    songData,
+    setSongData,
+    imageUrl,
+    setImageUrl
+}: {
+    audioRef: React.RefObject<HTMLAudioElement>,
+    setAudioUrl: (url: string) => void,
+    audioUrl: string, 
+    setFullScreen: (state: boolean) => void,
+    songData: Song | null,
+    setSongData: (song: Song) => void,
+    imageUrl: string | null,
+    setImageUrl: (url: string) => void
+}) {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL
 
     const [isClient, setIsClient] = useState(false)
     const router = useRouter();
     let searchParams = useSearchParams();
-    const audioRef = useRef(null);
-    const [songData, setSongData] = useState<Song | null>(null);
+
     const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
     const [credentials, setCredentials] = useState<{username: string | null, password: string | null, salt: string | null}>({username: null, password: null, salt: null});
 
@@ -88,11 +124,7 @@ export function PlayerContent() {
     }
 
     async function fetchSongData() {
-        try {
-            const username = await localStorage.getItem('username');
-            const password = await localStorage.getItem('password');
-            const salt = await localStorage.getItem('salt');
-            
+        try {            
             const fetchSongData = await fetch(`${apiUrl}/rest/getSong?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${currentlyPlaying}`, {
                 method: 'GET',
                 headers: {
@@ -103,12 +135,22 @@ export function PlayerContent() {
                 const response = await fetchSongData.json();
                 if (response['subsonic-response'].status === 'ok') {
                     setSongData(response['subsonic-response'].song);
+                    setImageUrl(`${apiUrl}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${response['subsonic-response'].song.coverArt}`);
+                    setAudioUrl(`${apiUrl}/rest/stream?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${currentlyPlaying}`);
                 }
             }
+            
         } catch (error) {
             console.error(error);
         }   
     }
+
+    useEffect(() => {
+        if (audioRef.current) {
+          audioRef.current.load();
+          audioRef.current.play().catch((error: unknown) => console.error('Error playing audio:', error));
+        }
+      }, [audioUrl]);
 
     
 
@@ -136,15 +178,20 @@ export function PlayerContent() {
             <div className='flex h-full justify-center items-center absolute'>
                 <div className='h-full group'>
                     <div  className='h-full rounded-lg aspect-square absolute p-3 z-50'>
-                        <div className='h-full rounded-lg aspect-square invisible group-hover:visible z-50 flex justify-center items-center'>
+                        <button className='h-full rounded-lg aspect-square invisible group-hover:visible z-50 flex justify-center items-center' onClick={() => setFullScreen(true)}>
                             <ChevronUp className=' text-slate-300 opacity-0 group-hover:opacity-70 transition-all duration-700 group-hover:mb-4' size={64}/>
-                        </div>
+                        </button>
                     </div>
                     <div className='h-full p-3'>
-                        <img 
-                            src={`${apiUrl}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${songData.coverArt}`} 
+                        {
+                            imageUrl ? 
+                            <img 
+                            src={imageUrl} 
                             alt="Album Cover" className='h-full rounded-lg group-hover:blur-xs transition-all duration-700' 
-                        />
+                            />
+                            :
+                            <div  className='h-full rounded-lg aspect-square bg-background group-hover:blur-xs transition-all duration-700'></div>
+                        }
                     </div>
                 </div>
                 <div className=''>
@@ -174,9 +221,7 @@ export function PlayerContent() {
             <div>
                 <RightControls audioRef={audioRef} />
             </div>
-            <audio ref={audioRef} id="music" preload="all">
-                <source src={`${apiUrl}/rest/stream?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${currentlyPlaying}`} />
-            </audio>
+                
         </div>
     );
 }
@@ -251,6 +296,31 @@ const Controls: React.FC<{ songData: Song, audioRef : any }> = ({ songData, audi
         setSliderTimestamp(formatTime(currentTimestamp));
     }, [timestamp])
 
+
+    // update play/pause button if audio is paused or played externally
+    useEffect(() => {
+        const audioElement = audioRef.current;
+        if (audioElement) {
+            const handlePlayPause = () => {
+                setPlaying(!audioElement.paused);
+    //            console.log(audioElement.paused ? 'not playing' : 'playing');
+                setPlaying(!audioElement.paused);
+            };
+    
+            audioElement.addEventListener('play', handlePlayPause);
+            audioElement.addEventListener('pause', handlePlayPause);
+
+            setPlaying(!audioElement.paused);
+
+            return () => {
+                audioElement.removeEventListener('play', handlePlayPause);
+                audioElement.removeEventListener('pause', handlePlayPause);
+            };
+        }
+    }, []);
+
+    const searchParams = useSearchParams();
+    const router = useRouter();
 
     return (
         <div className='flex flex-col h-full'>
