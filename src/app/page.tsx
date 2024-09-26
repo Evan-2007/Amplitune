@@ -29,7 +29,7 @@ export default function Home() {
           </Link>
         </Button>
         <Button asChild>
-          <Link href="/home?playing=31eecdb5ec50449b05683bff93a3f0b5">
+          <Link href="/home">
             Register
           </Link>
           </Button>
