@@ -76,3 +76,25 @@ ipcMain.handle('electron-store-key', async (event, index) => {
 ipcMain.handle('electron-store-length', async () => {
   return Object.keys(store.store).length;
 });
+
+ipcMain.handle('close-window', async () => {
+  BrowserWindow.getFocusedWindow().close();
+});
+
+ipcMain.handle('minimize-window', async () => {
+  BrowserWindow.getFocusedWindow().minimize();
+} );
+
+ipcMain.handle('maximize-window', async () => {
+  if (BrowserWindow.getFocusedWindow().isMaximized()) {
+    BrowserWindow.getFocusedWindow().unmaximize();
+  }
+  else {
+    BrowserWindow.getFocusedWindow().maximize();
+  }
+} );
+
+ipcMain.handle('quit-app', async () => {
+  app.quit();
+} );
+
