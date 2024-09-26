@@ -4,6 +4,8 @@ import {X} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { CrossPlatformStorage } from '@/lib/storage/cross-platform-storage'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { extractColors } from 'extract-colors'
+import Controls from './controls'
 
 import {useRef} from 'react'
 
@@ -23,11 +25,39 @@ export default function FullScreenPlayer(
             setFullScreen(false)
         }, 300)
     }
+
+    const [colors, setColors] = useState<FinalColor[]>([])
+
+
+    useEffect(() => {
+        getImageColors()
+    }, [imageUrl])
+
+    const getImageColors = async () => {
+        if (imageUrl) {
+            const response = await fetch(imageUrl)
+            const blob = await response.blob();
+            const image = URL.createObjectURL(blob);
+            extractColors(image).then((colors) => {
+                const sortedColors = colors.sort((a, b) => b.area - a.area);
+                console.log(sortedColors);
+                setColors(sortedColors);
+            })
+        }
+    }
+
     return (
-        <div className=" w-screen bg-black z-50 animate-[grow-height_.3s_ease-out] h-screen bottom-0 relative " ref={container}>
+        <div className=" w-screen z-50 animate-[grow-height_.3s_ease-out] h-screen bottom-0 relative " ref={container} style={
+            colors.length > 0 ? {
+                background: `${colors[0].hex} linear-gradient(180deg, ${colors[1].hex}, ${colors[2].hex})`,
+            } : {background: 'linear-gradient(180deg, #000, #000)'}
+        }>
             <div className='w-full h-full flex z-50'>
-                <div className="w-1/2 h-full flex justify-center items-center">
+                <div className="w-1/2 h-full flex justify-center items-center flex-col group z-50">
                     {imageUrl ? <img src={imageUrl} alt="" className='max-h-[58.33%] aspect-square'/> : <div className='max-h-[58.33%] aspect-square bg-gray-800'></div>}
+                    <div className='w-full h-48 bg-black mt-24 hidden group-hover:visible'>
+
+                    </div>
                 </div>
                 <div className="w-1/2 h-full flex flex-col justify-center items-center">
                 {songData && <Lyrics songData={songData} audioRef={audioRef} />}
