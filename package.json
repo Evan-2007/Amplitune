@@ -28,6 +28,7 @@
     "clsx": "^2.1.1",
     "electron-serve": "^2.1.1",
     "electron-store": "^10.0.0",
+    "extract-colors": "^4.0.8",
     "framer-motion": "^11.7.0",
     "fs": "0.0.1-security",
     "lucide-react": "^0.446.0",

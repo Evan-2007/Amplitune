@@ -50,6 +50,9 @@ dependencies:
   electron-store:
     specifier: ^10.0.0
     version: 10.0.0
+  extract-colors:
+    specifier: ^4.0.8
+    version: 4.0.8
   framer-motion:
     specifier: ^11.7.0
     version: 11.7.0(react-dom@18.3.1)(react@18.3.1)
@@ -3185,6 +3188,10 @@ packages:
   /exponential-backoff@3.1.1:
     resolution: {integrity: sha512-dX7e/LHVJ6W3DE1MHWi9S1EYzDESENfLrYohG2G++ovZrYOkm4Knwa0mc1cn84xJOR4KEU0WSchhLbd0UklbHw==}
     dev: true
+
+  /extract-colors@4.0.8:
+    resolution: {integrity: sha512-XW6Ee9bgdx4Z9GchZm2likadze+BjQG1orkSyfxjd9znvxxtc7UBHf//1lFMtQm+lDusO3Fz8giaok0LWyflOA==}
+    dev: false
 
   /extract-zip@2.0.1:
     resolution: {integrity: sha512-GDhU9ntwuKyGXdZBUgTIe+vXnWj0fppUEtMDL0+idd5Sta8TGpHssn/eusA9mrPr9qNDym6SxAYZjNvCn/9RBg==}

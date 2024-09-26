@@ -33,6 +33,7 @@ export default function Home() {
             Register
           </Link>
           </Button>
+          <ModeToggle />
       </div>
   );
 }
