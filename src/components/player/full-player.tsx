@@ -26,6 +26,11 @@ export default function FullScreenPlayer(
         }, 300)
     }
 
+    interface FinalColor {
+        hex: string,
+        area: number
+    }
+
     const [colors, setColors] = useState<FinalColor[]>([])
 
 
