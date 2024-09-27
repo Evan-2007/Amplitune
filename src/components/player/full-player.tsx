@@ -44,7 +44,11 @@ export default function FullScreenPlayer(
             const blob = await response.blob();
             const image = URL.createObjectURL(blob);
             extractColors(image).then((colors) => {
-                const sortedColors = colors.sort((a, b) => b.area - a.area);
+                const sortedColors = colors.sort((a, b) => {
+                    const aLuminance = parseInt(a.hex.substring(1, 3), 16) * 0.299 + parseInt(a.hex.substring(3, 5), 16) * 0.587 + parseInt(a.hex.substring(5, 7), 16) * 0.114;
+                    const bLuminance = parseInt(b.hex.substring(1, 3), 16) * 0.299 + parseInt(b.hex.substring(3, 5), 16) * 0.587 + parseInt(b.hex.substring(5, 7), 16) * 0.114;
+                    return aLuminance - bLuminance;
+                });
                 console.log(sortedColors);
                 setColors(sortedColors);
             })
@@ -54,7 +58,7 @@ export default function FullScreenPlayer(
     return (
         <div className=" w-screen z-50 animate-[grow-height_.3s_ease-out] h-screen bottom-0 relative " ref={container} style={
             colors.length > 0 ? {
-                background: `${colors[0].hex} linear-gradient(180deg, ${colors[1].hex}, ${colors[2].hex})`,
+                background: `${colors[0].hex} linear-gradient(180deg, ${colors[0].hex}, ${colors[0].hex})`,
             } : {background: 'linear-gradient(180deg, #000, #000)'}
         }>
             <div className='w-full h-full flex z-50'>
