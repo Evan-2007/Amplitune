@@ -16,6 +16,7 @@ const CUSTOMIZATION = {
   MAX_CREATION_DELAY: 100, // milliseconds
   EXPAND_DURATION_RATIO: 0.225, // 1/8 of total duration
   SHRINK_DURATION_RATIO: 0.225, // 1/8 of total duration
+  COLOR_TRANSITION_DURATION: 5000, // milliseconds
   COLORS: [
     '#FF8C00', // Dark Orange
     '#FFA500', // Orange
