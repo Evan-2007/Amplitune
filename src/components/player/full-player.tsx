@@ -6,7 +6,8 @@ import { CrossPlatformStorage } from '@/lib/storage/cross-platform-storage'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { extractColors } from 'extract-colors'
 import Controls from './controls'
-
+import Background from './background'
+ 
 import {useRef} from 'react'
 
 export default function FullScreenPlayer(
@@ -44,15 +45,26 @@ export default function FullScreenPlayer(
             const blob = await response.blob();
             const image = URL.createObjectURL(blob);
             extractColors(image).then((colors) => {
-                const sortedColors = colors.sort((a, b) => {
-                    const aLuminance = parseInt(a.hex.substring(1, 3), 16) * 0.299 + parseInt(a.hex.substring(3, 5), 16) * 0.587 + parseInt(a.hex.substring(5, 7), 16) * 0.114;
-                    const bLuminance = parseInt(b.hex.substring(1, 3), 16) * 0.299 + parseInt(b.hex.substring(3, 5), 16) * 0.587 + parseInt(b.hex.substring(5, 7), 16) * 0.114;
-                    return aLuminance - bLuminance;
+                const sortedColors = colors.sort((a, b) => b.area - a.area);
+                const filteredColors = sortedColors.filter(color => {
+                    const rgb = hexToRgb(color.hex);
+                    return !(rgb.r > 240 && rgb.g > 240 && rgb.b > 240);
                 });
-                console.log(sortedColors);
-                setColors(sortedColors);
-            })
+                console.log(filteredColors);
+                setColors(filteredColors);
+            });
+
         }
+
+
+    }
+
+    function hexToRgb(hex: string) {
+        const bigint = parseInt(hex.slice(1), 16);
+        const r = (bigint >> 16) & 255;
+        const g = (bigint >> 8) & 255;
+        const b = bigint & 255;
+        return { r, g, b };
     }
 
     return (
@@ -61,9 +73,9 @@ export default function FullScreenPlayer(
                 background: `${colors[0].hex} linear-gradient(180deg, ${colors[0].hex}, ${colors[0].hex})`,
             } : {background: 'linear-gradient(180deg, #000, #000)'}
         }>
-            <div className='w-full h-full flex z-50'>
+            <div className='w-full h-full flex z-50 absolute'>
                 <div className="w-1/2 h-full flex justify-center items-center flex-col group z-50">
-                    {imageUrl ? <img src={imageUrl} alt="" className='max-h-[58.33%] aspect-square'/> : <div className='max-h-[58.33%] aspect-square bg-gray-800'></div>}
+                    {imageUrl ? <img src={imageUrl} alt="" className='max-h-[58.33%] aspect-square rounded-2xl border-border border-[1px]'/> : <div className='max-h-[58.33%] aspect-square bg-gray-800'></div>}
                     <div className='w-full h-48 bg-black mt-24 hidden group-hover:visible'>
 
                     </div>
@@ -73,6 +85,9 @@ export default function FullScreenPlayer(
                 </div>
             </div>
             <X className="absolute top-4 right-4 cursor-pointer z-50 color-white" size={24} onClick={() => handleClose()} />
+                <div className='absolute'>
+                    <Background colors={colors.map(color => color.hex)} />
+                </div>
         </div>
     )
 }
@@ -182,8 +197,8 @@ function Lyrics({ songData, audioRef }: { songData: Song, audioRef: React.RefObj
                         key={index}
                         data-line={index}
                         className={`
-                            text-center transition-all duration-1000 ease-in-out text-6xl text-wrap z-[100] font-bold pb-12 px-16
-                            ${index === currentLine ? 'text-white scale-110  pb-10' : index > currentLine ? 'text-gray-400 scale-[80%] blur-[7px] group-hover:blur-0' : 'text-gray-400 opacity-0 blur-[5px] group-hover:blur-0  group-hover:scale-[80%] group-hover:opacity-100'}
+                            text-center transition-all duration-1000 ease-in-out text-6xl text-wrap z-[100] font-bold pb-12 px-16 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] 
+                            ${index === currentLine ? 'text-white scale-110  pb-10 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]' : index > currentLine ? 'text-gray-400 scale-[80%] blur-[7px] group-hover:blur-0' : 'text-gray-400 opacity-0 blur-[5px] group-hover:blur-0  group-hover:scale-[80%] group-hover:opacity-100'}
                         `}
                         >
                             {line.value}

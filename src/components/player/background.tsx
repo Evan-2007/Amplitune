@@ -1,18 +1,21 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 
 // Customizable variables
 const CUSTOMIZATION = {
-  MAX_OVALS: 10,
-  OVAL_DURATION: 25000, // milliseconds
-  MIN_OVAL_SIZE: 68,
-  MAX_OVAL_SIZE: 272,
+  MAX_OVALS: 6,
+  OVAL_DURATION: [
+    40000,
+    30000,
+  ], // milliseconds
+  MIN_OVAL_SIZE: 1500,
+  MAX_OVAL_SIZE: 500,
   MIN_ASPECT_RATIO: 0.5,
-  MAX_ASPECT_RATIO: 1,
-  BLUR_AMOUNT: 75, // pixels
-  MIN_CREATION_DELAY: 2000, // milliseconds
-  MAX_CREATION_DELAY: 5000, // milliseconds
-  EXPAND_DURATION_RATIO: 0.125, // 1/8 of total duration
-  SHRINK_DURATION_RATIO: 0.125, // 1/8 of total duration
+  MAX_ASPECT_RATIO: 2,
+  BLUR_AMOUNT: 150, // pixels
+  MIN_CREATION_DELAY: 50, // milliseconds
+  MAX_CREATION_DELAY: 100, // milliseconds
+  EXPAND_DURATION_RATIO: 0.225, // 1/8 of total duration
+  SHRINK_DURATION_RATIO: 0.225, // 1/8 of total duration
   COLORS: [
     '#FF8C00', // Dark Orange
     '#FFA500', // Orange
@@ -37,6 +40,11 @@ interface Oval {
   rotation: number;
   startTime: number;
   duration: number;
+  opacity: number;
+}
+
+interface BackgroundProps {
+  colors: string[];
 }
 
 type RandomPositionFunction = (max: number, extension: number) => number;
@@ -56,12 +64,16 @@ const getRandomSize: RandomSizeFunction = () =>
 const getRandomAspectRatio: RandomAspectRatioFunction = () => 
   Math.random() * (CUSTOMIZATION.MAX_ASPECT_RATIO - CUSTOMIZATION.MIN_ASPECT_RATIO) + CUSTOMIZATION.MIN_ASPECT_RATIO;
 
-const getRandomColor: RandomColorFunction = () => 
-  CUSTOMIZATION.COLORS[Math.floor(Math.random() * CUSTOMIZATION.COLORS.length)];
 
-const createOval: CreateOvalFunction = (canvas, timestamp) => {
+const getRandomColor = (colors: string[]): string => 
+  colors[Math.floor(Math.random() * colors.length)];
+
+const getRandomDuration = () => 
+  Math.floor(Math.random() * CUSTOMIZATION.OVAL_DURATION.length)
+
+const createOval = (canvas: HTMLCanvasElement, timestamp: number, colors: string[]): Oval => {
   const maxSize = getRandomSize();
-  const extension = maxSize / 2; // Allow ovals to extend half their size beyond the edge
+  const extension = maxSize / 2;
   return {
     startX: getRandomPosition(canvas.width, extension),
     startY: getRandomPosition(canvas.height, extension),
@@ -69,18 +81,30 @@ const createOval: CreateOvalFunction = (canvas, timestamp) => {
     endY: getRandomPosition(canvas.height, extension),
     maxSize,
     aspectRatio: getRandomAspectRatio(),
-    color: getRandomColor(),
-    rotation: Math.random() * Math.PI * 2, // Random rotation
+    color: getRandomColor(colors),
+    rotation: Math.random() * Math.PI * 2,
     startTime: timestamp,
-    duration: CUSTOMIZATION.OVAL_DURATION,
+    duration: CUSTOMIZATION.OVAL_DURATION[1],
+    opacity: 1,
   };
 };
 
-const easeInOutCubic: EasingFunction = t => t<.5 ? 4*t*t*t : (t-1)*(2*t-2)*(2*t-2)+1;
+const easeInOutCubic = (t: number): number => t<.5 ? 4*t*t*t : (t-1)*(2*t-2)*(2*t-2)+1;
 
-const CanvasMultipleOvals: React.FC = () => {
+const Background: React.FC<BackgroundProps> = ({ colors }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const blurredCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [currentColors, setCurrentColors] = useState(colors);
+  const [previousColors, setPreviousColors] = useState(colors);
+  const [transitionStartTime, setTransitionStartTime] = useState(0);
+
+  useEffect(() => {
+    if (JSON.stringify(colors) !== JSON.stringify(currentColors)) {
+      setPreviousColors(currentColors);
+      setCurrentColors(colors);
+      setTransitionStartTime(performance.now());
+    }
+  }, [colors, currentColors]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -97,15 +121,14 @@ const CanvasMultipleOvals: React.FC = () => {
       if (canvas && blurredCanvas) {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        blurredCanvas.width = window.innerWidth;
-        blurredCanvas.height = window.innerHeight;
+        blurredCanvas.width = window.innerWidth + 100;
+        blurredCanvas.height = window.innerHeight + 100;
       }
     };
 
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // Apply blur filter to the blurred canvas
     blurredCtx.filter = `blur(${CUSTOMIZATION.BLUR_AMOUNT}px)`;
 
     let ovals: Oval[] = [];
@@ -114,11 +137,12 @@ const CanvasMultipleOvals: React.FC = () => {
     const animate = (timestamp: number) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Create a new oval if conditions are met
+      const transitionProgress = Math.min((timestamp - transitionStartTime) / CUSTOMIZATION.COLOR_TRANSITION_DURATION, 1);
+
       if (ovals.length < CUSTOMIZATION.MAX_OVALS && 
           timestamp - lastOvalCreatedAt > CUSTOMIZATION.MIN_CREATION_DELAY + 
           Math.random() * (CUSTOMIZATION.MAX_CREATION_DELAY - CUSTOMIZATION.MIN_CREATION_DELAY)) {
-        ovals.push(createOval(canvas, timestamp));
+        ovals.push(createOval(canvas, timestamp, currentColors));
         lastOvalCreatedAt = timestamp;
       }
 
@@ -126,27 +150,31 @@ const CanvasMultipleOvals: React.FC = () => {
         const elapsedTime = timestamp - oval.startTime;
         const progress = Math.min(elapsedTime / oval.duration, 1);
 
-        // Use easing function for smooth animation
         const easedProgress = easeInOutCubic(progress);
 
-        // Calculate current position
         const currentX = oval.startX + (oval.endX - oval.startX) * easedProgress;
         const currentY = oval.startY + (oval.endY - oval.startY) * easedProgress;
 
-        // Calculate current size
         let currentSize: number;
         if (progress < CUSTOMIZATION.EXPAND_DURATION_RATIO) {
-          // Expand during the first part of the animation
           currentSize = oval.maxSize * (progress / CUSTOMIZATION.EXPAND_DURATION_RATIO);
         } else if (progress > 1 - CUSTOMIZATION.SHRINK_DURATION_RATIO) {
-          // Shrink during the last part of the animation
-          currentSize = oval.maxSize * ((1 - progress) / CUSTOMIZATION.SHRINK_DURATION_RATIO);
+          currentSize = oval.maxSize * Math.max(0, (1 - progress) / CUSTOMIZATION.SHRINK_DURATION_RATIO);
         } else {
-          // Maintain full size for the middle part of the animation
           currentSize = oval.maxSize;
         }
 
-        // Draw the oval
+        currentSize = Math.max(0.1, currentSize);
+
+        // Update opacity based on color transition
+        if (transitionProgress < 1) {
+          if (previousColors.includes(oval.color)) {
+            oval.opacity = 1 - transitionProgress;
+          } else if (currentColors.includes(oval.color)) {
+            oval.opacity = transitionProgress;
+          }
+        }
+
         ctx.save();
         ctx.translate(currentX, currentY);
         ctx.rotate(oval.rotation);
@@ -155,13 +183,13 @@ const CanvasMultipleOvals: React.FC = () => {
         ctx.ellipse(0, 0, currentSize / 2, currentSize / 2, 0, 0, Math.PI * 2);
         ctx.restore();
         ctx.fillStyle = oval.color;
+        ctx.globalAlpha = oval.opacity;
         ctx.fill();
+        ctx.globalAlpha = 1;
 
-        // Keep the oval if the animation is not complete
-        return progress < 1;
+        return progress < 1 && oval.opacity > 0;
       });
 
-      // Draw the non-blurred canvas onto the blurred canvas
       blurredCtx.clearRect(0, 0, blurredCanvas.width, blurredCanvas.height);
       blurredCtx.drawImage(canvas, 0, 0);
 
@@ -174,22 +202,22 @@ const CanvasMultipleOvals: React.FC = () => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', resizeCanvas);
     };
-  }, []);
+  }, [currentColors, previousColors, transitionStartTime]);
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <canvas
         ref={canvasRef}
-        className="bg-black"
+        className="bg-transparent"
         style={{ position: 'absolute', top: 0, left: 0, display: 'none' }}
       />
       <canvas
         ref={blurredCanvasRef}
-        className="bg-black"
+        className="bg-transparent"
         style={{ position: 'absolute', top: 0, left: 0, display: 'block' }}
       />
     </div>
   );
 };
 
-export default CanvasMultipleOvals;
+export default Background;
