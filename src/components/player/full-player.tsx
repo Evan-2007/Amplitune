@@ -27,12 +27,19 @@ export default function FullScreenPlayer(
         }, 300)
     }
 
+    useEffect (() => {
+        if (container.current) {
+            container.current.addEventListener
+        }
+    }, [container])
+
     interface FinalColor {
         hex: string,
         area: number
     }
 
     const [colors, setColors] = useState<FinalColor[]>([])
+
 
 
     useEffect(() => {
@@ -81,7 +88,8 @@ export default function FullScreenPlayer(
             colors.length > 0 ? {
                 background: `${colors[0].hex} linear-gradient(180deg, ${colors[0].hex}, ${colors[0].hex})`,
             } : {background: 'linear-gradient(180deg, #000, #000)'}
-        }>
+        }
+        >
             <div className='w-full h-full flex z-50 absolute'>
                 <div className="w-1/2 h-full flex justify-center items-center flex-col group z-50">
                     {imageUrl ? <img src={imageUrl} alt="" className='max-h-[58.33%] aspect-square rounded-2xl border-border border-[1px]'/> : <div className='max-h-[58.33%] aspect-square bg-gray-800'></div>}
@@ -93,7 +101,9 @@ export default function FullScreenPlayer(
                 {songData && <Lyrics songData={songData} audioRef={audioRef} />}
                 </div>
             </div>
-            <X className="absolute top-4 right-4 cursor-pointer z-50 color-white" size={24} onClick={() => handleClose()} />
+            <div className='w-12 h-12 bg-slate-700 absolute top-4 right-4 cursor-pointer z-50 rounded-full flex justify-center items-center border-border border opacity-40 hover:opacity-90 transition-all duration-500'>
+                <X className=" color-white" size={24} onClick={() => handleClose()} />
+            </div>
                 <div className='absolute'>
                     <Background colors={colors.slice(1).map(color => color.hex)} />
                 </div>
@@ -192,6 +202,8 @@ function Lyrics({ songData, audioRef }: { songData: Song, audioRef: React.RefObj
 
     if (error) return <p className="text-red-500">{error}</p>;
     if (!lyrics) return <p className="text-gray-500">No Lyrics Found</p>;
+
+    //4vw
 
     return (
         <div className="w-full h-full overflow-hidden relative flex justify-center items-center">
