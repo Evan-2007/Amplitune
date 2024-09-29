@@ -46,10 +46,19 @@ export default function FullScreenPlayer(
             const image = URL.createObjectURL(blob);
             extractColors(image).then((colors) => {
                 const sortedColors = colors.sort((a, b) => b.area - a.area);
-                const filteredColors = sortedColors.filter(color => {
-                    const rgb = hexToRgb(color.hex);
-                    return !(rgb.r > 240 && rgb.g > 240 && rgb.b > 240);
-                });
+                const filteredColors = sortedColors
+                    .filter(color => {
+                        const rgb = hexToRgb(color.hex);
+                        //!(rgb.r > 240 && rgb.g > 240 && rgb.b > 240) &&
+                        return  color.area > 0.02;
+                    })
+                    .sort((a, b) => {
+                        const rgbA = hexToRgb(a.hex);
+                        const rgbB = hexToRgb(b.hex);
+                        const brightnessA = 0.299 * rgbA.r + 0.587 * rgbA.g + 0.114 * rgbA.b;
+                        const brightnessB = 0.299 * rgbB.r + 0.587 * rgbB.g + 0.114 * rgbB.b;
+                        return brightnessA - brightnessB;
+                    });
                 console.log(filteredColors);
                 setColors(filteredColors);
             });
@@ -86,7 +95,7 @@ export default function FullScreenPlayer(
             </div>
             <X className="absolute top-4 right-4 cursor-pointer z-50 color-white" size={24} onClick={() => handleClose()} />
                 <div className='absolute'>
-                    <Background colors={colors.map(color => color.hex)} />
+                    <Background colors={colors.slice(1).map(color => color.hex)} />
                 </div>
         </div>
     )

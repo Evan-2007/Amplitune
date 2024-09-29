@@ -12,8 +12,8 @@ const CUSTOMIZATION = {
   MIN_ASPECT_RATIO: 0.5,
   MAX_ASPECT_RATIO: 2,
   BLUR_AMOUNT: 150, // pixels
-  MIN_CREATION_DELAY: 50, // milliseconds
-  MAX_CREATION_DELAY: 100, // milliseconds
+  MIN_CREATION_DELAY: 2000, // milliseconds
+  MAX_CREATION_DELAY: 5000, // milliseconds
   EXPAND_DURATION_RATIO: 0.225, // 1/8 of total duration
   SHRINK_DURATION_RATIO: 0.225, // 1/8 of total duration
   COLOR_TRANSITION_DURATION: 5000, // milliseconds
@@ -124,6 +124,7 @@ const Background: React.FC<BackgroundProps> = ({ colors }) => {
         canvas.height = window.innerHeight;
         blurredCanvas.width = window.innerWidth + 100;
         blurredCanvas.height = window.innerHeight + 100;
+        blurredCtx.filter = `blur(${CUSTOMIZATION.BLUR_AMOUNT}px)`;
       }
     };
 
@@ -146,6 +147,9 @@ const Background: React.FC<BackgroundProps> = ({ colors }) => {
         ovals.push(createOval(canvas, timestamp, currentColors));
         lastOvalCreatedAt = timestamp;
       }
+
+
+
 
       ovals = ovals.filter(oval => {
         const elapsedTime = timestamp - oval.startTime;
