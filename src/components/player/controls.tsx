@@ -88,6 +88,7 @@ interface ControlsProps {
     return (
       <div className='flex flex-col h-full'>
         <div className='h-full flex justify-center items-center space-x-2 mt-2'>
+          <div className='w-9'></div>
           <button onClick={toggleShuffle}>
             <Shuffle color={shuffle ? 'red' : 'currentColor'} strokeWidth={shuffle ? 3 : 2.5} size={20} />
           </button>
@@ -101,9 +102,12 @@ interface ControlsProps {
              repeat === 1 ? <Repeat strokeWidth={2.5} color='red' size={24} /> :
              <Repeat strokeWidth={2.5} size={24} />}
           </button>
+          <div className='w-4'></div>
         </div>
         <div className='flex flex-row justify-center items-center mb-4'>
-          <p>{formatTime(currentTime)}</p>
+          <div className='w-9 text-left'>
+            <p>{formatTime(currentTime)}</p>
+          </div>
           <TooltipProvider delayDuration={300}>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -121,7 +125,9 @@ interface ControlsProps {
               <TooltipContent sideOffset={4}>{sliderTimestamp}</TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          <p>{timeLeftString}</p>
+          <div className='w-4 text-left text-nowrap'>
+            <p>{timeLeftString}</p>
+          </div>
         </div>
       </div>
     );
