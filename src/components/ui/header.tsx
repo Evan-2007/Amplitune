@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 import { ModeToggle } from '../theme-toggle'
-import { Search as SearchIcon} from 'lucide-react'
+import {  Search as SearchIcon, CirclePlay} from 'lucide-react'
 import {Input } from '../ui/input'
 import { useEffect, useState, useRef } from 'react'
 import { isElectron as checkIsElectron } from '@/lib/utils'
@@ -10,6 +10,8 @@ import {Song} from '@/components/player/types'
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import {motion } from 'framer-motion'
 
 export function Header() {
 
@@ -59,11 +61,12 @@ function Search() {
 
 
     const [credentials, setCredentials] = useState<{username: string | null, password: string | null, salt: string | null}>({username: null, password: null, salt: null});
-    const [activeInput, setActiveInput] = useState(true);
+    const [activeInput, setActiveInput] = useState(false);
     const [search, setSearch] = useState('');
 
     const inputRef = useRef(null);
     const router = useRouter();
+    const resultsContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
       const handleFocus = () => {
@@ -73,7 +76,13 @@ function Search() {
       };
   
       const handleBlur = () => {
-        setActiveInput(true);
+        if (resultsContainerRef.current ) {
+            resultsContainerRef.current?.classList.remove('animate-[fadeIn_.001s]')
+            resultsContainerRef.current?.classList.add('animate-[fadeOut_.001s]')
+        }
+        setTimeout(() => {
+            setActiveInput(true); //change to false
+        }, 100);
       };
   
       document.addEventListener('focus', handleFocus, true);
@@ -132,30 +141,96 @@ function Search() {
                     <Input placeholder="Search"  className='w-64 h-8 rounded-2xl' onChange={(e) => handleUpdate(e)} ref={inputRef}/>
 
                 {
-                    activeInput && search != "" && (
-                        <div className='bg-card h-96 w-96 border-border border rounded-xl mt-4 absolute top-10'>
-                            <ScrollArea className='h-full w-full relative'>
-                                {results.length > 0 ? (
-                                    <ul className='w-full h-full flex flex-col space-y-2'>
-                                        {results.map((song, index) => (
-                                            <button key={index} className='filter-none flex w-full' onClick={() => router.push(`/home/?playing=${song.id}&play=true`)}>
-                                                <img className='w-10 rounded-md' src={`${process.env.NEXT_PUBLIC_API_URL}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${song.coverArt}`} alt="" />
-                                                <li className='text-nowrap'>{song.title}</li>
-                                                <div className='w-full my-2 bg-border h-[1px]'></div>
-                                            </button>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                <p>No results found</p>
-                                )}
-                            </ScrollArea>
-                        </div>
+                    activeInput && (
+                        <>
+                            <div className={`h-96 w-96 border-border border rounded-xl mt-5 absolute top-10 z-20 backdrop-blur-sm  duration-1000 ease-in-out animate-[fadeIn_.001s] bg-card/50`} ref={resultsContainerRef}>
+                                <ScrollArea className='h-full w-full relative'>
+                                    {results.length > 0 ? (
+                                        <div className=' h-full flex flex-col rounded-xl'>
+                                            {results.map((song, index) => (
+                                                <div className=''>
+                                                    <div className='grid-cols-7 grid col-auto py-2 pl-2'>
+                                                        <button key={index} className='filter-none flex w-full items-center group relative' onClick={() => router.push(`/home/?playing=${song.id}&play=true`)}>
+                                                            <img className='w-11 rounded-md absolute' src={`${process.env.NEXT_PUBLIC_API_URL}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${song.coverArt}`} alt="" />
+                                                            <div className='absolute w-11 rounded-md bg-card/20 z-50 h-11 flex justify-center items-center  group-hover:visible invisible group-hover:opacity-100 opacity-0 transition-all duration-300 ease-in backdrop-blur-[2px]'>
+                                                                <CirclePlay className='w-8 h-8 text-white m-auto' strokeWidth={.8} />
+                                                            </div>
+                                                        </button>
+                                                        <div className='col-span-5 space-y-1 pr-3'>
+                                                            <Link className='text-sm line-clamp-1 hover:underline' href={`/home/?playing=${song.id}&play=true`}>{song.title}</Link>
+                                                            <Link className='text-[11px] line-clamp-1 text-gray-500 hover:underline' href={`/home/?playing=${song.id}&play=true`}>{song.artist}</Link>
+                                                        </div>
+                                                        <ItemMenu />
+                                                    </div>
+                                                    <div className='w-full bg-border h-[1px] line-clamp-1 px-2'></div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                    <p>No results found</p>
+                                    )}
+                                </ScrollArea>
+                            </div>
+                        </>
                     )
                 }
             </div>
 
         </div>
     )
+}
+
+
+import {Ellipsis} from 'lucide-react'
+
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
+
+
+function ItemMenu() {
+    const [isOpen, setIsOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const toggleMenu = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsOpen(!isOpen);
+    };
+
+    return (
+        <div className="flex items-center space-x-2 pr-4 w-24 z-10">
+            <Ellipsis size={24} onClick={toggleMenu} />
+            {isOpen && (
+                <div ref={menuRef} className="absolute">
+                    test
+                </div>
+            )}
+        </div>
+    );
 }
 
 
