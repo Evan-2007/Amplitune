@@ -103,6 +103,9 @@ dependencies:
     version: 3.23.8
 
 devDependencies:
+  '@types/lodash':
+    specifier: ^4.17.9
+    version: 4.17.9
   '@types/md5':
     specifier: ^2.3.5
     version: 2.3.5
@@ -1355,6 +1358,10 @@ packages:
     resolution: {integrity: sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==}
     dependencies:
       '@types/node': 22.7.2
+    dev: true
+
+  /@types/lodash@4.17.9:
+    resolution: {integrity: sha512-w9iWudx1XWOHW5lQRS9iKpK/XuRhnN+0T7HvdCCd802FYkT1AMTnxndJHGrNJwRoRHkslGr4S29tjm1cT7x/7w==}
     dev: true
 
   /@types/md5@2.3.5:
