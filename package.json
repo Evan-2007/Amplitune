@@ -10,12 +10,22 @@
     "start": "next start",
     "lint": "next lint",
     "dev": "concurrently -n \"NEXT,ELECTRON\" -c \"yellow,blue\" --kill-others \"next dev\" \"electron .\"",
-    "build": "next build && electron-builder"
+    "build": "next build && electron-builder",
+    "start:ios": "next build && pnpm cap run ios",
+    "start:android": "pnpm cap run android"
+  },
+  "build": {
+    "files": [
+      "**/*",
+      "!ios/**",
+      "!android/**"
+    ]
   },
   "dependencies": {
     "@capacitor/android": "^6.1.2",
     "@capacitor/core": "^6.1.2",
     "@capacitor/ios": "^6.1.2",
+    "@capacitor/status-bar": "^6.0.1",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-dialog": "^1.1.1",
     "@radix-ui/react-dropdown-menu": "^2.1.1",

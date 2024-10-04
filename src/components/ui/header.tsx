@@ -25,7 +25,7 @@ export function Header() {
     }, [])
 
     return (
-        <div className="flex items-center justify-between p-4 bg-card z-10">
+        <div className="flex items-center justify-between p-4 bg-card z-10" >
             <LeftMenu />
             <Search />
             <RightMenu />
