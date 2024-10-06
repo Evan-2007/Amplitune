@@ -96,7 +96,7 @@ export default function FullScreenPlayer(
             <div className='w-full h-full flex z-50 absolute'>
                 <div className="w-1/2 h-full flex justify-center items-center flex-col group z-50">
                     {imageUrl ? <img src={imageUrl} alt="" className='max-h-[58.33%] aspect-square rounded-2xl border-border border-[1px]'/> : <div className='max-h-[58.33%] aspect-square bg-gray-800'></div>}
-                    <div className='w-full h-48 bg-black mt-24 hidden group-hover:visible'>
+                    <div className='w-full h-0  bg-black group-hover:mt-16  group-hover:h-48 transition-all duration-700 '>
 
                     </div>
                 </div>
@@ -104,7 +104,7 @@ export default function FullScreenPlayer(
                 {songData && <Lyrics songData={songData} audioRef={audioRef} />}
                 </div>
             </div>
-            <div className='w-12 h-12 bg-slate-700 absolute top-4 right-4 cursor-pointer z-50 rounded-full flex justify-center items-center border-border border opacity-40 hover:opacity-90 transition-all duration-500'>
+            <div className='w-12 h-12 bg-slate-700 absolute top-4 right-4 cursor-pointer z-50 rounded-full flex justify-center items-center border-border border opacity-40 hover:opacity-90 transition-all duration-300'>
                 <X className=" color-white" size={24} onClick={() => handleClose()} />
             </div>
                 <div className='absolute'>
