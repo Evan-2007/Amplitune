@@ -104,8 +104,8 @@ export default function FullScreenPlayer(
                 {songData && <Lyrics songData={songData} audioRef={audioRef} />}
                 </div>
             </div>
-            <div className='w-12 h-12 bg-slate-700 absolute top-4 right-4 cursor-pointer z-50 rounded-full flex justify-center items-center border-border border opacity-40 hover:opacity-90 transition-all duration-300'>
-                <X className=" color-white" size={24} onClick={() => handleClose()} />
+            <div className='w-12 h-12 bg-slate-700 absolute top-4 right-4 cursor-pointer z-50 rounded-full flex justify-center items-center border-border border opacity-40 hover:opacity-90 transition-all duration-300' onClick={() => handleClose()}>
+                <X className=" color-white" size={24}  />
             </div>
                 <div className='absolute'>
                     <Background colors={colors.slice(1).map(color => color.hex)} />
