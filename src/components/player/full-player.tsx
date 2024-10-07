@@ -10,6 +10,7 @@ import Background from './background'
 import { debounce } from 'lodash'
 import { useCallback } from 'react'
 import Lyrics from './lyrics'
+
  
 import {useRef} from 'react'
 
@@ -96,8 +97,10 @@ export default function FullScreenPlayer(
             <div className='w-full h-full flex z-50 absolute'>
                 <div className="w-1/2 h-full flex justify-center items-center flex-col group z-50">
                     {imageUrl ? <img src={imageUrl} alt="" className='max-h-[58.33%] aspect-square rounded-2xl border-border border-[1px]'/> : <div className='max-h-[58.33%] aspect-square bg-gray-800'></div>}
-                    <div className='w-full h-0  bg-black group-hover:mt-16  group-hover:h-48 transition-all duration-700 '>
-
+                    <div className='w-full h-0   group-hover:mt-6  transition-all duration-700 '>
+                        <div className='group-hover:opacity-100 opacity-0 transition-opacity duration-700 '>
+                            <Controls songData={songData as Song} audioRef={audioRef} />
+                        </div>
                     </div>
                 </div>
                 <div className="w-1/2 h-full flex flex-col justify-center items-center">
