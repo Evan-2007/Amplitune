@@ -3,11 +3,12 @@ import { Shuffle, Repeat, Repeat1 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {Song} from './types'
-
+import {cn} from '@/lib/utils'
 
 interface ControlsProps {
     songData: Song;
     audioRef: React.RefObject<HTMLAudioElement>;
+    className?: string;
   }
   
   const formatTime = (time: number): string => {
@@ -16,7 +17,7 @@ interface ControlsProps {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
   
-  const Controls: React.FC<ControlsProps> = ({ songData, audioRef }) => {
+  const Controls: React.FC<ControlsProps> = ({ songData, audioRef, className }) => {
     const [playing, setPlaying] = useState<boolean>(false);
     const [repeat, setRepeat] = useState<number>(0);
     const [shuffle, setShuffle] = useState<boolean>(false);
@@ -56,15 +57,13 @@ interface ControlsProps {
       };
     }, [audioRef, repeat, updateTime]);
   
-    useEffect(() => {
-      if (audioRef.current) {
-        if (playing) {
-          audioRef.current.play().catch((error: unknown) => console.error('Error playing audio:', error));
-        } else {
-          audioRef.current.pause();
+
+    function handlePlayPause() {
+        if (audioRef.current) {
+            audioRef.current.paused ? audioRef.current.play() : audioRef.current.pause()
+            setPlaying(!audioRef.current.paused)
         }
-      }
-    }, [playing, audioRef]);
+    }
   
     useEffect(() => {
       if (!sliderActive) {
@@ -86,14 +85,14 @@ interface ControlsProps {
     const cycleRepeat = () => setRepeat((prev) => (prev + 1) % 3);
   
     return (
-      <div className='flex flex-col h-full'>
+      <div className={cn('flex flex-col h-full', className)}>
         <div className='h-full flex justify-center items-center space-x-2 mt-2'>
           <div className='w-9'></div>
           <button onClick={toggleShuffle}>
             <Shuffle color={shuffle ? 'red' : 'currentColor'} strokeWidth={shuffle ? 3 : 2.5} size={20} />
           </button>
           <ControlButton icon="previous" />
-          <button onClick={togglePlayPause}>
+          <button onClick={handlePlayPause}>
             {playing ? <PauseIcon /> : <PlayIcon />}
           </button>
           <ControlButton icon="next" />
