@@ -7,6 +7,7 @@ import {Button} from "@/components/ui/button";
 import Link from "next/link";
 import {useState} from "react";
 import {CrossPlatformStorage} from "@/lib/storage/cross-platform-storage";
+import { isElectron } from "@/lib/utils";
 
 const localStorage = new CrossPlatformStorage();
 
@@ -15,6 +16,12 @@ export default function Home() {
 
 
 
+
+  const handleAcceleration = () => {
+    if (isElectron()) {
+      window.electronAPI.send('hardwareAcceleration', true)
+    }
+  }
 
 
   useEffect(() => {
@@ -32,6 +39,9 @@ export default function Home() {
           <Link href="/home">
             Register
           </Link>
+          </Button>
+          <Button onClick={handleAcceleration}>
+            Toggle Acceleration
           </Button>
           <ModeToggle />
       </div>

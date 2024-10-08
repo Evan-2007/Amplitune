@@ -6,5 +6,6 @@ contextBridge.exposeInMainWorld("electronAPI", {
     },
     send: (channel, args) => {
         ipcRenderer.send(channel, args);
-    }
+    },
 });
+

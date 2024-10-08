@@ -98,3 +98,10 @@ ipcMain.handle('quit-app', async () => {
   app.quit();
 } );
 
+
+
+ipcMain.handle('hardwareAcceleration', async (value) => {
+  if (value) {
+    app.disableHardwareAcceleration();
+  } 
+});
