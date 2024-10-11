@@ -1,3 +1,9 @@
+export interface searchResult {
+    song: Song[];
+    artist: Artist[];
+    album: Album[];
+}
+
 export interface Song {
     id: string;
     parent: string;
@@ -34,4 +40,37 @@ export interface Song {
     }
     channelCount: number;
     samplingRate: number;
+}
+
+interface Artist {
+    albumCount: number;
+    artistImageUrl: string;
+    coverArt: string;
+    id: string;
+    name: string;
+}
+
+interface Album {
+    artist: string;
+    artistId: string;
+    coverArt: string;
+    created: string;
+    diskTitles: diskTitles[];
+    duration: number;
+    genre: any[];
+    id: string;
+    isCompilation: boolean;
+    musicBrainzId: string;
+    name: string;
+    originalReleaseDate: object;
+    releseDate: object;
+    songCount: number;
+    sortName: string;
+    userRating: number;
+    year: number;
+}
+
+interface diskTitles {
+    disc: number;
+    title: string;
 }

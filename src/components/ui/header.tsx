@@ -6,7 +6,7 @@ import {Input } from '../ui/input'
 import { useEffect, useState, useRef } from 'react'
 import { isElectron as checkIsElectron } from '@/lib/utils'
 import { CrossPlatformStorage} from '@/lib/storage/cross-platform-storage'
-import {Song} from '@/components/player/types'
+import {Song, searchResult} from '@/components/player/types'
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { useRouter } from 'next/navigation'
@@ -57,7 +57,7 @@ function RightMenu() {
 
 function Search() {
 
-    const [results , setResults] = useState<Song[]>([])
+    const [results , setResults] = useState<searchResult | null>(null)
 
 
     const [credentials, setCredentials] = useState<{username: string | null, password: string | null, salt: string | null}>({username: null, password: null, salt: null});
@@ -126,12 +126,24 @@ function Search() {
                 console.error('An error occurred:', response['subsonic-response'].error.message);
                 throw new Error(response['subsonic-response'].error.status);
             }
-            setResults(response['subsonic-response'].searchResult3.song || []);
+
+            if (response['subsonic-response'].searchResult3.song.length == 0 && response['subsonic-response'].searchResult3.artist.length == 0 && response['subsonic-response'].searchResult3.album.length == 0) {
+                setResults(null);
+            } else {
+
+                setResults(response['subsonic-response'].searchResult3);
+            }
             console.log(response) 
         } catch (error) {
             console.error('An error occurred:', error);
+            setResults(null);
         }
     }
+
+
+    useEffect(() => {
+        console.log(results)
+    } , [results])
 
     return (
         <div className="flex items-center space-x-2 z-10">
@@ -145,9 +157,44 @@ function Search() {
                         <>
                             <div className={`h-96 w-96 border-border border rounded-xl mt-5 absolute top-10 z-20 backdrop-blur-sm  duration-1000 ease-in-out animate-[fadeIn_.001s] bg-card/50`} ref={resultsContainerRef}>
                                 <ScrollArea className='h-full w-full relative'>
-                                    {results.length > 0 ? (
+                                    {results !== null ? (
                                         <div className=' h-full flex flex-col rounded-xl'>
-                                            {results.map((song, index) => (
+                                            {results.artist && results.artist.length > 0 && results.artist.map((artist, index) => (
+                                                <div className=''>
+                                                    <div className='grid-cols-7 grid col-auto py-2 pl-2'>
+                                                        <button key={index} className='filter-none flex w-full items-center group relative pt-2 pb-2' onClick={() => router.push(`/home/?playing=${artist.id}&play=true`)}>
+                                                            <img className='w-11 rounded-full absolute' src={`${process.env.NEXT_PUBLIC_API_URL}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${artist.coverArt}`} alt="" />
+                                                        </button>
+                                                        <div className='col-span-5 space-y-1 pr-3 '>
+                                                            <Link className='text-sm line-clamp-1 hover:underline' href={`/home/?playing=${artist.id}&play=true`}>{artist.name}</Link>
+                                                            <Link className='text-[11px] line-clamp-1 text-gray-500 hover:underline' href={`/home/?playing=${artist.id}&play=true`}>Artist</Link>
+                                                        </div>
+                                                        <ItemMenu />
+                                                    </div>
+                                                    <div className='w-full bg-border h-[1px] line-clamp-1 px-2'></div>
+                                                </div>
+                                            ))}
+                                            {results.album && results.album.length > 0 && results.album.map((album, index) => (
+                                                album.songCount > 1 ? 
+                                                <div className=''>
+                                                <div className='grid-cols-7 grid col-auto py-2 pl-2'>
+                                                    <button key={index} className='filter-none flex w-full items-center group relative' onClick={() => router.push(`/home/?playing=${album.id}&play=true`)}>
+                                                        <img className='w-11 rounded-md absolute' src={`${process.env.NEXT_PUBLIC_API_URL}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${album.coverArt}`} alt="" />
+                                                        <div className='absolute w-11 rounded-md bg-card/20 z-50 h-11 flex justify-center items-center  group-hover:visible invisible group-hover:opacity-100 opacity-0 transition-all duration-300 ease-in backdrop-blur-[2px]'>
+                                                            <CirclePlay className='w-8 h-8 text-white m-auto' strokeWidth={.8} />
+                                                        </div>
+                                                    </button>
+                                                    <div className='col-span-5 space-y-1 pr-3'>
+                                                        <Link className='text-sm line-clamp-1 hover:underline' href={`/home/?playing=${album.id}&play=true`}>{album.name}</Link>
+                                                        <Link className='text-[11px] line-clamp-1 text-gray-500 hover:underline' href={`/home/?playing=${album.id}&play=true`}>{album.artist} - Album</Link>
+                                                    </div>
+                                                    <ItemMenu />
+                                                </div>
+                                                <div className='w-full bg-border h-[1px] line-clamp-1 px-2'></div>
+                                            </div>
+                                                : null
+                                            ))}
+                                            {results.song && results.song.length > 0 && results.song.map((song, index) => (
                                                 <div className=''>
                                                     <div className='grid-cols-7 grid col-auto py-2 pl-2'>
                                                         <button key={index} className='filter-none flex w-full items-center group relative' onClick={() => router.push(`/home/?playing=${song.id}&play=true`)}>
@@ -158,7 +205,7 @@ function Search() {
                                                         </button>
                                                         <div className='col-span-5 space-y-1 pr-3'>
                                                             <Link className='text-sm line-clamp-1 hover:underline' href={`/home/?playing=${song.id}&play=true`}>{song.title}</Link>
-                                                            <Link className='text-[11px] line-clamp-1 text-gray-500 hover:underline' href={`/home/?playing=${song.id}&play=true`}>{song.artist}</Link>
+                                                            <Link className='text-[11px] line-clamp-1 text-gray-500 hover:underline' href={`/home/?playing=${song.id}&play=true`}>{song.artist} - Song</Link>
                                                         </div>
                                                         <ItemMenu />
                                                     </div>
@@ -167,7 +214,9 @@ function Search() {
                                             ))}
                                         </div>
                                     ) : (
-                                    <p>No results found</p>
+                                    <div className='w-full flex justify-center items-center'>
+                                        <p>No results found</p>
+                                    </div>
                                     )}
                                 </ScrollArea>
                             </div>
