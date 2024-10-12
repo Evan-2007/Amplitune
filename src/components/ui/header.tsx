@@ -81,7 +81,7 @@ function Search() {
             resultsContainerRef.current?.classList.add('animate-[fadeOut_.001s]')
         }
         setTimeout(() => {
-            setActiveInput(true); //change to false
+            setActiveInput(false); //change to false
         }, 100);
       };
   
@@ -174,6 +174,26 @@ function Search() {
                                                     <div className='w-full bg-border h-[1px] line-clamp-1 px-2'></div>
                                                 </div>
                                             ))}
+                                           
+                                            {results.song && results.song.length > 0 && results.song.map((song, index) => (
+                                                <div className=''>
+                                                    <div className='grid-cols-7 grid col-auto py-2 pl-2'>
+                                                        <button key={index} className='filter-none flex w-full items-center group relative' onClick={() => router.push(`/home/?playing=${song.id}&play=true`)}>
+                                                            <img className='w-11 rounded-md absolute' src={`${process.env.NEXT_PUBLIC_API_URL}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${song.coverArt}`} alt="" />
+                                                            <div className='absolute w-11 rounded-md bg-card/20 z-50 h-11 flex justify-center items-center  group-hover:visible invisible group-hover:opacity-100 opacity-0 transition-all duration-300 ease-in backdrop-blur-[2px]'>
+                                                                <CirclePlay className='w-8 h-8 text-white m-auto' strokeWidth={.8} />
+                                                            </div>
+                                                        </button>
+                                                        <div className='col-span-5 space-y-1 pr-3'>
+                                                            <Link className='text-sm line-clamp-1 hover:underline' href={`/home/?playing=${song.id}&play=true`}>{song.title}</Link>
+                                                            <Link className='text-[11px] line-clamp-1 text-gray-500 hover:underline' href={`/home/?playing=${song.id}&play=true`}>{song.artist} - Song</Link>
+                                                        </div>
+                                                        <ItemMenu />
+                                                    </div>
+                                                    <div className='w-full bg-border h-[1px] line-clamp-1 px-2'></div>
+                                                </div>
+                                            ))}
+
                                             {results.album && results.album.length > 0 && results.album.map((album, index) => (
                                                 album.songCount > 1 ? 
                                                 <div className=''>
@@ -193,24 +213,6 @@ function Search() {
                                                 <div className='w-full bg-border h-[1px] line-clamp-1 px-2'></div>
                                             </div>
                                                 : null
-                                            ))}
-                                            {results.song && results.song.length > 0 && results.song.map((song, index) => (
-                                                <div className=''>
-                                                    <div className='grid-cols-7 grid col-auto py-2 pl-2'>
-                                                        <button key={index} className='filter-none flex w-full items-center group relative' onClick={() => router.push(`/home/?playing=${song.id}&play=true`)}>
-                                                            <img className='w-11 rounded-md absolute' src={`${process.env.NEXT_PUBLIC_API_URL}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${song.coverArt}`} alt="" />
-                                                            <div className='absolute w-11 rounded-md bg-card/20 z-50 h-11 flex justify-center items-center  group-hover:visible invisible group-hover:opacity-100 opacity-0 transition-all duration-300 ease-in backdrop-blur-[2px]'>
-                                                                <CirclePlay className='w-8 h-8 text-white m-auto' strokeWidth={.8} />
-                                                            </div>
-                                                        </button>
-                                                        <div className='col-span-5 space-y-1 pr-3'>
-                                                            <Link className='text-sm line-clamp-1 hover:underline' href={`/home/?playing=${song.id}&play=true`}>{song.title}</Link>
-                                                            <Link className='text-[11px] line-clamp-1 text-gray-500 hover:underline' href={`/home/?playing=${song.id}&play=true`}>{song.artist} - Song</Link>
-                                                        </div>
-                                                        <ItemMenu />
-                                                    </div>
-                                                    <div className='w-full bg-border h-[1px] line-clamp-1 px-2'></div>
-                                                </div>
                                             ))}
                                         </div>
                                     ) : (
