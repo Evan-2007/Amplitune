@@ -2,6 +2,9 @@ import { Song } from './types';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { CrossPlatformStorage } from '@/lib/storage/cross-platform-storage';
 import { debounce } from 'lodash';
+import Queue from '@/assets/queue.svg'
+import LyricsSVG from '@/assets/lyrics.svg'
+import { MessageSquareQuote } from 'lucide-react';
 
 
 
@@ -13,11 +16,14 @@ export default function Lyrics({ songData, audioRef }: { songData: Song, audioRe
 
     const localStorage = new CrossPlatformStorage();
 
+    const [tab , setTab] = useState<'lyrics' | 'queue'>('lyrics');
+
     const [lyrics, setLyrics] = useState<LyricLine[] | null>(null);
     const [currentLine, setCurrentLine] = useState<number>(0);
     const [error, setError] = useState<string | null>(null);
     const [credentials, setCredentials] = useState<{username: string | null, password: string | null, salt: string | null}>({username: null, password: null, salt: null});
     const [isMouseMoving, setIsMouseMoving] = useState<boolean>(false);
+
 
     const lyricsContainerRef = useRef<HTMLDivElement>(null);
 
@@ -140,6 +146,34 @@ export default function Lyrics({ songData, audioRef }: { songData: Song, audioRe
                         )}
                     </button>
                 ))}
+
+
+                    <div className={`bottom-24 w-full flex absolute justify-center items-center transition-all duration-1000 ease-in-out ${isMouseMoving ? 'opacity-100 ' : 'opacity-100'}`}>
+                        <div className={` w-64 h-11 rounded-md transition-all duration-1000 ease-in-out ${isMouseMoving ? 'bg-gray-900/70  backdrop-blur-[5px]' : 'bg-gray-900/0'}`}>
+
+                            <div className={`${isMouseMoving ? 'opacity-100' : 'opacity-0'} absolute transition-all duration-1000 ease-in-out items-center flex align-middle w-full h-full`}>
+                                <div className="p-1 h-full z-50 w-full absolute">
+                                    <div 
+                                        className={`
+                                            z-50 w-32 bg-gray-600 h-9 px-1 rounded-md 
+                                            transition-all duration-500 ease-in-out
+                                            absolute left-0 transform
+                                            ${tab === 'lyrics' ? 'translate-x-0 ml-1' : 'translate-x-full ml-[-4px]'}
+                                        `}
+                                    >
+                                        </div>
+                                    </div>
+                                <div className='w-3/6 z-[60] h-full flex justify-center items-center' onClick={() => setTab('lyrics')}>
+                                    <MessageSquareQuote size={32} className='z-50 pl-1' onClick={() => setTab('lyrics')}/>
+                                </div>
+                                <div className='w-3/6 z-[60] h-full flex justify-center items-center' onClick={() => setTab('queue')}>
+                                    <Queue className=' h-8 w-10 fill-white z-50 pr-1' />
+                                </div>
+                            </div>
+
+                            </div>
+                        </div>
+
             </div>
         </div>
     );
