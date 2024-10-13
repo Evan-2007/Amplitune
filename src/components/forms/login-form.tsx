@@ -89,11 +89,11 @@ function LoginForm() {
       }); 
       const response = await checkAuth.json();
       if (response['subsonic-response'].status === 'ok') {
+        localStorage.setItem('password', hash.toString());
+        localStorage.setItem('salt', salt.toString());
+        localStorage.setItem('username', data.username);
         const serers = await localStorage.getItem('servers'); 
         if (serers) {
-          localStorage.setItem('password', hash.toString());
-          localStorage.setItem('salt', salt.toString());
-          localStorage.setItem('username', data.username);
           const servers = JSON.parse(serers);
           servers.push({
             url: data.url,
