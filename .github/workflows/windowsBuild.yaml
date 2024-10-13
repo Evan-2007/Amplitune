@@ -34,6 +34,8 @@ jobs:
 
             - name: Build
               run: pnpm run build
+              env:
+                GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
             
             - name: publish artifacts
               uses: actions/upload-artifact@v4
