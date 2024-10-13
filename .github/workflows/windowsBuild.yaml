@@ -3,12 +3,12 @@ name: Windows Build x64
 on:
   push:
     branches:
-      - master
-      - develop
+      - main
+      - dev
   pull_request:
     branches:
-      - master
-      - develop
+      - main
+      - dev
 
 jobs:
     build: 
@@ -40,4 +40,4 @@ jobs:
               with:
                 name: build
                 path: dist
-                
+
