@@ -5,6 +5,7 @@ import {Header} from '@/components/ui/header'
 import { useEffect, useState } from 'react'
 import FullScreenPlayer from '@/components/player/full-player'
 import {Song} from '@/components/player/types'
+import { Sidebar } from '@/components/main/sidebar'
 
 export default function HomeLayout({
     children,
@@ -24,9 +25,12 @@ export default function HomeLayout({
       </div>
       <div className='w-full h-screen flex flex-col bg-card absolute'>
         <Header />
-        <div className='w-full h-full pr-4 pl-4 '>
-          <div className='w-full h-full border-border border rounded-xl bg-background '>
-            {children}
+        <div className='w-full h-full flex'>
+          <Sidebar />
+          <div className='w-full h-full pr-4 '>
+            <div className='w-full h-full border-border border rounded-xl bg-background '>
+              {children}
+            </div>
           </div>
         </div>
         <Player audioRef={audioRef} setAudioUrl={setAudioUrl} audioUrl={audioUrl} setFullScreen={setFullScreen} songData={songData} setSongData={setSongData} imageUrl={imageUrl} setImageUrl={setImageUrl}/>

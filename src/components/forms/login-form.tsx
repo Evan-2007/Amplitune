@@ -54,7 +54,8 @@ export function Login() {
 
 const schema = z.object({
     username: z.string(),
-    password: z.string()
+    password: z.string(),
+    url: z.string().url()
 })
 
 function LoginForm() {
@@ -70,7 +71,8 @@ function LoginForm() {
       resolver: zodResolver(schema),
       defaultValues: {
         username: "",
-        password: ""
+        password: "",
+        url: ""
       }
     }
   )
@@ -79,7 +81,7 @@ function LoginForm() {
       setLoading(true);
       const salt = window.crypto.getRandomValues(new Uint32Array(1))[0]
       const hash = md5(data.password + salt);
-      const checkAuth = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/rest/ping.view?u=${data.username}&t=${hash}&s=${salt}&f=json&v=1.13.0&c=myapp`, {
+      const checkAuth = await fetch(`${data.url}/rest/ping.view?u=${data.username}&t=${hash}&s=${salt}&f=json&v=1.13.0&c=myapp`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -87,14 +89,36 @@ function LoginForm() {
       }); 
       const response = await checkAuth.json();
       if (response['subsonic-response'].status === 'ok') {
-        localStorage.setItem('username', data.username);
-        localStorage.setItem('password', hash.toString());
-        localStorage.setItem('salt', salt.toString());
+        const serers = await localStorage.getItem('servers'); 
+        if (serers) {
+          const servers = JSON.parse(serers);
+          servers.push({
+            url: data.url,
+            username: data.username,
+            password: data.password,
+            type: 'navidrome',
+            salt: salt
+          });
+          localStorage.setItem('servers', JSON.stringify(servers));
+        } else {
+          localStorage.setItem('servers', JSON.stringify([{
+            url: data.url,
+            username: data.username,
+            password: data.password,
+            type: 'navidrome',
+            salt: salt
+          }]));
+        }
         console.log(localStorage)
         router.push('/');
+      } else if (response['subsonic-response'].status === 'failed') {
+        setLoginError('Invalid username or password');
+        setError(true);
+      } else {
+        throw new Error('An error occurred');
       }
     } catch (error) {
-      setLoginError('Invalid username or password');
+      setLoginError('Faild to communicate with server');
       setError(true);
       console.error('An error occurred:', error);
     } finally {
@@ -105,7 +129,6 @@ function LoginForm() {
   return (
     <Form {...form} >
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 flex justify-center flex-col">
-        {loginError && <p className="text-red-500 text-center">{loginError}</p>}
         <FormField
           control={form.control}
           name="username"
@@ -115,6 +138,11 @@ function LoginForm() {
           control={form.control}
           name="password"
           render={({ field }) => <FormInput field={field} name="Password" type="password" />}
+        />
+        <FormField
+          control={form.control}
+          name="url"
+          render={({ field }) => <FormInput field={field} name="Url (include http://)" />}
         />
         <div>
           <SubmitButton type='submit' className="mt-4" error={error} loading={loading} errorMessage={loginError}>Login</SubmitButton>

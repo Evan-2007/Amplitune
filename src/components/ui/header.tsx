@@ -64,11 +64,12 @@ function Search() {
     const [activeInput, setActiveInput] = useState(false);
     const [search, setSearch] = useState('');
 
-    const inputRef = useRef(null);
+    const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
     const resultsContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        
       const handleFocus = () => {
         if (document.activeElement === inputRef.current) {
             setActiveInput(true);
@@ -76,19 +77,25 @@ function Search() {
       };
   
       const handleBlur = () => {
-        if (resultsContainerRef.current ) {
+        if (document.activeElement !== inputRef.current && resultsContainerRef.current && resultsContainerRef.current.querySelector(':hover') === null) {
             resultsContainerRef.current?.classList.remove('animate-[fadeIn_.001s]')
             resultsContainerRef.current?.classList.add('animate-[fadeOut_.001s]')
+            console.log(resultsContainerRef.current.querySelector(':hover'))
+            setTimeout(() => {
+                    setActiveInput(true); //false
+            }, 100);
         }
-        setTimeout(() => {
-            setActiveInput(false); //change to false
-        }, 100);
       };
+
+    
+
   
+      document.addEventListener('click', handleBlur, true);
       document.addEventListener('focus', handleFocus, true);
       document.addEventListener('blur', handleBlur, true);
   
       return () => {
+        document.removeEventListener('click', handleBlur, true);
         document.removeEventListener('focus', handleFocus, true);
         document.removeEventListener('blur', handleBlur, true);
       };
@@ -146,7 +153,7 @@ function Search() {
     } , [results])
 
     return (
-        <div className="flex items-center space-x-2 z-10">
+        <div className="flex items-center space-x-2 z-10 overflow-visible">
 
             <div className='flex flex-col justify-center items-center'>
   
@@ -155,8 +162,8 @@ function Search() {
                 {
                     activeInput && (
                         <>
-                            <div className={`h-96 w-96 border-border border rounded-xl mt-5 absolute top-10 z-20 backdrop-blur-sm  duration-1000 ease-in-out animate-[fadeIn_.001s] bg-card/50`} ref={resultsContainerRef}>
-                                <ScrollArea className='h-full w-full relative'>
+                            <div className={`h-96 w-96 border-border border rounded-xl mt-5 absolute top-10 z-20 backdrop-blur-sm  duration-1000 ease-in-out animate-[fadeIn_.001s] bg-card/50 overflow-visible`} ref={resultsContainerRef}>
+                                <ScrollArea className='h-full w-full relative overflow-visible'>
                                     {results !== null ? (
                                         <div className=' h-full flex flex-col rounded-xl'>
                                             {results.artist && results.artist.length > 0 && results.artist.map((artist, index) => (
@@ -196,8 +203,8 @@ function Search() {
 
                                             {results.album && results.album.length > 0 && results.album.map((album, index) => (
                                                 album.songCount > 1 ? 
-                                                <div className=''>
-                                                <div className='grid-cols-7 grid col-auto py-2 pl-2'>
+                                                <div className='overflow-visible'>
+                                                <div className='grid-cols-7 grid col-auto py-2 pl-2 overflow-visible'>
                                                     <button key={index} className='filter-none flex w-full items-center group relative' onClick={() => router.push(`/home/?playing=${album.id}&play=true`)}>
                                                         <img className='w-11 rounded-md absolute' src={`${process.env.NEXT_PUBLIC_API_URL}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${album.coverArt}`} alt="" />
                                                         <div className='absolute w-11 rounded-md bg-card/20 z-50 h-11 flex justify-center items-center  group-hover:visible invisible group-hover:opacity-100 opacity-0 transition-all duration-300 ease-in backdrop-blur-[2px]'>
@@ -208,7 +215,11 @@ function Search() {
                                                         <Link className='text-sm line-clamp-1 hover:underline' href={`/home/?playing=${album.id}&play=true`}>{album.name}</Link>
                                                         <Link className='text-[11px] line-clamp-1 text-gray-500 hover:underline' href={`/home/?playing=${album.id}&play=true`}>{album.artist} - Album</Link>
                                                     </div>
-                                                    <ItemMenu />
+                                                    <ItemMenu >
+                                                        <Item>
+                                                            Add To Queue
+                                                        </Item>
+                                                    </ItemMenu>
                                                 </div>
                                                 <div className='w-full bg-border h-[1px] line-clamp-1 px-2'></div>
                                             </div>
@@ -252,7 +263,7 @@ import {
 
 
 
-function ItemMenu() {
+function ItemMenu({children}: {children?: React.ReactNode}) {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -273,13 +284,23 @@ function ItemMenu() {
     };
 
     return (
-        <div className="flex items-center space-x-2 pr-4 w-24 z-10">
+        <div className="flex items-center space-x-2 pr-4 w-24 z-10  overflow-visible">
             <Ellipsis size={24} onClick={toggleMenu} />
             {isOpen && (
-                <div ref={menuRef} className="absolute">
-                    test
+                <div ref={menuRef} className=" pl-8 z-50 absolute overflow-visible">
+                    {children}
+                    TEstawfafgsdgasg
                 </div>
             )}
+        </div>
+    );
+}
+
+
+function Item({children}: {children?: React.ReactNode}) {
+    return (
+        <div className="flex items-center space-x-2 pr-4 w-24 z-10 overflow-visible absolute">
+            {children}
         </div>
     );
 }
