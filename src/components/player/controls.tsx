@@ -4,6 +4,7 @@ import { Slider } from '@/components/ui/slider';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {Song} from './types'
 import {cn} from '@/lib/utils'
+import { useQueueStore } from '@/lib/queue';
 
 interface ControlsProps {
     songData: Song;
@@ -24,6 +25,9 @@ interface ControlsProps {
     const [currentTime, setCurrentTime] = useState<number>(0);
     const [sliderValue, setSliderValue] = useState<number>(0);
     const [sliderActive, setSliderActive] = useState<boolean>(false);
+
+    const skip = useQueueStore(state => state.skip)
+    const previous = useQueueStore(state => state.playPrevious)
   
     const length: number = songData.duration;
     const timeLeft: number = length - currentTime;
@@ -91,11 +95,15 @@ interface ControlsProps {
           <button onClick={toggleShuffle}>
             <Shuffle color={shuffle ? 'red' : 'currentColor'} strokeWidth={shuffle ? 3 : 2.5} size={20} />
           </button>
-          <ControlButton icon="previous" />
+          <button onClick={() => previous()}>
+            <ControlButton icon="previous" />
+          </button>
           <button onClick={handlePlayPause}>
             {playing ? <PauseIcon /> : <PlayIcon />}
           </button>
-          <ControlButton icon="next" />
+          <button  onClick={() => skip()}>
+            <ControlButton icon="next" onClick={() => skip} />
+          </button>
           <button onClick={cycleRepeat}>
             {repeat === 2 ? <Repeat1 color='red' strokeWidth={2.5} size={24} /> :
              repeat === 1 ? <Repeat strokeWidth={2.5} color='red' size={24} /> :
@@ -134,10 +142,11 @@ interface ControlsProps {
   
   interface ControlButtonProps {
     icon: "previous" | "next";
+    onClick?: () => void;
   }
   
   const ControlButton: React.FC<ControlButtonProps> = ({ icon }) => (
-    <button>
+    <button onClick={() => onclick}>
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-[30px]">
         <path d={icon === "next" ?
           "M5.055 7.06C3.805 6.347 2.25 7.25 2.25 8.69v8.122c0 1.44 1.555 2.343 2.805 1.628L12 14.471v2.34c0 1.44 1.555 2.343 2.805 1.628l7.108-4.061c1.26-.72 1.26-2.536 0-3.256l-7.108-4.061C13.555 6.346 12 7.249 12 8.689v2.34L5.055 7.061Z" :
