@@ -10,13 +10,16 @@ export interface queueStore {
     clearQueue: () => void
     playNext: (track: song) => void
     setCurrentSong: (index: number) => void
+    setRepeat: (repeat: boolean) => void
+    playPrevious: () => void
+    skip: () => void
 }
 
 
 interface queue {
     repeat: boolean
     shuffle: boolean
-    currentSong?: song
+    currentSong?: {track: song, index: number}
     songs: song[]
 }
 
@@ -64,7 +67,46 @@ export const useQueueStore = create<queueStore>((set) => ({
         repeat: false,
         shuffle: false,
         songs: [],
-        currentSong: undefined
+        currentSong: {
+            index: 0,
+            track: {
+                id: '',
+                parent: '',
+                isDir: false,
+                title: '',
+                album: '',
+                artist: '',
+                track: 0,
+                year: 0,
+                coverArt: '',
+                size: 0,
+                contentType: '',
+                suffix: '',
+                duration: 0,
+                bitRate: 0,
+                path: '',
+                playCount: 0,
+                discNumber: 0,
+                created: '',
+                albumId: '',
+                artistId: '',
+                type: '',
+                isVideo: false,
+                played: false,
+                bpm: 0,
+                comment: '',
+                sortName: '',
+                mediaType: '',
+                musicBrainzId: '',
+                genres: [],
+                replayGain: {
+                    trackPeak: 0,
+                    trackGain: 0
+                },
+                channelCount: 0,
+                samplingRate: 0
+            }
+        }
     },
     setQueue: (queue: queue) => set((state) => ({ 
         queue: {
@@ -99,13 +141,59 @@ export const useQueueStore = create<queueStore>((set) => ({
 
 
     setCurrentSong: (index) => set((state) => ({
-        currentSong: {
-            track: state.queue.songs[index],
-            index: index
+        queue: {
+            ...state.queue,
+            currentSong: {
+                track: state.queue.songs[index],
+                index
+            }
         }
+    })),
+
+
+    setRepeat: (repeat) => set((state) => ({
+        queue: {
+            ...state.queue,
+            repeat
+        }
+    })),
+
+    playPrevious: () => set((state) => {
+        console.log('playPrevious')
+        if (state.queue.currentSong) {
+          const currentIndex = state.queue.currentSong.index
+          if (currentIndex > 0) {
+            return {
+              queue: {
+                ...state.queue,
+                currentSong: {
+                  track: state.queue.songs[currentIndex - 1],
+                  index: currentIndex - 1
+                }
+              }
+            }
+          }
+        }
+        return {}
+      }),
+    
+      skip: () => set((state) => {
+        console.log('skip')
+        console.log(state.currentSong)
+        if (state.queue.currentSong) {
+          const currentIndex = state.queue.currentSong.index
+          if (currentIndex < state.queue.songs.length - 1) {
+            return {
+              queue: {
+                ...state.queue,
+                currentSong: {
+                  track: state.queue.songs[currentIndex + 1],
+                  index: currentIndex + 1
+                }
+              }
+            }
+          }
+        }
+        return {}
+      })
     }))
-
-
-
-
-}))
