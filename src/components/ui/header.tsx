@@ -12,8 +12,18 @@ import { Separator } from "@/components/ui/separator"
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {motion } from 'framer-motion'
+import { useQueueStore } from '@/lib/queue'
+
+import {
+    Dropdown,
+    DropdownTrigger,
+    DropdownMenu,
+    DropdownSection,
+    DropdownItem
+  } from "@nextui-org/dropdown";
 
 export function Header() {
+
 
     const localStorage = new CrossPlatformStorage();
 
@@ -56,6 +66,9 @@ function RightMenu() {
 
 
 function Search() {
+
+    
+    const queue = useQueueStore(state => state);
 
     const [results , setResults] = useState<searchResult | null>(null)
 
@@ -195,7 +208,19 @@ function Search() {
                                                             <Link className='text-sm line-clamp-1 hover:underline' href={`/home/?playing=${song.id}&play=true`}>{song.title}</Link>
                                                             <Link className='text-[11px] line-clamp-1 text-gray-500 hover:underline' href={`/home/?playing=${song.id}&play=true`}>{song.artist} - Song</Link>
                                                         </div>
-                                                        <ItemMenu />
+                                                        <Dropdown
+                                                        variant='flat'
+                                                        classNames={{
+                                                            content: "bg-background border-border border rounded-xl backdrop-blur-xl",
+                                                        }}
+                                                        >
+                                                            <DropdownTrigger>
+                                                                <Ellipsis size={24} />
+                                                            </DropdownTrigger>
+                                                            <DropdownMenu  className='text-sm'>
+                                                                <DropdownItem onClick={() => queue.addToQueue(song)}>Add To Queue</DropdownItem>
+                                                            </DropdownMenu>
+                                                        </Dropdown>
                                                     </div>
                                                     <div className='w-full bg-border h-[1px] line-clamp-1 px-2'></div>
                                                 </div>
@@ -246,21 +271,6 @@ function Search() {
 import {Ellipsis} from 'lucide-react'
 
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuPortal,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-
 
 
 function ItemMenu({children}: {children?: React.ReactNode}) {
