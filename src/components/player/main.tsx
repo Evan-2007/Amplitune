@@ -21,6 +21,9 @@ import {
 import {CrossPlatformStorage} from "@/lib/storage/cross-platform-storage";
 import FullScreenPlayer from "./full-player";
 import Controls from "./controls";
+import {useQueueStore} from "@/lib/queue";
+import {usePlayerStore} from "@/lib/state";
+
 
 const localStorage = new CrossPlatformStorage();
 
@@ -30,7 +33,6 @@ function SearchParamsWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export function Player({
-    audioRef,
     setAudioUrl,
     audioUrl,
     setFullScreen,
@@ -39,7 +41,6 @@ export function Player({
     imageUrl,
     setImageUrl
 }: {
-    audioRef: React.RefObject<HTMLAudioElement>,
     setAudioUrl: (url: string) => void,
     audioUrl: string,
     setFullScreen: (state: boolean) => void,
@@ -51,14 +52,13 @@ export function Player({
     return (
         <Suspense fallback={<div>Loading...</div>}>
             <SearchParamsWrapper>
-                <PlayerContent audioRef={audioRef} setAudioUrl={setAudioUrl} audioUrl={audioUrl} setFullScreen={setFullScreen} songData={songData} setSongData={setSongData} imageUrl={imageUrl} setImageUrl={setImageUrl}/>
+                <PlayerContent setAudioUrl={setAudioUrl} audioUrl={audioUrl} setFullScreen={setFullScreen} songData={songData} setSongData={setSongData} imageUrl={imageUrl} setImageUrl={setImageUrl}/>
             </SearchParamsWrapper>
         </Suspense>
     )
 }
 
 export function PlayerContent({
-    audioRef,
     setAudioUrl,
     audioUrl,
     setFullScreen,
@@ -67,7 +67,6 @@ export function PlayerContent({
     imageUrl,
     setImageUrl
 }: {
-    audioRef: React.RefObject<HTMLAudioElement>,
     setAudioUrl: (url: string) => void,
     audioUrl: string, 
     setFullScreen: (state: boolean) => void,
@@ -78,6 +77,9 @@ export function PlayerContent({
 }) {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL
 
+    const setCurrentSong = useQueueStore((state) => state.setCurrentSong);
+    const addToQueue = useQueueStore((state) => state.addToQueue);
+    const queue = useQueueStore((state) => state.queue);
     const [isClient, setIsClient] = useState(false)
     const router = useRouter();
     let searchParams = useSearchParams();
@@ -95,6 +97,9 @@ export function PlayerContent({
         const salt = await localStorage.getItem('salt');
         setCredentials({username, password, salt});
     }
+
+
+    const audioRef = useRef<HTMLAudioElement>(null);
 
     useEffect(() => {
         setIsClient(true);
@@ -123,7 +128,7 @@ export function PlayerContent({
         }
         fetchSongData();
     }
-
+    const currentSong = useQueueStore(state => state.queue.currentSong)
     async function fetchSongData() {
         try {            
             const fetchSongData = await fetch(`${apiUrl}/rest/getSong?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${currentlyPlaying}`, {
@@ -138,6 +143,14 @@ export function PlayerContent({
                     setSongData(response['subsonic-response'].song);
                     setImageUrl(`${apiUrl}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${response['subsonic-response'].song.coverArt}`);
                     setAudioUrl(`${apiUrl}/rest/stream?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${currentlyPlaying}`);
+                    addToQueue(response['subsonic-response'].song);
+                    if (queue.songs.length === 1) {
+                        console.log((currentSong?.index ?? 0) + 1)
+                        setCurrentSong((currentSong?.index ?? 0) + 1);
+                    } else {
+                        console.log('set queue to 0')
+                        setCurrentSong(0);
+                    }
                 }
             }
             
@@ -145,6 +158,41 @@ export function PlayerContent({
             console.error(error);
         }   
     }
+
+
+
+    const songs = useQueueStore((state) => state.queue.songs);
+
+    useEffect(() => {
+        if (audioRef.current) {
+            audioRef.current.onended = () => {
+                console.log('Song ended');
+                if (songs.length > 0) {
+                    const currentIndex = songs.findIndex(song => song.id === currentSong?.track?.id);
+                    console.log('Current index:', currentIndex);
+                    if (currentIndex === -1 || currentIndex === songs.length - 1) {
+                        console.log('Moving to first song');
+                        setCurrentSong(0);
+                    } else {
+                        console.log('Moving to next song');
+                        setCurrentSong(currentIndex + 1);
+                    }
+                } else {
+                    console.log('No songs in queue');
+                }
+            }
+        }
+    }, [audioRef.current, songs, currentSong, setCurrentSong]);
+
+    useEffect(() => {
+        if (currentSong && currentSong.track && currentSong.track.id) {
+          setAudioUrl(`${apiUrl}/rest/stream?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${currentSong.track.id}`);
+          console.log(currentSong);
+        } else {
+          console.log('Current song or track ID is not available');
+        }
+      }, [currentSong, credentials, apiUrl]);
+
 
     useEffect(() => {
         if (audioRef.current) {
@@ -222,7 +270,7 @@ export function PlayerContent({
             <div>
                 <RightControls audioRef={audioRef} />
             </div>
-                
+            <audio ref={audioRef} src={audioUrl} />
         </div>
     );
 }
