@@ -5,6 +5,7 @@ import { debounce } from 'lodash';
 import Queue from '@/assets/queue.svg'
 import LyricsSVG from '@/assets/lyrics.svg'
 import { MessageSquareQuote } from 'lucide-react';
+import {useQueueStore} from '@/lib/queue'
 
 
 
@@ -13,6 +14,8 @@ export default function Lyrics({ songData, audioRef }: { songData: Song, audioRe
         start: number,
         value: string
     }
+
+    const currentQueue = useQueueStore((state) => state.queue);
 
     const localStorage = new CrossPlatformStorage();
 
@@ -113,19 +116,23 @@ export default function Lyrics({ songData, audioRef }: { songData: Song, audioRe
         }
     }
 
+
+    const currentlyPlaying = useQueueStore(state => state.queue.currentSong)
+
     if (error) return <p className="text-red-500">{error}</p>;
     if (!lyrics) return <p className="text-gray-500">No Lyrics Found</p>;
+
 
     return (
         <div className="w-full h-full overflow-hidden relative flex justify-center items-center">
             <div 
                 ref={lyricsContainerRef}
-                className="h-full overflow-y-auto py-[50vh] flex flex-col items-center group mr-10 no-scrollbar"
+                className="h-full overflow-y-auto py-[50vh] flex flex-col items-center group mr-10 no-scrollbar w-full"
                 style={{ scrollBehavior: 'smooth' }}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={() => setIsMouseMoving(false)}
             >
-                {lyrics.map((line, index) => (
+                {tab === 'lyrics' && lyrics.map((line, index) => (
                     <button key={index} onClick={() => handleLyricClick(index)}>
                         <p
                         data-line={index}
@@ -146,6 +153,32 @@ export default function Lyrics({ songData, audioRef }: { songData: Song, audioRe
                         )}
                     </button>
                 ))}
+
+                {tab === 'queue' && (
+                    <div className="w-full h-full flex justify-between flex-col border-border border">
+                        <div className='absolute top-24 flex justify-between'>
+                            <h1 className='text-xl font-bold '>Up Next</h1>
+                            <div>
+                                <h1>Clear</h1>
+                            </div>
+                        </div>
+                        <div>
+                            <h1>Queue</h1>
+                            <h1>{currentlyPlaying?.index}</h1>
+                            {currentQueue.songs.map((song, index) => (
+                                <div key={index} className='flex justify-between items-center'>
+                                    <div>
+                                        <h1>{song.title}</h1>
+                                        <h2>{song.artist}</h2>
+                                    </div>
+                                    <div>
+                                        <h1>Remove</h1>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
 
                     <div className={`bottom-24 w-full flex absolute justify-center items-center transition-all duration-1000 ease-in-out ${isMouseMoving ? 'opacity-100 ' : 'opacity-100'}`}>
