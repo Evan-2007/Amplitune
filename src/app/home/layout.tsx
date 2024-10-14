@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import FullScreenPlayer from '@/components/player/full-player'
 import {Song} from '@/components/player/types'
 import { Sidebar } from '@/components/main/sidebar'
+import {usePlayerStore} from "@/lib/state"
 
 export default function HomeLayout({
     children,
@@ -17,7 +18,9 @@ export default function HomeLayout({
     const [fullScreen, setFullScreen] = useState(false)
     const [songData, setSongData] = useState<Song | null>(null);
     const [imageUrl, setImageUrl] = useState<string | null>(null);
-    const audioRef = React.createRef<HTMLAudioElement>()
+
+    const audioRef = usePlayerStore((state) => state.ref)
+
     return(
       <div className='w-screen h-full'>
       <div className='absolute'>
@@ -33,8 +36,7 @@ export default function HomeLayout({
             </div>
           </div>
         </div>
-        <Player audioRef={audioRef} setAudioUrl={setAudioUrl} audioUrl={audioUrl} setFullScreen={setFullScreen} songData={songData} setSongData={setSongData} imageUrl={imageUrl} setImageUrl={setImageUrl}/>
-        <audio ref={audioRef} src={audioUrl} />
+        <Player setAudioUrl={setAudioUrl} audioUrl={audioUrl} setFullScreen={setFullScreen} songData={songData} setSongData={setSongData} imageUrl={imageUrl} setImageUrl={setImageUrl}/>
       </div>
 
       </div>
