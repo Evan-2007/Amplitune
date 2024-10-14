@@ -4,7 +4,7 @@ A Navidrome/Subsonic frontend built using NextJS and Electron designed for both 
 
 Amplitune is still in development and has alot of broken/missing fetures
 
-Demo can be found here [here](https://amplitune.clfy.evanc.dev) 
+Demo can be found [here](https://amplitune.clfy.evanc.dev){:target="_blank"}
 \
 username: demo
 \
