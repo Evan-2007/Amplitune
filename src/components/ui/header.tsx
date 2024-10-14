@@ -209,7 +209,6 @@ function Search() {
                                                             <Link className='text-[11px] line-clamp-1 text-gray-500 hover:underline' href={`/home/?playing=${song.id}&play=true`}>{song.artist} - Song</Link>
                                                         </div>
                                                         <Dropdown
-                                                        variant='flat'
                                                         classNames={{
                                                             content: "bg-background border-border border rounded-xl backdrop-blur-xl",
                                                         }}
