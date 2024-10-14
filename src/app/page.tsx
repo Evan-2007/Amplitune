@@ -37,7 +37,7 @@ export default function Home() {
         </Button>
         <Button asChild>
           <Link href="/home">
-            Register
+            Home
           </Link>
           </Button>
           <Button onClick={handleAcceleration}>
