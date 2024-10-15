@@ -263,7 +263,7 @@ export function PlayerContent({
             <div>
                 <RightControls audioRef={audioRef} />
             </div>
-            <audio ref={audioRef} src={audioUrl} />
+            <audio ref={audioRef} src={audioUrl ?? undefined} />
         </div>
     );
 }

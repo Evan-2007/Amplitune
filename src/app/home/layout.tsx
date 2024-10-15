@@ -25,7 +25,7 @@ export default function HomeLayout({
     return(
       <div className='w-screen h-full'>
       <div className='absolute'>
-      {fullScreen && <FullScreenPlayer songData={songData} imageUrl={imageUrl} audioRef={audioRef} setFullScreen={setFullScreen} />}
+      {fullScreen && <FullScreenPlayer audioRef={audioRef} setFullScreen={setFullScreen} />}
       </div>
       <div className='w-full h-screen flex flex-col bg-card absolute'>
         <Header />
