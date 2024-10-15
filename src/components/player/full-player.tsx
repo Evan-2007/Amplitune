@@ -11,18 +11,25 @@ import { debounce } from 'lodash'
 import { useCallback } from 'react'
 import Lyrics from './lyrics'
 import Left from './full-left'
+import {useQueueStore} from '@/lib/queue'
+
 
  
 import {useRef} from 'react'
 
 export default function FullScreenPlayer(
-    {songData, imageUrl, audioRef, setFullScreen }: {
-        songData: Song | null,
-        imageUrl: string | null,
+    { audioRef, setFullScreen }: {
         audioRef: React.RefObject<HTMLAudioElement>,
         setFullScreen: (state: boolean) => void
     }
 ) {
+
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
+    const [credentials, setCredentials] = useState<{ username: string; password: string; salt: string } | null>(null);
+    
+    const storage = new CrossPlatformStorage();
+
+    const songData = useQueueStore((state) => state.queue.currentSong?.track);
 
     const container = useRef<HTMLDivElement>(null)
     function handleClose() {
@@ -45,6 +52,29 @@ export default function FullScreenPlayer(
 
     const [colors, setColors] = useState<FinalColor[]>([])
 
+
+    useEffect(() => {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+        if (songData && credentials) {
+            setImageUrl(`${apiUrl}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${songData.coverArt}`);
+        }
+
+    }, [songData ,credentials]);
+
+    useEffect(() => {
+        getCredentials();
+    }, []);
+
+    async function getCredentials() {
+        const username = await storage.getItem('username');
+        const password = await storage.getItem('password');
+        const salt = await storage.getItem('salt');
+        if (!username || !password || !salt) {
+            return null;
+        }
+        setCredentials({ username, password, salt });
+    }
 
 
     useEffect(() => {
@@ -96,9 +126,9 @@ export default function FullScreenPlayer(
         }
         >
             <div className='w-full h-full flex z-50 absolute'>
-                <Left songData={songData as Song} audioRef={audioRef} imageUrl={imageUrl as string} />
+                <Left audioRef={audioRef} />
                 <div className="w-1/2 h-full flex flex-col justify-center items-center">
-                {songData && <Lyrics songData={songData} audioRef={audioRef} />}
+                {songData && <Lyrics audioRef={audioRef} />}
                 </div>
             </div>
             <div className='w-12 h-12 bg-slate-700 absolute top-4 right-4 cursor-pointer z-50 rounded-full flex justify-center items-center border-border border opacity-40 hover:opacity-90 transition-all duration-300' onClick={() => handleClose()}>

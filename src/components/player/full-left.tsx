@@ -3,10 +3,18 @@ import {Song} from './types'
 import Controls from './controls'
 import { useEffect, useState, useCallback } from 'react'
 import { debounce } from 'lodash'
+import {useQueueStore} from '@/lib/queue'
+import { CrossPlatformStorage } from '@/lib/storage/cross-platform-storage'
 
-export default function Left({ songData, audioRef, imageUrl }: { songData: Song, audioRef: React.RefObject<HTMLAudioElement>, imageUrl: string }) {
+export default function Left({ audioRef }: { audioRef: React.RefObject<HTMLAudioElement> }) {
 
     const [isMouseMoving, setIsMouseMoving] = useState<boolean>(false);
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
+    const [credentials, setCredentials] = useState<{ username: string; password: string; salt: string } | null>(null);
+
+    const songData = useQueueStore((state) => state.queue.currentSong?.track);
+
+    const storage = new CrossPlatformStorage();
 
     const debouncedMouseStop = useCallback(
         debounce(() => {
@@ -14,6 +22,30 @@ export default function Left({ songData, audioRef, imageUrl }: { songData: Song,
         }, 2000),
         []
     );
+
+    useEffect(() => {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+        if (songData && credentials) {
+            setImageUrl(`${apiUrl}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${songData.coverArt}`);
+        }
+
+    }, [songData ,credentials]);
+
+    useEffect(() => {
+        getCredentials();
+    }, []);
+
+    async function getCredentials() {
+        const username = await storage.getItem('username');
+        const password = await storage.getItem('password');
+        const salt = await storage.getItem('salt');
+        if (!username || !password || !salt) {
+            return null;
+        }
+        setCredentials({ username, password, salt });
+    }
+    
 
     const handleMouseMove = useCallback(() => {
         setIsMouseMoving(true);

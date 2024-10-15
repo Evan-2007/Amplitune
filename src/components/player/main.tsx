@@ -23,6 +23,7 @@ import FullScreenPlayer from "./full-player";
 import Controls from "./controls";
 import {useQueueStore} from "@/lib/queue";
 import {usePlayerStore} from "@/lib/state";
+import Image from 'next/image';
 
 
 const localStorage = new CrossPlatformStorage();
@@ -33,18 +34,11 @@ function SearchParamsWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export function Player({
-    setAudioUrl,
-    audioUrl,
     setFullScreen,
-    songData,
-    setSongData,
-    imageUrl,
-    setImageUrl
 }: {
     setAudioUrl: (url: string) => void,
     audioUrl: string,
     setFullScreen: (state: boolean) => void,
-    songData: Song | null,
     setSongData: (song: Song) => void,
     imageUrl: string | null,
     setImageUrl: (url: string) => void
@@ -52,28 +46,16 @@ export function Player({
     return (
         <Suspense fallback={<div>Loading...</div>}>
             <SearchParamsWrapper>
-                <PlayerContent setAudioUrl={setAudioUrl} audioUrl={audioUrl} setFullScreen={setFullScreen} songData={songData} setSongData={setSongData} imageUrl={imageUrl} setImageUrl={setImageUrl}/>
+                <PlayerContent setFullScreen={setFullScreen} />
             </SearchParamsWrapper>
         </Suspense>
     )
 }
 
 export function PlayerContent({
-    setAudioUrl,
-    audioUrl,
     setFullScreen,
-    songData,
-    setSongData,
-    imageUrl,
-    setImageUrl
 }: {
-    setAudioUrl: (url: string) => void,
-    audioUrl: string, 
     setFullScreen: (state: boolean) => void,
-    songData: Song | null,
-    setSongData: (song: Song) => void,
-    imageUrl: string | null,
-    setImageUrl: (url: string) => void
 }) {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL
 
@@ -83,9 +65,13 @@ export function PlayerContent({
     const [isClient, setIsClient] = useState(false)
     const router = useRouter();
     let searchParams = useSearchParams();
+    const songData = useQueueStore((state) => state.queue.currentSong?.track);
 
     const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
     const [credentials, setCredentials] = useState<{username: string | null, password: string | null, salt: string | null}>({username: null, password: null, salt: null});
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
+    const [audioUrl, setAudioUrl] = useState<string | null>(null);
+
 
     useEffect (() => {
         getCredentials();
@@ -98,9 +84,17 @@ export function PlayerContent({
         setCredentials({username, password, salt});
     }
 
+    const setRef = usePlayerStore((state) => state.setRef);
+
+
+    
+
 
     const audioRef = useRef<HTMLAudioElement>(null);
-
+    useEffect(() => {
+        setRef(audioRef);
+    
+    }, [audioRef.current]);
     useEffect(() => {
         setIsClient(true);
         const initializePlayer = async () => {
@@ -140,7 +134,6 @@ export function PlayerContent({
             if (fetchSongData.status === 200) {
                 const response = await fetchSongData.json();
                 if (response['subsonic-response'].status === 'ok') {
-                    setSongData(response['subsonic-response'].song);
                     setImageUrl(`${apiUrl}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${response['subsonic-response'].song.coverArt}`);
                     setAudioUrl(`${apiUrl}/rest/stream?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${currentlyPlaying}`);
                     addToQueue(response['subsonic-response'].song);
@@ -187,6 +180,7 @@ export function PlayerContent({
     useEffect(() => {
         if (currentSong && currentSong.track && currentSong.track.id) {
           setAudioUrl(`${apiUrl}/rest/stream?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${currentSong.track.id}`);
+          setImageUrl(`${apiUrl}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${currentSong.track.coverArt}`);
           console.log(currentSong);
         } else {
           console.log('Current song or track ID is not available');
@@ -236,8 +230,7 @@ export function PlayerContent({
                             imageUrl ? 
                             <img 
                             src={imageUrl} 
-                            alt="Album Cover" className='h-full rounded-lg group-hover:blur-xs transition-all duration-700' 
-                            />
+                            alt="Album Cover" className='h-full rounded-lg group-hover:blur-xs transition-all duration-700'                             />
                             :
                             <div  className='h-full rounded-lg aspect-square bg-background group-hover:blur-xs transition-all duration-700'></div>
                         }

@@ -8,6 +8,7 @@ import {Song} from '@/components/player/types'
 import { Sidebar } from '@/components/main/sidebar'
 import {usePlayerStore} from "@/lib/state"
 
+
 export default function HomeLayout({
     children,
   }: {
@@ -36,7 +37,7 @@ export default function HomeLayout({
             </div>
           </div>
         </div>
-        <Player setAudioUrl={setAudioUrl} audioUrl={audioUrl} setFullScreen={setFullScreen} songData={songData} setSongData={setSongData} imageUrl={imageUrl} setImageUrl={setImageUrl}/>
+        <Player setAudioUrl={setAudioUrl} audioUrl={audioUrl} setFullScreen={setFullScreen} setSongData={setSongData} imageUrl={imageUrl} setImageUrl={setImageUrl}/>
       </div>
 
       </div>

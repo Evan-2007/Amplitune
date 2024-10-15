@@ -19,7 +19,7 @@ export interface queueStore {
 interface queue {
     repeat: boolean
     shuffle: boolean
-    currentSong?: {track: song, index: number}
+    currentSong: {track: song, index: number}
     songs: song[]
 }
 

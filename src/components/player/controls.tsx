@@ -18,25 +18,28 @@ interface ControlsProps {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
   
-  const Controls: React.FC<ControlsProps> = ({ songData, audioRef, className }) => {
+  const Controls: React.FC<ControlsProps> = ({audioRef, className }) => {
     const [playing, setPlaying] = useState<boolean>(false);
     const [repeat, setRepeat] = useState<number>(0);
     const [shuffle, setShuffle] = useState<boolean>(false);
     const [currentTime, setCurrentTime] = useState<number>(0);
     const [sliderValue, setSliderValue] = useState<number>(0);
     const [sliderActive, setSliderActive] = useState<boolean>(false);
+    const [length, setLength] = useState<number>(0);
+    const [timeLeft, setTimeLeft] = useState<number>(0);
 
     const skip = useQueueStore(state => state.skip)
     const previous = useQueueStore(state => state.playPrevious)
-  
-    const length: number = songData.duration;
-    const timeLeft: number = length - currentTime;
-  
+
+    const songData = useQueueStore(state => state.currentSong?.track)
+
     const timeLeftString: string = `-${formatTime(timeLeft)}`;
     const sliderTimestamp: string = formatTime((length * sliderValue) / 1000);
   
     const updateTime = useCallback(() => {
       if (audioRef.current) {
+        setLength(audioRef.current.duration);
+        setTimeLeft(audioRef.current.duration - audioRef.current.currentTime);
         setCurrentTime(audioRef.current.currentTime);
       }
     }, [audioRef]);

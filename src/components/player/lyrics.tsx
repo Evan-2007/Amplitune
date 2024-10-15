@@ -9,7 +9,7 @@ import {useQueueStore} from '@/lib/queue'
 
 
 
-export default function Lyrics({ songData, audioRef }: { songData: Song, audioRef: React.RefObject<HTMLAudioElement> }) {
+export default function Lyrics({ audioRef }: { audioRef: React.RefObject<HTMLAudioElement> }) {
     interface LyricLine {
         start: number,
         value: string
@@ -29,6 +29,8 @@ export default function Lyrics({ songData, audioRef }: { songData: Song, audioRe
 
 
     const lyricsContainerRef = useRef<HTMLDivElement>(null);
+
+    const songData = useQueueStore(state => state.queue.currentSong?.track)
 
     useEffect(() => {
         getCredentials();
@@ -55,6 +57,8 @@ export default function Lyrics({ songData, audioRef }: { songData: Song, audioRe
     useEffect(() => {
         if (credentials.username && credentials.password && credentials.salt) {
             fetchLyrics();
+            //scroll to top of lyrics
+            setCurrentLine(0);
         }
     }, [songData, credentials]);
 
@@ -91,6 +95,7 @@ export default function Lyrics({ songData, audioRef }: { songData: Song, audioRe
     }
 
     async function fetchLyrics() {
+        if (!songData) return;
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/rest/getLyricsBySongId.view?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${songData.id}`);
             const data = await response.json();

@@ -47,6 +47,8 @@ export const usePlayerStore = create<playerStore>((set) => ({
     setVolume: (volume) => set({ volume }),
 
     ref: { current: null },
-    setRef: (ref) => set({ ref })
+    setRef: (ref) => set(
+        playerStore => ({ ...playerStore, ref }
+    ))
 
 }))
