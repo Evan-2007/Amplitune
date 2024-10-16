@@ -6,6 +6,16 @@ import Queue from '@/assets/queue.svg'
 import LyricsSVG from '@/assets/lyrics.svg'
 import { MessageSquareQuote } from 'lucide-react';
 import {useQueueStore} from '@/lib/queue'
+import { ScrollArea } from '../ui/scroll-area';
+
+import {Ellipsis} from 'lucide-react'
+import {
+    Dropdown,
+    DropdownTrigger,
+    DropdownMenu,
+    DropdownSection,
+    DropdownItem
+  } from "@nextui-org/dropdown";
 
 
 
@@ -61,6 +71,18 @@ export default function Lyrics({ audioRef }: { audioRef: React.RefObject<HTMLAud
             setCurrentLine(0);
         }
     }, [songData, credentials]);
+
+    useEffect (() => {
+        if (lyricsContainerRef.current) {
+            const container = lyricsContainerRef.current;
+            const currentLineElement = container.querySelector(`[data-line="${currentLine}"]`);
+            if (currentLineElement) {
+                currentLineElement.scrollIntoView({
+                    block: 'center',
+                });
+            }
+        }
+    } , [tab])
 
     useEffect(() => {
         if (lyricsContainerRef.current && !isMouseMoving) {
@@ -142,7 +164,7 @@ export default function Lyrics({ audioRef }: { audioRef: React.RefObject<HTMLAud
                         <p
                         data-line={index}
                         className={`
-                            text-center transition-all duration-1000 ease-in-out text-6xl text-wrap z-50 font-bold pb-12 px-16 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] 
+                            text-center transition-all duration-1000 ease-in-out text-6xl text-wrap z-50 font-bold pb-12 px-16 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] animate-[fade-in] 
                             ${index === currentLine ? 'text-white scale-110  pb-10 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]' : index > currentLine && !isMouseMoving ? 'text-gray-400 scale-[80%] blur-[7px]': index > currentLine && isMouseMoving ? "text-gray-400 scale-[80%] blur-0" : isMouseMoving ? 'group-hover:scale-[80%] group-hover:opacity-100' : 'text-gray-400 opacity-0 blur-[7px] transition-all duration-1000' }
                         `}
                         >
@@ -160,29 +182,7 @@ export default function Lyrics({ audioRef }: { audioRef: React.RefObject<HTMLAud
                 ))}
 
                 {tab === 'queue' && (
-                    <div className="w-full h-full flex justify-between flex-col border-border border">
-                        <div className='absolute top-24 flex justify-between'>
-                            <h1 className='text-xl font-bold '>Up Next</h1>
-                            <div>
-                                <h1>Clear</h1>
-                            </div>
-                        </div>
-                        <div>
-                            <h1>Queue</h1>
-                            <h1>{currentlyPlaying?.index}</h1>
-                            {currentQueue.songs.map((song, index) => (
-                                <div key={index} className='flex justify-between items-center'>
-                                    <div>
-                                        <h1>{song.title}</h1>
-                                        <h2>{song.artist}</h2>
-                                    </div>
-                                    <div>
-                                        <h1>Remove</h1>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                    <QueueList isMouseMoving={isMouseMoving}/>
                 )}
 
 
@@ -215,4 +215,122 @@ export default function Lyrics({ audioRef }: { audioRef: React.RefObject<HTMLAud
             </div>
         </div>
     );
+}
+
+
+
+function QueueList({ isMouseMoving }: { isMouseMoving: boolean } ) {
+
+    const currentlyPlaying = useQueueStore(state => state.queue.currentSong)
+    const queue = useQueueStore(state => state.queue)
+    const [credentials, setCredentials] = useState<{username: string | null, password: string | null, salt: string | null}>({username: null, password: null, salt: null});
+
+    const localStorage = new CrossPlatformStorage();
+    const setSong = useQueueStore(state => state.setCurrentSong)
+
+
+
+    useEffect(() => {
+        getCredentials();
+
+    }, [queue])
+
+    async function getCredentials() {
+        const username = await localStorage.getItem('username');
+        const password = await localStorage.getItem('password');
+        const salt = await localStorage.getItem('salt');
+        setCredentials({username, password, salt});
+    }
+
+    return (
+        <div className={`w-9/12 h-[75vh] flex flex-col animate-[fade-in]  top-24 absolute backdrop-opacity-0 transition-all duration-700 ${isMouseMoving && 'bg-card/60 backdrop-opacity-100 backdrop-blur-md'} p-10 rounded-2xl`}>
+        <div className=' top-24 flex justify-between '>
+        <div></div>
+            <div>
+                <h1>Clear</h1>
+            </div>
+        </div>
+        <div className='mt-8 mb-2 mr-10 text-2xl font-bold'>
+            Previous
+        </div>
+        <div className='space-y-2'>
+            {queue.songs.map((song, index) => (
+                <>
+                    {index < queue.currentSong.index && (
+                        <div className='flex justify-between'>
+                            <div className='flex space-x-4'>
+                                <img src={`${process.env.NEXT_PUBLIC_API_URL}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${song.coverArt}`} alt="cover art" className="w-12 h-12 rounded-md" onClick={() => setSong(index)}/>
+                                <div>
+                                    <h1>{song.title}</h1>
+                                    <h1>{song.artist} - {song.album}</h1>
+                                </div>
+                            </div>
+                            <div className='flex justify-center items-center'>
+                                <DropdownComponent index={index} song={song}/>
+                            </div>
+                        </div>
+                    )}
+                </>
+            ))}
+        </div>
+        <div>
+            <h1 className="mr-10 text-2xl font-bold mt-8 mb-2">Playing</h1>
+            <div className='flex justify-between'>
+                <div className='flex space-x-4'>
+                    <img src={`${process.env.NEXT_PUBLIC_API_URL}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${currentlyPlaying?.track.coverArt}`} alt="cover art" className="w-12 h-12 rounded-md"/>
+                    <div>
+                        <h1>{currentlyPlaying?.track.title}</h1>
+                        <h1>{currentlyPlaying?.track.artist} - {currentlyPlaying?.track.album}</h1>
+                    </div>
+                </div>
+                <div className='flex justify-center items-center'>
+                    <DropdownComponent index={queue.currentSong.index} song={currentlyPlaying?.track}/>
+                </div>
+            </div>
+        </div>
+        <div className='mt-8 mb-2 mr-10 text-2xl font-bold'>
+            Up Next
+        </div>
+            <div className='space-y-3'>
+                {queue.songs.map((song, index) => (
+                    <>
+                        {index > queue.currentSong.index && (
+                            <div className='flex justify-between'>
+                                <div className='flex space-x-4'>
+                                    <img src={`${process.env.NEXT_PUBLIC_API_URL}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${song.coverArt}`} alt="cover art" className="w-12 h-12 rounded-md" onClick={() => setSong(index)}/>
+                                    <div>
+                                        <h1>{song.title}</h1>
+                                        <h1>{song.artist} - {song.album}</h1>
+                                    </div>
+                                </div>
+                                <div className='flex justify-center items-center'>
+                                    <DropdownComponent index={index} song={song}/>
+                                </div>
+                            </div>
+                        )}
+                    </>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function DropdownComponent({index , song}: {index: number, song: Song}) {
+
+    const removeFromQueue = useQueueStore(state => state.removeFromQueue)
+
+    return (
+        <Dropdown
+        classNames={{
+            content: "bg-background border-border border rounded-xl backdrop-blur-xl",
+        }}
+        >
+            <DropdownTrigger>
+                <Ellipsis size={24} />
+            </DropdownTrigger>
+            <DropdownMenu  className='text-sm'>
+                <DropdownItem onClick={() => removeFromQueue(index)}>Remove from Queue</DropdownItem>
+            </DropdownMenu>
+        </Dropdown>
+    )
 }
