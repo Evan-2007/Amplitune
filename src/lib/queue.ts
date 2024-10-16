@@ -3,7 +3,6 @@ import { create } from 'zustand'
 
 export interface queueStore {
     queue: queue
-    setQueue: (queue: queue) => void
     addToQueue: (track: song) => void
     currentSong?: {track: song, index: number}
     removeFromQueue: (index: number) => void
@@ -13,6 +12,8 @@ export interface queueStore {
     setRepeat: (repeat: boolean) => void
     playPrevious: () => void
     skip: () => void
+    shuffle: () => void
+    setQueue: (songs: song[], shuffle: boolean, clearQueue: boolean) => void
 }
 
 
@@ -21,9 +22,11 @@ interface queue {
     shuffle: boolean
     currentSong: {track: song, index: number}
     songs: song[]
+    shuffledSongs: song[]
 }
 
 interface song {
+    nonShuffledIndex?: number;
     id: string;
     parent: string;
     isDir: boolean;
@@ -67,6 +70,7 @@ export const useQueueStore = create<queueStore>((set) => ({
         repeat: false,
         shuffle: false,
         songs: [],
+        shuffledSongs: [],
         currentSong: {
             index: 0,
             track: {
@@ -108,12 +112,6 @@ export const useQueueStore = create<queueStore>((set) => ({
             }
         }
     },
-    setQueue: (queue: queue) => set((state) => ({ 
-        queue: {
-            ...state.queue,
-            ...queue,
-        }
-     })),
     addToQueue: (track) => set((state) => ({
         queue: {
             ...state.queue,
@@ -135,7 +133,11 @@ export const useQueueStore = create<queueStore>((set) => ({
     playNext: (track) => set((state) => ({
         queue: {
             ...state.queue,
-            songs: [track, ...state.queue.songs]
+            songs: [
+                ...state.queue.songs.slice(0, state.queue.currentSong.index + 1),
+                track,
+                ...state.queue.songs.slice(state.queue.currentSong.index + 1)
+            ]
         }
     })),
 
@@ -195,5 +197,33 @@ export const useQueueStore = create<queueStore>((set) => ({
           }
         }
         return {}
+      }),
+
+      shuffle: () => set((state) => {
+        console.log('shuffle')
+        if (state.queue.shuffle) {
+          return {
+            queue: {
+              ...state.queue,
+              shuffledSongs: state.queue.songs.sort(() => Math.random() - 0.5)
+            }
+          }
+        }
+        return {}
+      }), 
+
+      setQueue: (songs, shuffle, clearQueue) => set((state) => {
+        console.log('setQueue')
+        return {
+          queue: {
+            ...state.queue,
+            currentSong: clearQueue ? {
+              track: songs[0],
+              index: 0
+            } : state.queue.currentSong,
+            songs: clearQueue ? songs : [...state.queue.songs, ...songs],
+            shuffledSongs: shuffle ? songs.sort(() => Math.random() - 0.5) : []
+          }
+        }
       })
     }))

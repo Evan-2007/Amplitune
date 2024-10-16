@@ -123,6 +123,7 @@ export function PlayerContent({
         fetchSongData();
     }
     const currentSong = useQueueStore(state => state.queue.currentSong)
+    const playNext = useQueueStore(state => state.playNext)
     async function fetchSongData() {
         try {            
             const fetchSongData = await fetch(`${apiUrl}/rest/getSong?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${currentlyPlaying}`, {
@@ -136,8 +137,8 @@ export function PlayerContent({
                 if (response['subsonic-response'].status === 'ok') {
                     setImageUrl(`${apiUrl}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${response['subsonic-response'].song.coverArt}`);
                     setAudioUrl(`${apiUrl}/rest/stream?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${currentlyPlaying}`);
-                    addToQueue(response['subsonic-response'].song);
-                    if (queue.songs.length === 1) {
+                    playNext(response['subsonic-response'].song);
+                    if (queue.songs.length >= 1) {
                         console.log((currentSong?.index ?? 0) + 1)
                         setCurrentSong((currentSong?.index ?? 0) + 1);
                     } else {
