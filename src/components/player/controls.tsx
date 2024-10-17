@@ -86,6 +86,16 @@ interface ControlsProps {
         audioRef.current.currentTime = time;
       }
     };
+
+    function handlePrevious() {
+        if (audioRef.current) {
+            if (audioRef.current.currentTime > 2) {
+                audioRef.current.currentTime = 0
+            } else {
+                previous()
+            }
+        }
+    }
   
     const togglePlayPause = () => setPlaying(!playing);
     const toggleShuffle = () => setShuffle(!shuffle);
@@ -98,7 +108,7 @@ interface ControlsProps {
           <button onClick={toggleShuffle}>
             <Shuffle color={shuffle ? 'red' : 'currentColor'} strokeWidth={shuffle ? 3 : 2.5} size={20} />
           </button>
-          <button onClick={() => previous()}>
+          <button onClick={() => handlePrevious()}>
             <ControlButton icon="previous" />
           </button>
           <button onClick={handlePlayPause}>
