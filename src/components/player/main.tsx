@@ -36,12 +36,7 @@ function SearchParamsWrapper({ children }: { children: React.ReactNode }) {
 export function Player({
     setFullScreen,
 }: {
-    setAudioUrl: (url: string) => void,
-    audioUrl: string,
     setFullScreen: (state: boolean) => void,
-    setSongData: (song: Song) => void,
-    imageUrl: string | null,
-    setImageUrl: (url: string) => void
 }) { 
     return (
         <Suspense fallback={<div>Loading...</div>}>
@@ -260,7 +255,7 @@ export function PlayerContent({
             <div>
             </div>
             <div>
-                <Controls songData={songData} audioRef={audioRef}/>
+                <Controls songData={songData}/>
             </div>
             <div>
                 <RightControls audioRef={audioRef} />

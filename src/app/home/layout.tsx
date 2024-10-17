@@ -37,7 +37,7 @@ export default function HomeLayout({
             </div>
           </div>
         </div>
-        <Player setAudioUrl={setAudioUrl} audioUrl={audioUrl} setFullScreen={setFullScreen} setSongData={setSongData} imageUrl={imageUrl} setImageUrl={setImageUrl}/>
+        <Player setFullScreen={setFullScreen}/>
       </div>
 
       </div>

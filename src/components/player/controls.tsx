@@ -5,10 +5,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import {Song} from './types'
 import {cn} from '@/lib/utils'
 import { useQueueStore } from '@/lib/queue';
+import { usePlayerStore } from '@/lib/state';
 
 interface ControlsProps {
     songData: Song;
-    audioRef: React.RefObject<HTMLAudioElement>;
     className?: string;
   }
   
@@ -18,7 +18,7 @@ interface ControlsProps {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
   
-  const Controls: React.FC<ControlsProps> = ({audioRef, className }) => {
+  const Controls: React.FC<ControlsProps> = ({ className }) => {
     const [playing, setPlaying] = useState<boolean>(false);
     const [repeat, setRepeat] = useState<number>(0);
     const [shuffle, setShuffle] = useState<boolean>(false);
@@ -30,6 +30,8 @@ interface ControlsProps {
 
     const skip = useQueueStore(state => state.skip)
     const previous = useQueueStore(state => state.playPrevious)
+
+    const audioRef = usePlayerStore(state => state.ref)
 
     const songData = useQueueStore(state => state.currentSong?.track)
 
