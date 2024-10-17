@@ -113,6 +113,7 @@ export function PlayerContent({
     useEffect(() => {
         if (isClient && currentlyPlaying) {
             setParams();
+            fetchSongData();
         }
     }, [isClient, currentlyPlaying]);
 
@@ -120,7 +121,6 @@ export function PlayerContent({
         if (currentlyPlaying !== searchParams.get('playing')) {
             router.push(`/home/?playing=${currentlyPlaying}`);
         }
-        fetchSongData();
     }
     const currentSong = useQueueStore(state => state.queue.currentSong)
     const playNext = useQueueStore(state => state.playNext)
@@ -183,6 +183,7 @@ export function PlayerContent({
           setAudioUrl(`${apiUrl}/rest/stream?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${currentSong.track.id}`);
           setImageUrl(`${apiUrl}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${currentSong.track.coverArt}`);
           console.log(currentSong);
+          setParams();
         } else {
           console.log('Current song or track ID is not available');
         }
