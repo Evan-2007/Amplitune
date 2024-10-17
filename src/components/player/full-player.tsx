@@ -12,15 +12,14 @@ import { useCallback } from 'react'
 import Lyrics from './lyrics'
 import Left from './full-left'
 import {useQueueStore} from '@/lib/queue'
-import {usePlayerStore} from '@/lib/state'
+import {usePlayerStore, useUiStore} from '@/lib/state'
 
 
  
 import {useRef} from 'react'
 
 export default function FullScreenPlayer(
-    { setFullScreen }: {
-        setFullScreen: (state: boolean) => void
+    {  }: {
     }
 ) {
 
@@ -33,11 +32,14 @@ export default function FullScreenPlayer(
 
     const audioRef = usePlayerStore((state) => state.ref)
 
+    const fullScreen = useUiStore((state) => state.fullScreenPlayer)
+    const setFullScreen = useUiStore((state) => state.toggleFullScreenPlayer)
+
     const container = useRef<HTMLDivElement>(null)
     function handleClose() {
         container.current?.classList.add('animate-[shrink-height_.3s_ease-out]')
         setTimeout(() => {
-            setFullScreen(false)
+            setFullScreen()
         }, 300)
     }
 
@@ -119,6 +121,8 @@ export default function FullScreenPlayer(
         const b = bigint & 255;
         return { r, g, b };
     }
+
+    if (!fullScreen) return null
 
     return (
         <div className=" w-screen z-50 animate-[grow-height_.3s_ease-out] h-screen bottom-0 relative " ref={container} style={

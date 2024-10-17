@@ -22,7 +22,7 @@ import {CrossPlatformStorage} from "@/lib/storage/cross-platform-storage";
 import FullScreenPlayer from "./full-player";
 import Controls from "./controls";
 import {useQueueStore} from "@/lib/queue";
-import {usePlayerStore} from "@/lib/state";
+import {usePlayerStore, useUiStore} from "@/lib/state";
 import Image from 'next/image';
 
 
@@ -34,23 +34,19 @@ function SearchParamsWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export function Player({
-    setFullScreen,
 }: {
-    setFullScreen: (state: boolean) => void,
 }) { 
     return (
         <Suspense fallback={<div>Loading...</div>}>
             <SearchParamsWrapper>
-                <PlayerContent setFullScreen={setFullScreen} />
+                <PlayerContent />
             </SearchParamsWrapper>
         </Suspense>
     )
 }
 
 export function PlayerContent({
-    setFullScreen,
 }: {
-    setFullScreen: (state: boolean) => void,
 }) {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL
 
@@ -66,6 +62,8 @@ export function PlayerContent({
     const [credentials, setCredentials] = useState<{username: string | null, password: string | null, salt: string | null}>({username: null, password: null, salt: null});
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [audioUrl, setAudioUrl] = useState<string | null>(null);
+
+    const setFullScreen = useUiStore((state) => state.toggleFullScreenPlayer);
 
 
     useEffect (() => {
@@ -218,7 +216,7 @@ export function PlayerContent({
             <div className='flex h-full justify-center items-center absolute'>
                 <div className='h-full group'>
                     <div  className='h-full rounded-lg aspect-square absolute p-3 z-50'>
-                        <button className='h-full rounded-lg aspect-square invisible group-hover:visible z-50 flex justify-center items-center' onClick={() => setFullScreen(true)}>
+                        <button className='h-full rounded-lg aspect-square invisible group-hover:visible z-50 flex justify-center items-center' onClick={() => setFullScreen()}>
                             <ChevronUp className=' text-slate-300 opacity-0 group-hover:opacity-70 transition-all duration-700 group-hover:mb-4' size={64}/>
                         </button>
                     </div>

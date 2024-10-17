@@ -6,22 +6,27 @@ export interface uiStore {
     sideMenuOpen: boolean
     setSideMenuOpen: (open: boolean) => void
     toggleSideMenu: () => void
+    toggleFullScreenPlayer: () => void
 
     sideBarOpen: boolean
     setSideBarOpen: (open: boolean) => void
     toggleSideBar: () => void
     sideBarType: 'queue' | 'lyrics'
+    fullScreenPlayer: boolean
 }
 
 export const useUiStore = create<uiStore>((set) => ({
     sideMenuOpen: false,
+    fullScreenPlayer: false,
     setSideMenuOpen: (open) => set({ sideMenuOpen: open }),
     toggleSideMenu: () => set((state) => ({ sideMenuOpen: !state.sideMenuOpen })),
+
 
     sideBarOpen: false,
     setSideBarOpen: (open) => set({ sideBarOpen: open }),
     toggleSideBar: () => set((state) => ({ sideBarOpen: !state.sideBarOpen })),
-    sideBarType: 'queue'
+    toggleFullScreenPlayer: () => set((state) => ({ fullScreenPlayer: !state.fullScreenPlayer })),
+    sideBarType: 'queue',
 }))
 
 
