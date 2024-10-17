@@ -12,14 +12,14 @@ import { useCallback } from 'react'
 import Lyrics from './lyrics'
 import Left from './full-left'
 import {useQueueStore} from '@/lib/queue'
+import {usePlayerStore} from '@/lib/state'
 
 
  
 import {useRef} from 'react'
 
 export default function FullScreenPlayer(
-    { audioRef, setFullScreen }: {
-        audioRef: React.RefObject<HTMLAudioElement>,
+    { setFullScreen }: {
         setFullScreen: (state: boolean) => void
     }
 ) {
@@ -30,6 +30,8 @@ export default function FullScreenPlayer(
     const storage = new CrossPlatformStorage();
 
     const songData = useQueueStore((state) => state.queue.currentSong?.track);
+
+    const audioRef = usePlayerStore((state) => state.ref)
 
     const container = useRef<HTMLDivElement>(null)
     function handleClose() {
