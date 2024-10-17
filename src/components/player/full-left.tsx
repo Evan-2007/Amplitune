@@ -64,7 +64,7 @@ export default function Left({ audioRef }: { audioRef: React.RefObject<HTMLAudio
             </div>
             <div className={`'w-full h-0  ${isMouseMoving && 'mt-6'}  transition-all duration-700 '`}>
                 <div className={`transition-opacity duration-700 pulse_3s_ease-out_infinite opacity-0 ${isMouseMoving && 'opacity-100'}`}>
-                    <Controls songData={songData} audioRef={audioRef} />
+                    <Controls songData={songData} />
                 </div>
             </div>
         </div>
