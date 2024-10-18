@@ -10,6 +10,5 @@ username: demo
 \
 password: demo
 \
-url: https://demo.navidrome.evanc.dev
+url: https://demo.navidrome.org/
 \
-(demo is currently broken)

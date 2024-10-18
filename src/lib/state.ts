@@ -57,3 +57,46 @@ export const usePlayerStore = create<playerStore>((set) => ({
     ))
 
 }))
+
+
+
+interface configStore {
+    config: {
+        activeServer?: {
+            url: string
+            username: string
+            password: string
+            id: string
+            salt: string
+            hash: string
+            type: 'navidrome'
+        }
+    }
+    
+
+    setActiveServer: (server: {
+        url: string
+        username: string
+        password: string
+        id: string
+        salt: string
+        hash: string
+        type: 'navidrome'
+    }) => void
+
+}
+
+export const useConfigStore = create<configStore>((set) => ({
+    config: {
+        activeServer: undefined
+    },
+
+    setActiveServer: (server) => set((state) => {
+        return {
+            config: {
+                ...state.config,
+                activeServer: server
+            }
+        }
+    })
+}))

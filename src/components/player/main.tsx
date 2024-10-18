@@ -24,6 +24,8 @@ import Controls from "./controls";
 import {useQueueStore} from "@/lib/queue";
 import {usePlayerStore, useUiStore} from "@/lib/state";
 import Image from 'next/image';
+import {subsonicURL} from '@/lib/servers/navidrome'
+
 
 
 const localStorage = new CrossPlatformStorage();
@@ -59,28 +61,13 @@ export function PlayerContent({
     const songData = useQueueStore((state) => state.queue.currentSong?.track);
 
     const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
-    const [credentials, setCredentials] = useState<{username: string | null, password: string | null, salt: string | null}>({username: null, password: null, salt: null});
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
     const setFullScreen = useUiStore((state) => state.toggleFullScreenPlayer);
 
 
-    useEffect (() => {
-        getCredentials();
-    } , [])
-
-    async function getCredentials() {
-        const username = await localStorage.getItem('username');
-        const password = await localStorage.getItem('password');
-        const salt = await localStorage.getItem('salt');
-        setCredentials({username, password, salt});
-    }
-
     const setRef = usePlayerStore((state) => state.setRef);
-
-
-    
 
 
     const audioRef = useRef<HTMLAudioElement>(null);
@@ -118,8 +105,12 @@ export function PlayerContent({
     const currentSong = useQueueStore(state => state.queue.currentSong)
     const playNext = useQueueStore(state => state.playNext)
     async function fetchSongData() {
-        try {            
-            const fetchSongData = await fetch(`${apiUrl}/rest/getSong?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${currentlyPlaying}`, {
+        try {
+            const url = await subsonicURL('/rest/getSong', `&id=${currentlyPlaying}`);
+            if (url === 'error') {
+                router.push('/servers');
+            }            
+            const fetchSongData = await fetch(url.toString(), {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -128,8 +119,13 @@ export function PlayerContent({
             if (fetchSongData.status === 200) {
                 const response = await fetchSongData.json();
                 if (response['subsonic-response'].status === 'ok') {
-                    setImageUrl(`${apiUrl}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${response['subsonic-response'].song.coverArt}`);
-                    setAudioUrl(`${apiUrl}/rest/stream?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${currentlyPlaying}`);
+                    const getImageUrl = await subsonicURL('/rest/getCoverArt', `&id=${response['subsonic-response'].song.coverArt}`);
+                    const getAudioUrl = await subsonicURL('/rest/stream', `&id=${response['subsonic-response'].song.id}`);
+                    if (getImageUrl === 'error' || getAudioUrl === 'error') {
+                        router.push('/servers');
+                    }
+                    setImageUrl(getImageUrl.toString());
+                    setAudioUrl(getAudioUrl.toString());
                     playNext(response['subsonic-response'].song);
                     if (queue.songs.length >= 1) {
                         console.log((currentSong?.index ?? 0) + 1)
@@ -173,14 +169,23 @@ export function PlayerContent({
 
     useEffect(() => {
         if (currentSong && currentSong.track && currentSong.track.id) {
-          setAudioUrl(`${apiUrl}/rest/stream?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${currentSong.track.id}`);
-          setImageUrl(`${apiUrl}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${currentSong.track.coverArt}`);
+          updateUrls();
           console.log(currentSong);
           setParams();
         } else {
           console.log('Current song or track ID is not available');
         }
-      }, [currentSong, credentials, apiUrl]);
+      }, [currentSong, apiUrl]);
+
+    async function updateUrls() {
+        const getImageUrl = await subsonicURL('/rest/getCoverArt', `&id=${currentSong.track.coverArt}`);
+        const getAudioUrl = await subsonicURL('/rest/stream', `&id=${currentSong.track.id}`);
+        if (getImageUrl === 'error' || getAudioUrl === 'error') {
+            router.push('/servers');
+        }
+        setImageUrl(getImageUrl.toString());
+        setAudioUrl(getAudioUrl.toString());
+    }
 
 
     useEffect(() => {
@@ -192,7 +197,7 @@ export function PlayerContent({
 
     
 
-    if (songData == null || credentials.username == null || credentials.password == null || credentials.salt == null) {
+    if (songData == null ) {
         return (
             <div className="h-[100px] w-screen  sticky flex">
                 <div className='flex h-full justify-center items-center'>

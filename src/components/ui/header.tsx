@@ -13,6 +13,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {motion } from 'framer-motion'
 import { useQueueStore } from '@/lib/queue'
+import {subsonicURL} from '@/lib/servers/navidrome'
+
 
 import {
     Dropdown,
@@ -76,6 +78,7 @@ function Search() {
     const [credentials, setCredentials] = useState<{username: string | null, password: string | null, salt: string | null}>({username: null, password: null, salt: null});
     const [activeInput, setActiveInput] = useState(false);
     const [search, setSearch] = useState('');
+    const [baseImageURL, setBaseImageURL] = useState('');
 
     const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
@@ -95,7 +98,7 @@ function Search() {
             resultsContainerRef.current?.classList.add('animate-[fadeOut_.001s]')
             console.log(resultsContainerRef.current.querySelector(':hover'))
             setTimeout(() => {
-                    setActiveInput(true); //false
+                    setActiveInput(false); //false
             }, 100);
         }
       };
@@ -115,14 +118,15 @@ function Search() {
     }, []);
 
     useEffect (() => {
-        getCredentials();
+        getBaseUrl();
     } , [])
 
-    async function getCredentials() {
-        const username = await localStorage.getItem('username');
-        const password = await localStorage.getItem('password');
-        const salt = await localStorage.getItem('salt');
-        setCredentials({username, password, salt});
+    async function getBaseUrl() {
+        const url = await subsonicURL('/rest/getCoverArt');
+        if (url === 'error') {
+            router.push('/servers');
+        }
+        setBaseImageURL(url.toString());
     }
 
 
@@ -135,7 +139,11 @@ function Search() {
     const handleUpdate = async(e: any) => {
         try {
             setSearch(e.target.value);
-            const result = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/rest/search3.view?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&f=json&v=1.13.0&c=myapp&query=${e.target.value}`, {
+            const url = await subsonicURL('/rest/search3.view', `&query=${e.target.value}`);
+            if (url === 'error') {
+                router.push('/servers');
+            }
+            const result = await fetch(url.toString(), {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -183,7 +191,7 @@ function Search() {
                                                 <div className=''>
                                                     <div className='grid-cols-7 grid col-auto py-2 pl-2'>
                                                         <button key={index} className='filter-none flex w-full items-center group relative pt-2 pb-2' onClick={() => router.push(`/home/?playing=${artist.id}&play=true`)}>
-                                                            <img className='w-11 rounded-full absolute' src={`${process.env.NEXT_PUBLIC_API_URL}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${artist.coverArt}`} alt="" />
+                                                            <img className='w-11 rounded-full absolute' src={`${baseImageURL}&id=${artist.coverArt}`} alt="" />
                                                         </button>
                                                         <div className='col-span-5 space-y-1 pr-3 '>
                                                             <Link className='text-sm line-clamp-1 hover:underline' href={`/home/?playing=${artist.id}&play=true`}>{artist.name}</Link>
@@ -199,7 +207,7 @@ function Search() {
                                                 <div className=''>
                                                     <div className='grid-cols-7 grid col-auto py-2 pl-2'>
                                                         <button key={index} className='filter-none flex w-full items-center group relative' onClick={() => router.push(`/home/?playing=${song.id}&play=true`)}>
-                                                            <img className='w-11 rounded-md absolute' src={`${process.env.NEXT_PUBLIC_API_URL}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${song.coverArt}`} alt="" />
+                                                            <img className='w-11 rounded-md absolute' src={`${baseImageURL}&id=${song.coverArt}`} alt="" />
                                                             <div className='absolute w-11 rounded-md bg-card/20 z-50 h-11 flex justify-center items-center  group-hover:visible invisible group-hover:opacity-100 opacity-0 transition-all duration-300 ease-in backdrop-blur-[2px]'>
                                                                 <CirclePlay className='w-8 h-8 text-white m-auto' strokeWidth={.8} />
                                                             </div>
@@ -230,7 +238,7 @@ function Search() {
                                                 <div className='overflow-visible'>
                                                 <div className='grid-cols-7 grid col-auto py-2 pl-2 overflow-visible'>
                                                     <button key={index} className='filter-none flex w-full items-center group relative' onClick={() => router.push(`/home/?playing=${album.id}&play=true`)}>
-                                                        <img className='w-11 rounded-md absolute' src={`${process.env.NEXT_PUBLIC_API_URL}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${album.coverArt}`} alt="" />
+                                                        <img className='w-11 rounded-md absolute' src={`${baseImageURL}&id=${album.coverArt}`} alt="" />
                                                         <div className='absolute w-11 rounded-md bg-card/20 z-50 h-11 flex justify-center items-center  group-hover:visible invisible group-hover:opacity-100 opacity-0 transition-all duration-300 ease-in backdrop-blur-[2px]'>
                                                             <CirclePlay className='w-8 h-8 text-white m-auto' strokeWidth={.8} />
                                                         </div>

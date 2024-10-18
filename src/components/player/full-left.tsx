@@ -5,6 +5,8 @@ import { useEffect, useState, useCallback } from 'react'
 import { debounce } from 'lodash'
 import {useQueueStore} from '@/lib/queue'
 import { CrossPlatformStorage } from '@/lib/storage/cross-platform-storage'
+import { useRouter } from 'next/navigation'
+import { subsonicURL } from '@/lib/servers/navidrome'
 
 export default function Left({ audioRef }: { audioRef: React.RefObject<HTMLAudioElement> }) {
 
@@ -16,6 +18,8 @@ export default function Left({ audioRef }: { audioRef: React.RefObject<HTMLAudio
 
     const storage = new CrossPlatformStorage();
 
+    const router = useRouter();
+
     const debouncedMouseStop = useCallback(
         debounce(() => {
             setIsMouseMoving(false);
@@ -26,11 +30,19 @@ export default function Left({ audioRef }: { audioRef: React.RefObject<HTMLAudio
     useEffect(() => {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-        if (songData && credentials) {
-            setImageUrl(`${apiUrl}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${songData.coverArt}`);
+        if (songData) {
+            setImage();
         }
 
     }, [songData ,credentials]);
+
+    const setImage = async () => {
+        const url = await subsonicURL('/rest/getCoverArt', `&id=${songData.coverArt}`);
+        if (url === 'error') {
+            router.push('/servers');
+        }
+        setImageUrl(url.toString());
+    }
 
     useEffect(() => {
         getCredentials();

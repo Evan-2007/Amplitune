@@ -7,6 +7,7 @@ import LyricsSVG from '@/assets/lyrics.svg'
 import { MessageSquareQuote } from 'lucide-react';
 import {useQueueStore} from '@/lib/queue'
 import { ScrollArea } from '../ui/scroll-area';
+import { useRouter } from 'next/navigation';
 
 import {Ellipsis} from 'lucide-react'
 import {
@@ -16,6 +17,7 @@ import {
     DropdownSection,
     DropdownItem
   } from "@nextui-org/dropdown";
+  import {subsonicURL} from '@/lib/servers/navidrome'
 
 
 
@@ -34,17 +36,13 @@ export default function Lyrics({ audioRef }: { audioRef: React.RefObject<HTMLAud
     const [lyrics, setLyrics] = useState<LyricLine[] | null>(null);
     const [currentLine, setCurrentLine] = useState<number>(0);
     const [error, setError] = useState<string | null>(null);
-    const [credentials, setCredentials] = useState<{username: string | null, password: string | null, salt: string | null}>({username: null, password: null, salt: null});
     const [isMouseMoving, setIsMouseMoving] = useState<boolean>(false);
 
+    const router = useRouter();
 
     const lyricsContainerRef = useRef<HTMLDivElement>(null);
 
     const songData = useQueueStore(state => state.queue.currentSong?.track)
-
-    useEffect(() => {
-        getCredentials();
-    }, []);
 
     useEffect(() => {
         if (audioRef.current) {
@@ -65,12 +63,10 @@ export default function Lyrics({ audioRef }: { audioRef: React.RefObject<HTMLAud
     }, [audioRef, lyrics]);
 
     useEffect(() => {
-        if (credentials.username && credentials.password && credentials.salt) {
             fetchLyrics();
             //scroll to top of lyrics
             setCurrentLine(0);
-        }
-    }, [songData, credentials]);
+    }, [songData]);
 
     useEffect (() => {
         if (lyricsContainerRef.current) {
@@ -109,17 +105,16 @@ export default function Lyrics({ audioRef }: { audioRef: React.RefObject<HTMLAud
         debouncedMouseStop();
     }, [debouncedMouseStop]);
 
-    async function getCredentials() {
-        const username = await localStorage.getItem('username');
-        const password = await localStorage.getItem('password');
-        const salt = await localStorage.getItem('salt');
-        setCredentials({username, password, salt});
-    }
+
 
     async function fetchLyrics() {
         if (!songData) return;
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/rest/getLyricsBySongId.view?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${songData.id}`);
+            const url = await subsonicURL('/rest/getLyricsBySongId.view', `&id=${songData.id}`);
+            if (url === 'error') {
+                router.push('/servers');
+            }
+            const response = await fetch(url.toString());
             const data = await response.json();
             if (data['subsonic-response'].status !== 'ok') {
                 throw new Error(data['subsonic-response'].error.message);

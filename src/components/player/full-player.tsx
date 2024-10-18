@@ -13,6 +13,8 @@ import Lyrics from './lyrics'
 import Left from './full-left'
 import {useQueueStore} from '@/lib/queue'
 import {usePlayerStore, useUiStore} from '@/lib/state'
+import {subsonicURL} from '@/lib/servers/navidrome'
+import { useRouter } from 'next/navigation'
 
 
  
@@ -23,14 +25,14 @@ export default function FullScreenPlayer(
     }
 ) {
 
-    const [imageUrl, setImageUrl] = useState<string | null>(null);
-    const [credentials, setCredentials] = useState<{ username: string; password: string; salt: string } | null>(null);
-    
+    const [imageUrl, setImageUrl] = useState<string | null>(null);    
     const storage = new CrossPlatformStorage();
 
     const songData = useQueueStore((state) => state.queue.currentSong?.track);
 
     const audioRef = usePlayerStore((state) => state.ref)
+
+    const router = useRouter();
 
     const fullScreen = useUiStore((state) => state.fullScreenPlayer)
     const setFullScreen = useUiStore((state) => state.toggleFullScreenPlayer)
@@ -58,13 +60,18 @@ export default function FullScreenPlayer(
 
 
     useEffect(() => {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        updateImageUrl()
+    }, [songData]);
 
-        if (songData && credentials) {
-            setImageUrl(`${apiUrl}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${songData.coverArt}`);
+    const updateImageUrl = async () => {
+        if (songData ) {
+            const url = await subsonicURL('/rest/getCoverArt', `&id=${songData.coverArt}`);
+            if (url === 'error') {
+                router.push('/servers');
+            }
+            setImageUrl(url.toString());
         }
-
-    }, [songData ,credentials]);
+    }
 
     useEffect(() => {
         getCredentials();
@@ -77,7 +84,6 @@ export default function FullScreenPlayer(
         if (!username || !password || !salt) {
             return null;
         }
-        setCredentials({ username, password, salt });
     }
 
 
