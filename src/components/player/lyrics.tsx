@@ -147,6 +147,9 @@ export default function Lyrics({
         );
       } else {
         setSynced(true);
+        setLyrics(
+            data['subsonic-response'].lyricsList.structuredLyrics[0].line
+        );
       }
     } catch (error) {
       console.error('An error occurred:', error);
@@ -232,7 +235,7 @@ export default function Lyrics({
             lyrics &&
             !synced &&
             lyrics.map((line, index) => (
-              <div>
+              <div key={index}>
                 <p className='mt-6 text-center text-4xl font-bold text-gray-400 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]'>
                   {line.value}
                 </p>
