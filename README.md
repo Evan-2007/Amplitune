@@ -10,5 +10,4 @@ username: demo
 \
 password: demo
 \
-url: https://demo.navidrome.org/
-\
+url: https://demo.navidrome.org

@@ -149,17 +149,23 @@ export default function Lyrics({
   async function fetchLRCLIB() {
     if (!songData) return;
     try {
-      await fetch(
-        'https://lrclib.net/api/get?artist_name=' +
-          songData.artist +
-          '&track_name=' +
-          songData.title +
-          '&album_name=' +
-          songData.album
-      ).then(async (response) => {
-        const data = await response.json();
-        setLyrics(formatLyrics(data.syncedLyrics));
-      });
+    await fetch(
+      'https://lrclib.net/api/get?artist_name=' +
+        songData.artist +
+        '&track_name=' +
+        songData.title +
+        '&album_name=' +
+        songData.album,
+      {
+        headers: {
+        'Content-Type': 'application/json',
+        'Lrclib-Client': `amplitune (https://github.com/Evan-2007/Amplitune)`
+        },
+      }
+    ).then(async (response) => {
+      const data = await response.json();
+      setLyrics(formatLyrics(data.syncedLyrics));
+    });
     } catch (error) {
       console.error('An error occurred:', error);
       setError('An error occurred while fetching the lyrics');
