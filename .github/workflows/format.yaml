@@ -12,15 +12,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm  
+        with:
+          version: 9
+          run_install: false
+
+      - name: install prettier extension
+        run: pnpm install prettier-plugin-tailwindcss
+
       - name: Checkout
         uses: actions/checkout@v3
         with:
           # Make sure the actual branch is checked out when running on pull requests
           ref: ${{ github.head_ref }}
 
-      - name: Prettify code
-        uses: creyD/prettier_action@v4.3
+      - uses: actionsx/prettier@v2
         with:
-            prettier_plugins: prettier-plugin-tailwindcss
-            dry: true
-            prettier_options: --check
+          # prettier CLI arguments.
+          args: --check .
