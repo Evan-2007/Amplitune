@@ -19,7 +19,7 @@ jobs:
           run_install: false
 
       - name: install prettier extension
-        run: pnpm install prettier-plugin-tailwindcss
+        run: pnpm install prettier-plugin-tailwindcss prettier
 
       - name: Checkout
         uses: actions/checkout@v3
@@ -27,7 +27,5 @@ jobs:
           # Make sure the actual branch is checked out when running on pull requests
           ref: ${{ github.head_ref }}
 
-      - uses: actionsx/prettier@v2
-        with:
-          # prettier CLI arguments.
-          args: --check .
+      - name: Run prettier
+        run: pnpm run format
