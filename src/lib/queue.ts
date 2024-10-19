@@ -118,12 +118,22 @@ export const useQueueStore = create<queueStore>((set) => ({
             songs: [...state.queue.songs, track]
         }
     })),
-    removeFromQueue: (index) => set((state) => ({
-        queue: {
-            ...state.queue,
-            songs: state.queue.songs.filter((_, i) => i !== index)
-        }
-    })),
+    removeFromQueue: (index) => set((state: queueStore) => {
+        const newSongs = state.queue.songs.filter((_, i) => i !== index);
+        const isCurrentSong = state.queue.currentSong.index === index;
+        return {
+            queue: {
+                ...state.queue,
+                songs: newSongs,
+                currentSong: isCurrentSong
+                    ? {
+                        track: newSongs[index] || state.queue.songs[index + 1],
+                        index: index
+                    }
+                    : state.queue.currentSong
+            }
+        };
+    }),
     clearQueue: () => set((state) => ({
         queue: {
             ...state.queue,
