@@ -9,7 +9,7 @@ import { useQueueStore } from '@/lib/queue';
 import { ScrollArea } from '../ui/scroll-area';
 import { useRouter } from 'next/navigation';
 import { formatLyrics } from '@/lib/lyrics';
-
+import { CirclePlay } from 'lucide-react';
 import { Ellipsis } from 'lucide-react';
 import {
   Dropdown,
@@ -319,13 +319,20 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
           <>
             {index < queue.currentSong.index && (
               <div className='flex justify-between'>
-                <div className='flex space-x-4'>
-                  <img
-                    src={`${baseUrl}&id=${song.coverArt}`}
-                    alt='cover art'
-                    className='h-12 w-12 rounded-md'
-                    onClick={() => setSong(index)}
-                  />
+                <div className='flex space-x-4 group/image'>
+                  <div className='' onClick={() => setSong(index)}>
+                    <img
+                      src={`${baseUrl}&id=${song.coverArt}`}
+                      alt='cover art'
+                      className='absolute h-12 w-12 rounded-md'
+                    />
+                    <div className='invisible z-50 cursor-pointer flex h-12 w-12 items-center justify-center rounded-md bg-card/20 opacity-0 backdrop-blur-[2px] transition-all duration-300 ease-in group-hover/image:visible group-hover/image:opacity-100'>
+                      <CirclePlay
+                        className='m-auto h-8 w-8 text-white'
+                        strokeWidth={0.8}
+                      />
+                    </div>
+                  </div>
                   <div>
                     <h1>{song.title}</h1>
                     <h1>
@@ -372,13 +379,20 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
           <>
             {index > queue.currentSong.index && (
               <div className='flex justify-between'>
-                <div className='flex space-x-4'>
-                  <img
-                    src={`${baseUrl}&id=${song.coverArt}`}
-                    alt='cover art'
-                    className='h-12 w-12 rounded-md'
-                    onClick={() => setSong(index)}
-                  />
+                <div className='group/image flex space-x-4'>
+                  <div className='' onClick={() => setSong(index)}>
+                    <img
+                      src={`${baseUrl}&id=${song.coverArt}`}
+                      alt='cover art'
+                      className='absolute h-12 w-12 rounded-md'
+                    />
+                    <div className='invisible cursor-pointer z-50 flex h-12 w-12 items-center justify-center rounded-md bg-card/20 opacity-0 backdrop-blur-[2px] transition-all duration-300 ease-in group-hover/image:visible group-hover/image:opacity-100'>
+                      <CirclePlay
+                        className='m-auto h-8 w-8 text-white'
+                        strokeWidth={0.8}
+                      />
+                    </div>
+                  </div>
                   <div>
                     <h1>{song.title}</h1>
                     <h1>
