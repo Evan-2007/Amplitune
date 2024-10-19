@@ -69,11 +69,15 @@ export default function Left({ audioRef }: { audioRef: React.RefObject<HTMLAudio
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setIsMouseMoving(false)}
         >
-            {imageUrl ? <img src={imageUrl} alt="" className='max-h-[58.33%] aspect-square rounded-2xl border-border border-[1px]'/> : <div className='max-h-[58.33%] aspect-square bg-gray-800'></div>}
-            <div className='w-full flex flex-col text-center text-nowrap overflow-hidden px-12' >
-                <h1 className='text-white text-2xl font-bold mt-4'>{songData.title}</h1>
-                <h2 className=' text-lg text-gray-300'>{songData.album} - {songData.artist}</h2>
-            </div>
+            {songData && imageUrl && songData.title ? 
+                <>
+                    <img src={imageUrl} alt="" className='max-h-[58.33%] aspect-square rounded-2xl border-border border-[1px]'/> 
+                    <div className='w-full flex flex-col text-center text-nowrap overflow-hidden px-12' >
+                        <h1 className='text-white text-2xl font-bold mt-4'>{songData.title}</h1>
+                        <h2 className=' text-lg text-gray-300'>{songData.album} - {songData.artist}</h2>
+                    </div>
+                </> : <div className='max-h-[58.33%] aspect-square bg-gray-800'></div>
+            }
             <div className={`'w-full h-0  ${isMouseMoving && 'mt-6'}  transition-all duration-700 '`}>
                 <div className={`transition-opacity duration-700 pulse_3s_ease-out_infinite opacity-0 ${isMouseMoving && 'opacity-100'}`}>
                     <Controls songData={songData} />

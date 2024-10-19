@@ -218,24 +218,23 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean } ) {
 
     const currentlyPlaying = useQueueStore(state => state.queue.currentSong)
     const queue = useQueueStore(state => state.queue)
-    const [credentials, setCredentials] = useState<{username: string | null, password: string | null, salt: string | null}>({username: null, password: null, salt: null});
+    const [baseUrl, setBaseUrl] = useState<string>('')
 
     const localStorage = new CrossPlatformStorage();
     const setSong = useQueueStore(state => state.setCurrentSong)
+    const removeFromQueue = useQueueStore(state => state.removeFromQueue)
 
 
 
     useEffect(() => {
-        getCredentials();
+        setBaseImageUrl()
+    }, [])
 
-    }, [queue])
-
-    async function getCredentials() {
-        const username = await localStorage.getItem('username');
-        const password = await localStorage.getItem('password');
-        const salt = await localStorage.getItem('salt');
-        setCredentials({username, password, salt});
+    const setBaseImageUrl = async () => {
+        setBaseUrl(await subsonicURL('/rest/getCoverArt', ''))
     }
+
+
 
     return (
         <div className={`w-9/12 h-[75vh] flex flex-col animate-[fade-in]  top-24 absolute backdrop-opacity-0 transition-all duration-700 ${isMouseMoving && 'bg-card/60 backdrop-opacity-100 backdrop-blur-md'} p-10 rounded-2xl`}>
@@ -254,7 +253,7 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean } ) {
                     {index < queue.currentSong.index && (
                         <div className='flex justify-between'>
                             <div className='flex space-x-4'>
-                                <img src={`${process.env.NEXT_PUBLIC_API_URL}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${song.coverArt}`} alt="cover art" className="w-12 h-12 rounded-md" onClick={() => setSong(index)}/>
+                                <img src={`${baseUrl}&id=${song.coverArt}`} alt="cover art" className="w-12 h-12 rounded-md" onClick={() => setSong(index)}/>
                                 <div>
                                     <h1>{song.title}</h1>
                                     <h1>{song.artist} - {song.album}</h1>
@@ -272,7 +271,7 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean } ) {
             <h1 className="mr-10 text-2xl font-bold mt-8 mb-2">Playing</h1>
             <div className='flex justify-between'>
                 <div className='flex space-x-4'>
-                    <img src={`${process.env.NEXT_PUBLIC_API_URL}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${currentlyPlaying?.track.coverArt}`} alt="cover art" className="w-12 h-12 rounded-md"/>
+                    <img src={`${baseUrl}&id=${currentlyPlaying.track.coverArt}`} alt="cover art" className="w-12 h-12 rounded-md"/>
                     <div>
                         <h1>{currentlyPlaying?.track.title}</h1>
                         <h1>{currentlyPlaying?.track.artist} - {currentlyPlaying?.track.album}</h1>
@@ -292,7 +291,8 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean } ) {
                         {index > queue.currentSong.index && (
                             <div className='flex justify-between'>
                                 <div className='flex space-x-4'>
-                                    <img src={`${process.env.NEXT_PUBLIC_API_URL}/rest/getCoverArt?u=${credentials.username}&t=${credentials.password}&s=${credentials.salt}&v=1.13.0&c=myapp&f=json&id=${song.coverArt}`} alt="cover art" className="w-12 h-12 rounded-md" onClick={() => setSong(index)}/>
+                                
+                                    <img src={`${baseUrl}&id=${song.coverArt}`} alt="cover art" className="w-12 h-12 rounded-md" onClick={() => setSong(index)}/>
                                     <div>
                                         <h1>{song.title}</h1>
                                         <h1>{song.artist} - {song.album}</h1>
@@ -314,6 +314,12 @@ function DropdownComponent({index , song}: {index: number, song: Song}) {
 
     const removeFromQueue = useQueueStore(state => state.removeFromQueue)
 
+
+    const handleRemove = (index: number) => {
+        console.log(index)  
+        removeFromQueue(index)
+    }
+
     return (
         <Dropdown
         classNames={{
@@ -324,7 +330,7 @@ function DropdownComponent({index , song}: {index: number, song: Song}) {
                 <Ellipsis size={24} />
             </DropdownTrigger>
             <DropdownMenu  className='text-sm'>
-                <DropdownItem onClick={() => removeFromQueue(index)}>Remove from Queue</DropdownItem>
+                <DropdownItem onClick={() => handleRemove(index)}>Remove from Queue</DropdownItem>
             </DropdownMenu>
         </Dropdown>
     )
