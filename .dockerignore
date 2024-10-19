@@ -1,0 +1,11 @@
+node_modules
+dist
+out
+build
+.github
+.vscode
+.next
+.github
+main
+ios
+android
