@@ -1,4 +1,4 @@
-name: Windows Build x64
+name: cross-platform-build
 
 on:
   push:
