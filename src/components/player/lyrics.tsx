@@ -40,6 +40,7 @@ export default function Lyrics({
   const [currentLine, setCurrentLine] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [isMouseMoving, setIsMouseMoving] = useState<boolean>(false);
+  const [synced, setSynced] = useState<boolean>(false);
 
   const router = useRouter();
 
@@ -75,7 +76,7 @@ export default function Lyrics({
   }, [songData]);
 
   useEffect(() => {
-    if (lyricsContainerRef.current) {
+    if (lyricsContainerRef.current && synced) {
       const container = lyricsContainerRef.current;
       const currentLineElement = container.querySelector(
         `[data-line="${currentLine}"]`
@@ -134,11 +135,13 @@ export default function Lyrics({
       if (data['subsonic-response'].status !== 'ok') {
         throw new Error(data['subsonic-response'].error.message);
       }
-      setLyrics(data['subsonic-response'].lyricsList.structuredLyrics[0].line);
 
       // If lyrics are not synced, try and fetch from lrclib
       if (data['subsonic-response'].lyricsList.structuredLyrics[0].synced === false) {
-        fetchLRCLIB();
+        setSynced(false);
+         fetchLRCLIB(data['subsonic-response'].lyricsList.structuredLyrics[0].line);
+      } else {
+        setSynced(true);
       }
     } catch (error) {
       console.error('An error occurred:', error);
@@ -146,7 +149,9 @@ export default function Lyrics({
     }
   }
 
-  async function fetchLRCLIB() {
+  
+
+  async function fetchLRCLIB(lyrics?: LyricLine[]) {
     if (!songData) return;
     try {
     await fetch(
@@ -165,9 +170,11 @@ export default function Lyrics({
     ).then(async (response) => {
       const data = await response.json();
       setLyrics(formatLyrics(data.syncedLyrics));
+      setSynced(true);
     });
     } catch (error) {
       console.error('An error occurred:', error);
+      setLyrics(lyrics? lyrics : null);
       setError('An error occurred while fetching the lyrics');
     }
   }
@@ -186,19 +193,17 @@ export default function Lyrics({
 
   const currentlyPlaying = useQueueStore((state) => state.queue.currentSong);
 
-  if (error) return <p className='text-red-500'>{error}</p>;
-  if (!lyrics) return <p className='text-gray-500'>No Lyrics Found</p>;
 
   return (
     <div className='relative flex h-full w-full items-center justify-center overflow-hidden'>
       <div
         ref={lyricsContainerRef}
-        className='no-scrollbar group mr-10 flex h-full w-full flex-col items-center overflow-y-auto py-[50vh]'
+        className={`${synced ? 'py-[50vh]' : 'py-[10vh]'} group mr-10 flex h-full w-full flex-col items-center overflow-y-auto no-scrollbar`}
         style={{ scrollBehavior: 'smooth' }}
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setIsMouseMoving(false)}
       >
-        {tab === 'lyrics' &&
+        {tab === 'lyrics' && lyrics && synced &&
           lyrics.map((line, index) => (
             <button key={index} onClick={() => handleLyricClick(index)}>
               <p
@@ -216,7 +221,22 @@ export default function Lyrics({
                 </div>
               )}
             </button>
-          ))}
+          ))} 
+
+          <div className='flex h-full w-full items-center justify-start flex-col mb-[30vh]'>
+            {tab === 'lyrics' && lyrics && !synced &&
+            lyrics.map((line, index) => (
+                <div>
+                    <p className='text-gray-400 text-center text-4xl font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] mt-6'>
+                    {line.value}
+                    </p>
+                </div>
+            ))}
+          </div>
+
+          {tab === 'lyrics' && !lyrics && 
+                <p className='text-gray-400 text-center text-4xl font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] mt-6'>No lyrics found</p>
+            }
 
         {tab === 'queue' && <QueueList isMouseMoving={isMouseMoving} />}
 
