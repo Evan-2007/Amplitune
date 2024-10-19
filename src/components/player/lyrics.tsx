@@ -137,9 +137,14 @@ export default function Lyrics({
       }
 
       // If lyrics are not synced, try and fetch from lrclib
-      if (data['subsonic-response'].lyricsList.structuredLyrics[0].synced === false) {
+      if (
+        data['subsonic-response'].lyricsList.structuredLyrics[0].synced ===
+        false
+      ) {
         setSynced(false);
-         fetchLRCLIB(data['subsonic-response'].lyricsList.structuredLyrics[0].line);
+        fetchLRCLIB(
+          data['subsonic-response'].lyricsList.structuredLyrics[0].line
+        );
       } else {
         setSynced(true);
       }
@@ -149,32 +154,30 @@ export default function Lyrics({
     }
   }
 
-  
-
   async function fetchLRCLIB(lyrics?: LyricLine[]) {
     if (!songData) return;
     try {
-    await fetch(
-      'https://lrclib.net/api/get?artist_name=' +
-        songData.artist +
-        '&track_name=' +
-        songData.title +
-        '&album_name=' +
-        songData.album,
-      {
-        headers: {
-        'Content-Type': 'application/json',
-        'Lrclib-Client': `amplitune (https://github.com/Evan-2007/Amplitune)`
-        },
-      }
-    ).then(async (response) => {
-      const data = await response.json();
-      setLyrics(formatLyrics(data.syncedLyrics));
-      setSynced(true);
-    });
+      await fetch(
+        'https://lrclib.net/api/get?artist_name=' +
+          songData.artist +
+          '&track_name=' +
+          songData.title +
+          '&album_name=' +
+          songData.album,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Lrclib-Client': `amplitune (https://github.com/Evan-2007/Amplitune)`,
+          },
+        }
+      ).then(async (response) => {
+        const data = await response.json();
+        setLyrics(formatLyrics(data.syncedLyrics));
+        setSynced(true);
+      });
     } catch (error) {
       console.error('An error occurred:', error);
-      setLyrics(lyrics? lyrics : null);
+      setLyrics(lyrics ? lyrics : null);
       setError('An error occurred while fetching the lyrics');
     }
   }
@@ -193,17 +196,18 @@ export default function Lyrics({
 
   const currentlyPlaying = useQueueStore((state) => state.queue.currentSong);
 
-
   return (
     <div className='relative flex h-full w-full items-center justify-center overflow-hidden'>
       <div
         ref={lyricsContainerRef}
-        className={`${synced ? 'py-[50vh]' : 'py-[10vh]'} group mr-10 flex h-full w-full flex-col items-center overflow-y-auto no-scrollbar`}
+        className={`${synced ? 'py-[50vh]' : 'py-[10vh]'} no-scrollbar group mr-10 flex h-full w-full flex-col items-center overflow-y-auto`}
         style={{ scrollBehavior: 'smooth' }}
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setIsMouseMoving(false)}
       >
-        {tab === 'lyrics' && lyrics && synced &&
+        {tab === 'lyrics' &&
+          lyrics &&
+          synced &&
           lyrics.map((line, index) => (
             <button key={index} onClick={() => handleLyricClick(index)}>
               <p
@@ -221,22 +225,26 @@ export default function Lyrics({
                 </div>
               )}
             </button>
-          ))} 
+          ))}
 
-          <div className='flex h-full w-full items-center justify-start flex-col mb-[30vh]'>
-            {tab === 'lyrics' && lyrics && !synced &&
+        <div className='mb-[30vh] flex h-full w-full flex-col items-center justify-start'>
+          {tab === 'lyrics' &&
+            lyrics &&
+            !synced &&
             lyrics.map((line, index) => (
-                <div>
-                    <p className='text-gray-400 text-center text-4xl font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] mt-6'>
-                    {line.value}
-                    </p>
-                </div>
+              <div>
+                <p className='mt-6 text-center text-4xl font-bold text-gray-400 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]'>
+                  {line.value}
+                </p>
+              </div>
             ))}
-          </div>
+        </div>
 
-          {tab === 'lyrics' && !lyrics && 
-                <p className='text-gray-400 text-center text-4xl font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] mt-6'>No lyrics found</p>
-            }
+        {tab === 'lyrics' && !lyrics && (
+          <p className='mt-6 text-center text-4xl font-bold text-gray-400 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]'>
+            No lyrics found
+          </p>
+        )}
 
         {tab === 'queue' && <QueueList isMouseMoving={isMouseMoving} />}
 
