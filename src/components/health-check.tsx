@@ -1,7 +1,3 @@
-
-
 export function HealthCheck() {
-
-
-    return null;
+  return null;
 }

@@ -73,24 +73,33 @@ header {
   -webkit-app-region: drag;
 }
 
-button, input, svg {
+button,
+input,
+svg {
   -webkit-app-region: no-drag;
 }
 
-
-
 @keyframes grow-height {
-  from { margin-top: 100vh;  }
-  to { margin-top: 0; }
+  from {
+    margin-top: 100vh;
+  }
+  to {
+    margin-top: 0;
+  }
 }
 
 @keyframes shrink-height {
-  from { margin-top: 0; }
-  to { margin-top: 100vh; }
+  from {
+    margin-top: 0;
+  }
+  to {
+    margin-top: 100vh;
+  }
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     scale: 1;
   }
@@ -103,7 +112,8 @@ button, input, svg {
 @keyframes fadeIn {
   0% {
     opacity: 0;
-  } 25% {
+  }
+  25% {
     opacity: 1;
   }
 }
@@ -111,22 +121,22 @@ button, input, svg {
 @keyframes fadeOut {
   0% {
     opacity: 1;
-  } 25% {
+  }
+  25% {
     opacity: 0;
   }
 }
 
-
 @layer utilities {
   /* Hide scrollbar for Chrome, Safari and Opera */
   .no-scrollbar::-webkit-scrollbar {
-      display: none;
+    display: none;
   }
- /* Hide scrollbar for IE, Edge and Firefox */
+  /* Hide scrollbar for IE, Edge and Firefox */
   .no-scrollbar {
-      -ms-overflow-style: none;  /* IE and Edge */
-      scrollbar-width: none;  /* Firefox */
-}
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
 }
 
 body {

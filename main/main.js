@@ -1,14 +1,16 @@
-import { app, BrowserWindow } from "electron";
-import path from "path";
-import serve from "electron-serve";
+import { app, BrowserWindow } from 'electron';
+import path from 'path';
+import serve from 'electron-serve';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
 
-const appServe = app.isPackaged ? serve({
-  directory: path.join(__dirname, "../out")
-}) : null;
+const appServe = app.isPackaged
+  ? serve({
+      directory: path.join(__dirname, '../out'),
+    })
+  : null;
 
 const createWindow = () => {
   const win = new BrowserWindow({
@@ -17,38 +19,35 @@ const createWindow = () => {
 
     titleBarStyle: 'hidden',
     webPreferences: {
-      preload: path.join(__dirname, "preload.js")
-    }
+      preload: path.join(__dirname, 'preload.js'),
+    },
   });
 
   if (app.isPackaged) {
     appServe(win).then(() => {
-      win.loadURL("app://-");
+      win.loadURL('app://-');
     });
   } else {
-    win.loadURL("http://localhost:3000");
+    win.loadURL('http://localhost:3000');
     win.webContents.openDevTools();
-    win.webContents.on("did-fail-load", (e, code, desc) => {
+    win.webContents.on('did-fail-load', (e, code, desc) => {
       win.webContents.reloadIgnoringCache();
     });
   }
-}
+};
 
-app.on("ready", () => {
-    createWindow();
+app.on('ready', () => {
+  createWindow();
 });
 
-app.on("window-all-closed", () => {
-    if(process.platform !== "darwin"){
-        app.quit();
-    }
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
 });
-
-
 
 import { ipcMain } from 'electron';
 import Store from 'electron-store';
-
 
 const store = new Store();
 
@@ -83,25 +82,22 @@ ipcMain.handle('close-window', async () => {
 
 ipcMain.handle('minimize-window', async () => {
   BrowserWindow.getFocusedWindow().minimize();
-} );
+});
 
 ipcMain.handle('maximize-window', async () => {
   if (BrowserWindow.getFocusedWindow().isMaximized()) {
     BrowserWindow.getFocusedWindow().unmaximize();
-  }
-  else {
+  } else {
     BrowserWindow.getFocusedWindow().maximize();
   }
-} );
+});
 
 ipcMain.handle('quit-app', async () => {
   app.quit();
-} );
-
-
+});
 
 ipcMain.handle('hardwareAcceleration', async (value) => {
   if (value) {
     app.disableHardwareAcceleration();
-  } 
+  }
 });

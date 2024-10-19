@@ -7,7 +7,9 @@ export class CrossPlatformStorage implements StorageInterface {
 
   constructor() {
     if (typeof window !== 'undefined') {
-      this.store = this.isElectron() ? new ElectronStorage() : new BrowserStorage();
+      this.store = this.isElectron()
+        ? new ElectronStorage()
+        : new BrowserStorage();
     } else {
       // Server-side fallback
       this.store = {

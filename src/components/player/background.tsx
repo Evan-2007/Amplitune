@@ -3,10 +3,7 @@ import React, { useRef, useEffect, useState } from 'react';
 // Customizable variables
 const CUSTOMIZATION = {
   MAX_OVALS: 6,
-  OVAL_DURATION: [
-    40000,
-    30000,
-  ], // milliseconds
+  OVAL_DURATION: [40000, 30000], // milliseconds
   MIN_OVAL_SIZE: 1500,
   MAX_OVAL_SIZE: 500,
   MIN_ASPECT_RATIO: 0.5,
@@ -25,7 +22,7 @@ const CUSTOMIZATION = {
     '#CD853F', // Peru
     '#DEB887', // BurlyWood
     '#F4A460', // SandyBrown
-    '#8B4513'  // SaddleBrown
+    '#8B4513', // SaddleBrown
   ] as const,
 } as const;
 
@@ -52,27 +49,36 @@ type RandomPositionFunction = (max: number, extension: number) => number;
 type RandomSizeFunction = () => number;
 type RandomAspectRatioFunction = () => number;
 type RandomColorFunction = () => string;
-type CreateOvalFunction = (canvas: HTMLCanvasElement, timestamp: number) => Oval;
+type CreateOvalFunction = (
+  canvas: HTMLCanvasElement,
+  timestamp: number
+) => Oval;
 type EasingFunction = (t: number) => number;
 
 // Utility functions
-const getRandomPosition: RandomPositionFunction = (max, extension) => 
+const getRandomPosition: RandomPositionFunction = (max, extension) =>
   Math.random() * (max + 2 * extension) - extension;
 
-const getRandomSize: RandomSizeFunction = () => 
-  Math.random() * (CUSTOMIZATION.MAX_OVAL_SIZE - CUSTOMIZATION.MIN_OVAL_SIZE) + CUSTOMIZATION.MIN_OVAL_SIZE;
+const getRandomSize: RandomSizeFunction = () =>
+  Math.random() * (CUSTOMIZATION.MAX_OVAL_SIZE - CUSTOMIZATION.MIN_OVAL_SIZE) +
+  CUSTOMIZATION.MIN_OVAL_SIZE;
 
-const getRandomAspectRatio: RandomAspectRatioFunction = () => 
-  Math.random() * (CUSTOMIZATION.MAX_ASPECT_RATIO - CUSTOMIZATION.MIN_ASPECT_RATIO) + CUSTOMIZATION.MIN_ASPECT_RATIO;
+const getRandomAspectRatio: RandomAspectRatioFunction = () =>
+  Math.random() *
+    (CUSTOMIZATION.MAX_ASPECT_RATIO - CUSTOMIZATION.MIN_ASPECT_RATIO) +
+  CUSTOMIZATION.MIN_ASPECT_RATIO;
 
-
-const getRandomColor = (colors: string[]): string => 
+const getRandomColor = (colors: string[]): string =>
   colors[Math.floor(Math.random() * colors.length)];
 
-const getRandomDuration = () => 
-  Math.floor(Math.random() * CUSTOMIZATION.OVAL_DURATION.length)
+const getRandomDuration = () =>
+  Math.floor(Math.random() * CUSTOMIZATION.OVAL_DURATION.length);
 
-const createOval = (canvas: HTMLCanvasElement, timestamp: number, colors: string[]): Oval => {
+const createOval = (
+  canvas: HTMLCanvasElement,
+  timestamp: number,
+  colors: string[]
+): Oval => {
   const maxSize = getRandomSize();
   const extension = maxSize / 2;
   return {
@@ -90,7 +96,8 @@ const createOval = (canvas: HTMLCanvasElement, timestamp: number, colors: string
   };
 };
 
-const easeInOutCubic = (t: number): number => t<.5 ? 4*t*t*t : (t-1)*(2*t-2)*(2*t-2)+1;
+const easeInOutCubic = (t: number): number =>
+  t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
 
 const Background: React.FC<BackgroundProps> = ({ colors }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -139,32 +146,43 @@ const Background: React.FC<BackgroundProps> = ({ colors }) => {
     const animate = (timestamp: number) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const transitionProgress = Math.min((timestamp - transitionStartTime) / CUSTOMIZATION.COLOR_TRANSITION_DURATION, 1);
+      const transitionProgress = Math.min(
+        (timestamp - transitionStartTime) /
+          CUSTOMIZATION.COLOR_TRANSITION_DURATION,
+        1
+      );
 
-      if (ovals.length < CUSTOMIZATION.MAX_OVALS && 
-          timestamp - lastOvalCreatedAt > CUSTOMIZATION.MIN_CREATION_DELAY + 
-          Math.random() * (CUSTOMIZATION.MAX_CREATION_DELAY - CUSTOMIZATION.MIN_CREATION_DELAY)) {
+      if (
+        ovals.length < CUSTOMIZATION.MAX_OVALS &&
+        timestamp - lastOvalCreatedAt >
+          CUSTOMIZATION.MIN_CREATION_DELAY +
+            Math.random() *
+              (CUSTOMIZATION.MAX_CREATION_DELAY -
+                CUSTOMIZATION.MIN_CREATION_DELAY)
+      ) {
         ovals.push(createOval(canvas, timestamp, currentColors));
         lastOvalCreatedAt = timestamp;
       }
 
-
-
-
-      ovals = ovals.filter(oval => {
+      ovals = ovals.filter((oval) => {
         const elapsedTime = timestamp - oval.startTime;
         const progress = Math.min(elapsedTime / oval.duration, 1);
 
         const easedProgress = easeInOutCubic(progress);
 
-        const currentX = oval.startX + (oval.endX - oval.startX) * easedProgress;
-        const currentY = oval.startY + (oval.endY - oval.startY) * easedProgress;
+        const currentX =
+          oval.startX + (oval.endX - oval.startX) * easedProgress;
+        const currentY =
+          oval.startY + (oval.endY - oval.startY) * easedProgress;
 
         let currentSize: number;
         if (progress < CUSTOMIZATION.EXPAND_DURATION_RATIO) {
-          currentSize = oval.maxSize * (progress / CUSTOMIZATION.EXPAND_DURATION_RATIO);
+          currentSize =
+            oval.maxSize * (progress / CUSTOMIZATION.EXPAND_DURATION_RATIO);
         } else if (progress > 1 - CUSTOMIZATION.SHRINK_DURATION_RATIO) {
-          currentSize = oval.maxSize * Math.max(0, (1 - progress) / CUSTOMIZATION.SHRINK_DURATION_RATIO);
+          currentSize =
+            oval.maxSize *
+            Math.max(0, (1 - progress) / CUSTOMIZATION.SHRINK_DURATION_RATIO);
         } else {
           currentSize = oval.maxSize;
         }
@@ -213,12 +231,12 @@ const Background: React.FC<BackgroundProps> = ({ colors }) => {
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <canvas
         ref={canvasRef}
-        className="bg-transparent"
+        className='bg-transparent'
         style={{ position: 'absolute', top: 0, left: 0, display: 'none' }}
       />
       <canvas
         ref={blurredCanvasRef}
-        className="bg-transparent"
+        className='bg-transparent'
         style={{ position: 'absolute', top: 0, left: 0, display: 'block' }}
       />
     </div>

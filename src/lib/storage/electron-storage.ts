@@ -11,7 +11,12 @@ export class ElectronStorage implements StorageInterface {
   }
 
   private isElectron(): boolean {
-    return !!(window && window.process && window.process.versions && window.process.versions.electron);
+    return !!(
+      window &&
+      window.process &&
+      window.process.versions &&
+      window.process.versions.electron
+    );
   }
 
   async getItem(key: string): Promise<string | null> {
