@@ -8,6 +8,7 @@ import { MessageSquareQuote } from 'lucide-react';
 import {useQueueStore} from '@/lib/queue'
 import { ScrollArea } from '../ui/scroll-area';
 import { useRouter } from 'next/navigation';
+import {formatLyrics} from '@/lib/lyrics'
 
 import {Ellipsis} from 'lucide-react'
 import {
@@ -46,6 +47,7 @@ export default function Lyrics({ audioRef }: { audioRef: React.RefObject<HTMLAud
 
     useEffect(() => {
         if (audioRef.current) {
+            console.log(lyrics)
             const handleTimeUpdate = () => {
                 const currentTime = audioRef.current?.currentTime;
                 if (currentTime && lyrics) {
@@ -116,6 +118,10 @@ export default function Lyrics({ audioRef }: { audioRef: React.RefObject<HTMLAud
             }
             const response = await fetch(url.toString());
             const data = await response.json();
+            if (!data['subsonic-response'].lyricsList.structuredLyrics) {
+                fetchLRCLIB();
+                return null;
+            }
             if (data['subsonic-response'].status !== 'ok') {
                 throw new Error(data['subsonic-response'].error.message);
             }
@@ -125,6 +131,20 @@ export default function Lyrics({ audioRef }: { audioRef: React.RefObject<HTMLAud
             setError('An error occurred while fetching the lyrics');
         }
     }
+
+    async function fetchLRCLIB() {
+        if (!songData) return;
+        try {
+            await fetch('https://lrclib.net/api/get?artist_name=' + songData.artist + '&track_name=' + songData.title + '&album_name=' + songData.album).then(async (response) => {
+                const data = await response.json();
+                setLyrics(formatLyrics(data.syncedLyrics));
+            });
+        } catch (error) {
+            console.error('An error occurred:', error);
+            setError('An error occurred while fetching the lyrics');
+        }
+    }
+
 
     function handleLyricClick(index: number) {
         if (audioRef.current && lyricsContainerRef) {
