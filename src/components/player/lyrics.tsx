@@ -135,6 +135,11 @@ export default function Lyrics({
         throw new Error(data['subsonic-response'].error.message);
       }
       setLyrics(data['subsonic-response'].lyricsList.structuredLyrics[0].line);
+
+      // If lyrics are not synced, try and fetch from lrclib
+      if (data['subsonic-response'].lyricsList.structuredLyrics[0].synced === false) {
+        fetchLRCLIB();
+      }
     } catch (error) {
       console.error('An error occurred:', error);
       setError('An error occurred while fetching the lyrics');
