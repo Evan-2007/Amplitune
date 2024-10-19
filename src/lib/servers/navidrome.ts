@@ -2,7 +2,6 @@ import {useRouter} from 'next/router';
 import {CrossPlatformStorage} from '@/lib/storage/cross-platform-storage';
 
 export const fawafsfa = async () => {
-    const router = useRouter();
     const storage = new CrossPlatformStorage();
     const servers = await storage.getItem('servers');
     if (!servers) {

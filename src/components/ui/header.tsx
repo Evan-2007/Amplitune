@@ -188,7 +188,7 @@ function Search() {
                                     {results !== null ? (
                                         <div className=' h-full flex flex-col rounded-xl'>
                                             {results.artist && results.artist.length > 0 && results.artist.map((artist, index) => (
-                                                <div className=''>
+                                                <div className='' key={index}>
                                                     <div className='grid-cols-7 grid col-auto py-2 pl-2'>
                                                         <button key={index} className='filter-none flex w-full items-center group relative pt-2 pb-2' onClick={() => router.push(`/home/?playing=${artist.id}&play=true`)}>
                                                             <img className='w-11 rounded-full absolute' src={`${baseImageURL}&id=${artist.coverArt}`} alt="" />
@@ -204,7 +204,7 @@ function Search() {
                                             ))}
                                            
                                             {results.song && results.song.length > 0 && results.song.map((song, index) => (
-                                                <div className=''>
+                                                <div className='' key={index}>
                                                     <div className='grid-cols-7 grid col-auto py-2 pl-2'>
                                                         <button key={index} className='filter-none flex w-full items-center group relative' onClick={() => router.push(`/home/?playing=${song.id}&play=true`)}>
                                                             <img className='w-11 rounded-md absolute' src={`${baseImageURL}&id=${song.coverArt}`} alt="" />
@@ -235,7 +235,7 @@ function Search() {
 
                                             {results.album && results.album.length > 0 && results.album.map((album, index) => (
                                                 album.songCount > 1 ? 
-                                                <div className='overflow-visible'>
+                                                <div className='overflow-visible' key={index}>
                                                 <div className='grid-cols-7 grid col-auto py-2 pl-2 overflow-visible'>
                                                     <button key={index} className='filter-none flex w-full items-center group relative' onClick={() => router.push(`/home/?playing=${album.id}&play=true`)}>
                                                         <img className='w-11 rounded-md absolute' src={`${baseImageURL}&id=${album.coverArt}`} alt="" />
@@ -327,19 +327,19 @@ function WindowControls() {
     return (
         <div className="flex space-x-2 absolute right-0 top-0">
             <div id="min-button">
-                <img  src="icons/min-w-10.png 1x, icons/min-w-12.png 1.25x, icons/min-w-15.png 1.5x, icons/min-w-15.png 1.75x, icons/min-w-20.png 2x, icons/min-w-20.png 2.25x, icons/min-w-24.png 2.5x, icons/min-w-30.png 3x, icons/min-w-30.png 3.5x" draggable="false" />
+                <img  src="icons/min-w-10.png 1x, icons/min-w-12.png 1.25x, icons/min-w-15.png 1.5x, icons/min-w-15.png 1.75x, icons/min-w-20.png 2x, icons/min-w-20.png 2.25x, icons/min-w-24.png 2.5x, icons/min-w-30.png 3x, icons/min-w-30.png 3.5x" draggable="false" alt="minimize Window"/>
             </div>
 
             <div  id="max-button">
-                <img  src="icons/max-w-10.png 1x, icons/max-w-12.png 1.25x, icons/max-w-15.png 1.5x, icons/max-w-15.png 1.75x, icons/max-w-20.png 2x, icons/max-w-20.png 2.25x, icons/max-w-24.png 2.5x, icons/max-w-30.png 3x, icons/max-w-30.png 3.5x" draggable="false" />
+                <img  src="icons/max-w-10.png 1x, icons/max-w-12.png 1.25x, icons/max-w-15.png 1.5x, icons/max-w-15.png 1.75x, icons/max-w-20.png 2x, icons/max-w-20.png 2.25x, icons/max-w-24.png 2.5x, icons/max-w-30.png 3x, icons/max-w-30.png 3.5x" draggable="false" alt="maximize Window" />
             </div>
 
             <div  id="restore-button">
-                <img  src="icons/restore-w-10.png 1x, icons/restore-w-12.png 1.25x, icons/restore-w-15.png 1.5x, icons/restore-w-15.png 1.75x, icons/restore-w-20.png 2x, icons/restore-w-20.png 2.25x, icons/restore-w-24.png 2.5x, icons/restore-w-30.png 3x, icons/restore-w-30.png 3.5x" draggable="false" />
+                <img  src="icons/restore-w-10.png 1x, icons/restore-w-12.png 1.25x, icons/restore-w-15.png 1.5x, icons/restore-w-15.png 1.75x, icons/restore-w-20.png 2x, icons/restore-w-20.png 2.25x, icons/restore-w-24.png 2.5x, icons/restore-w-30.png 3x, icons/restore-w-30.png 3.5x" draggable="false" alt="restore window size" />
             </div>
 
             <div  id="close-button">
-                <img  src="icons/close-w-10.png 1x, icons/close-w-12.png 1.25x, icons/close-w-15.png 1.5x, icons/close-w-15.png 1.75x, icons/close-w-20.png 2x, icons/close-w-20.png 2.25x, icons/close-w-24.png 2.5x, icons/close-w-30.png 3x, icons/close-w-30.png 3.5x" draggable="false" />
+                <img  src="icons/close-w-10.png 1x, icons/close-w-12.png 1.25x, icons/close-w-15.png 1.5x, icons/close-w-15.png 1.75x, icons/close-w-20.png 2x, icons/close-w-20.png 2.25x, icons/close-w-24.png 2.5x, icons/close-w-30.png 3x, icons/close-w-30.png 3.5x" draggable="false" alt="close window" />
             </div>
         </div>
     )
