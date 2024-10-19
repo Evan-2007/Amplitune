@@ -13,14 +13,6 @@ jobs:
 
     steps:
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm  
-        with:
-           version: 9
-           run_install: false
-
-      - name: install prettier extension
-        run: pnpm install prettier-plugin-tailwindcss
 
       - name: Checkout
         uses: actions/checkout@v3
@@ -33,3 +25,4 @@ jobs:
         with:
             dry: true
             prettier_options: --check
+            prettier_plugins: 'prettier-plugin-tailwindcss'
