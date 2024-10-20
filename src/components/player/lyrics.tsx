@@ -148,7 +148,7 @@ export default function Lyrics({
       } else {
         setSynced(true);
         setLyrics(
-            data['subsonic-response'].lyricsList.structuredLyrics[0].line
+          data['subsonic-response'].lyricsList.structuredLyrics[0].line
         );
       }
     } catch (error) {
@@ -322,14 +322,14 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
           <>
             {index < queue.currentSong.index && (
               <div className='flex justify-between'>
-                <div className='flex space-x-4 group/image'>
+                <div className='group/image flex space-x-4'>
                   <div className='' onClick={() => setSong(index)}>
                     <img
                       src={`${baseUrl}&id=${song.coverArt}`}
                       alt='cover art'
                       className='absolute h-12 w-12 rounded-md'
                     />
-                    <div className='invisible z-50 cursor-pointer flex h-12 w-12 items-center justify-center rounded-md bg-card/20 opacity-0 backdrop-blur-[2px] transition-all duration-300 ease-in group-hover/image:visible group-hover/image:opacity-100'>
+                    <div className='invisible z-50 flex h-12 w-12 cursor-pointer items-center justify-center rounded-md bg-card/20 opacity-0 backdrop-blur-[2px] transition-all duration-300 ease-in group-hover/image:visible group-hover/image:opacity-100'>
                       <CirclePlay
                         className='m-auto h-8 w-8 text-white'
                         strokeWidth={0.8}
@@ -389,7 +389,7 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
                       alt='cover art'
                       className='absolute h-12 w-12 rounded-md'
                     />
-                    <div className='invisible cursor-pointer z-50 flex h-12 w-12 items-center justify-center rounded-md bg-card/20 opacity-0 backdrop-blur-[2px] transition-all duration-300 ease-in group-hover/image:visible group-hover/image:opacity-100'>
+                    <div className='invisible z-50 flex h-12 w-12 cursor-pointer items-center justify-center rounded-md bg-card/20 opacity-0 backdrop-blur-[2px] transition-all duration-300 ease-in group-hover/image:visible group-hover/image:opacity-100'>
                       <CirclePlay
                         className='m-auto h-8 w-8 text-white'
                         strokeWidth={0.8}

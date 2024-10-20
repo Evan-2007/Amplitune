@@ -1,8 +1,8 @@
 'use client';
-import {navidromeApi, subsonicURL} from '@/lib/servers/navidrome';
+import { navidromeApi, subsonicURL } from '@/lib/servers/navidrome';
 import { useEffect } from 'react';
-import {useState} from 'react';
-import {useRouter} from 'next/navigation';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
 export default function HomePage() {
@@ -15,7 +15,6 @@ export default function HomePage() {
   const getSubsonicURL = async () => {
     setBaseUrl(await subsonicURL('/rest/getCoverArt', ''));
   };
-  
 
   return (
     <div className='flex h-full w-full flex-col p-10'>
@@ -27,8 +26,6 @@ export default function HomePage() {
     </div>
   );
 }
-
-
 
 interface SongSearch {
   playCount: number;
@@ -65,39 +62,50 @@ interface SongSearch {
   updatedAt?: string;
   orderTitle?: string;
 }
-  
 
-
-function RecentlyPlayed({baseImageUrl}: {baseImageUrl: string | null}) {
-  const [recentlyPlayed, setRecentlyPlayed] = useState<SongSearch[] | undefined>(undefined);
+function RecentlyPlayed({ baseImageUrl }: { baseImageUrl: string | null }) {
+  const [recentlyPlayed, setRecentlyPlayed] = useState<
+    SongSearch[] | undefined
+  >(undefined);
   const router = useRouter();
 
   useEffect(() => {
     getRecentlyPlayed();
-  } , []);
+  }, []);
 
   async function getRecentlyPlayed() {
-    const response = await navidromeApi('/api/song?_end=15&_order=DESC&_sort=play_date&_start=0');
-    if (response.error == 'not_authenticated' || response.error == 'no_server') {
+    const response = await navidromeApi(
+      '/api/song?_end=15&_order=DESC&_sort=play_date&_start=0'
+    );
+    if (
+      response.error == 'not_authenticated' ||
+      response.error == 'no_server'
+    ) {
       router.push('/servers');
     }
 
     if (response.response) {
       setRecentlyPlayed(response.response);
     }
-    
   }
   return (
     <>
       <div className='flex overflow-auto'>
-        {recentlyPlayed && baseImageUrl && <DisplaySongs songs={recentlyPlayed} baseImageURL={baseImageUrl} />}
+        {recentlyPlayed && baseImageUrl && (
+          <DisplaySongs songs={recentlyPlayed} baseImageURL={baseImageUrl} />
+        )}
       </div>
     </>
   );
 }
 
-
-function DisplaySongs({songs, baseImageURL}: {songs: SongSearch[], baseImageURL: string}) {
+function DisplaySongs({
+  songs,
+  baseImageURL,
+}: {
+  songs: SongSearch[];
+  baseImageURL: string;
+}) {
   const [screenCount, setScreenCount] = useState<number>(0);
   const [tab, setTab] = useState({
     start: 0,
@@ -119,7 +127,6 @@ function DisplaySongs({songs, baseImageURL}: {songs: SongSearch[], baseImageURL:
     };
   }, []);
 
-
   return (
     <div className=''>
       <h1 className='text-3xl'>Recently Played</h1>
@@ -136,16 +143,27 @@ function DisplaySongs({songs, baseImageURL}: {songs: SongSearch[], baseImageURL:
             end: tab.end - screenCount,
           });
         }}
-        tab={tab.start == 0 ? 'first' : tab.end == songs.length ? 'last' : undefined}
+        tab={
+          tab.start == 0
+            ? 'first'
+            : tab.end == songs.length
+              ? 'last'
+              : undefined
+        }
       />
       <div className='flex space-x-5'>
-        {songs.slice(0, screenCount ).map((song: SongSearch) => {
+        {songs.slice(0, screenCount).map((song: SongSearch) => {
           return (
             <div key={song.id} className='flex flex-col'>
-            <Image src={`${baseImageURL}&id=${song.id}`} width={300} height={300} alt={song.orderTitle}/>
-            <p>{song.orderTitle}</p>
-            <p>{song.artist}</p>
-          </div>
+              <Image
+                src={`${baseImageURL}&id=${song.id}`}
+                width={300}
+                height={300}
+                alt={song.orderTitle}
+              />
+              <p>{song.orderTitle}</p>
+              <p>{song.artist}</p>
+            </div>
           );
         })}
       </div>
@@ -153,17 +171,25 @@ function DisplaySongs({songs, baseImageURL}: {songs: SongSearch[], baseImageURL:
   );
 }
 
-import {Car, ChevronLeftIcon, ChevronRightIcon} from 'lucide-react';
-import {Card, CardContent, CardHeader} from '@/components/ui/card';
-function TabSwitcher({next, previous, tab}: {next: () => void, previous: () => void, tab: 'last' | 'first' | undefined}) {
+import { Car, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+function TabSwitcher({
+  next,
+  previous,
+  tab,
+}: {
+  next: () => void;
+  previous: () => void;
+  tab: 'last' | 'first' | undefined;
+}) {
   return (
-      <div className='flex justify-center space-x-4'>
-        <Card>
-          <ChevronLeftIcon onClick={previous} />
-        </Card>
-        <Card>
-          <ChevronRightIcon onClick={next} />
-        </Card>
-      </div>
+    <div className='flex justify-center space-x-4'>
+      <Card>
+        <ChevronLeftIcon onClick={previous} />
+      </Card>
+      <Card>
+        <ChevronRightIcon onClick={next} />
+      </Card>
+    </div>
   );
 }

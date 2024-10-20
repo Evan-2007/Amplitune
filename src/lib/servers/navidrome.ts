@@ -2,38 +2,38 @@ import { useRouter } from 'next/router';
 import { CrossPlatformStorage } from '@/lib/storage/cross-platform-storage';
 
 interface navidromeRequest {
-    response?: any;
-    error: 'not_authenticated' | 'not_found' | 'error' | 'no_server';
+  response?: any;
+  error: 'not_authenticated' | 'not_found' | 'error' | 'no_server';
 }
 
 export const navidromeApi = async (path: string): Promise<navidromeRequest> => {
-    const storage = new CrossPlatformStorage();
-    const activeServer = await storage.getItem('activeServer');
-    if (!activeServer) {
-        return { response: null, error: 'no_server' };
-    }
-    const parsedServer = await JSON.parse(activeServer);
-    if (!parsedServer || parsedServer.token === undefined) {
-        return { response: null, error: 'not_authenticated' };
-    }
+  const storage = new CrossPlatformStorage();
+  const activeServer = await storage.getItem('activeServer');
+  if (!activeServer) {
+    return { response: null, error: 'no_server' };
+  }
+  const parsedServer = await JSON.parse(activeServer);
+  if (!parsedServer || parsedServer.token === undefined) {
+    return { response: null, error: 'not_authenticated' };
+  }
 
-    const url = `${parsedServer.url}${path}`;
-    const response = await fetch(url, {
-        headers: {
-            'X-Nd-Authorization': `Bearer ${parsedServer.token}`,
-        },
-    });
-    if (response.status === 401) {
-        return { response: null, error: 'not_authenticated' };
-    }
-    if (response.status === 404) {
-        return { response: null, error: 'not_found' };
-    }
-    if (response.ok) {
-        const data = await response.json();
-        return { response: data, error: 'error' };
-    }
-    return { response: null, error: 'error' };
+  const url = `${parsedServer.url}${path}`;
+  const response = await fetch(url, {
+    headers: {
+      'X-Nd-Authorization': `Bearer ${parsedServer.token}`,
+    },
+  });
+  if (response.status === 401) {
+    return { response: null, error: 'not_authenticated' };
+  }
+  if (response.status === 404) {
+    return { response: null, error: 'not_found' };
+  }
+  if (response.ok) {
+    const data = await response.json();
+    return { response: data, error: 'error' };
+  }
+  return { response: null, error: 'error' };
 };
 
 interface server {

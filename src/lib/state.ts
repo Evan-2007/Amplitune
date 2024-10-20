@@ -41,7 +41,6 @@ export interface playerStore {
 
   ref: React.RefObject<HTMLAudioElement>;
   setRef: (ref: React.RefObject<HTMLAudioElement>) => void;
-
 }
 
 export const usePlayerStore = create<playerStore>((set) => ({
@@ -59,14 +58,14 @@ export const usePlayerStore = create<playerStore>((set) => ({
   toggleRepeat: () =>
     set((state) => {
       if (state.repeat === 2) {
-        return { 
+        return {
           ...state,
-          repeat: 0 
+          repeat: 0,
         };
       } else {
-        return { 
+        return {
           ...state,
-          repeat: state.repeat + 1 
+          repeat: state.repeat + 1,
         };
       }
     }),

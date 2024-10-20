@@ -217,7 +217,10 @@ export const useQueueStore = create<queueStore>((set) => ({
               },
             },
           };
-        } else if (state.queue.currentSong.index === state.queue.songs.length - 1) {
+        } else if (
+          state.queue.currentSong.index ===
+          state.queue.songs.length - 1
+        ) {
           return {
             queue: {
               ...state.queue,
