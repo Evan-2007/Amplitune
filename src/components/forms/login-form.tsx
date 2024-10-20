@@ -126,6 +126,7 @@ function LoginForm() {
             type: 'navidrome',
             salt: response.subsonicSalt,
             hash: response.subsonicToken,
+            token: response.token,
             id: crypto.randomUUID(),
           });
           localStorage.setItem('servers', JSON.stringify(servers));
@@ -140,6 +141,7 @@ function LoginForm() {
                 type: 'navidrome',
                 salt: response.subsonicSalt,
                 hash: response.subsonicToken,
+                token: response.token,
                 id: crypto.randomUUID(),
               },
             ])
@@ -155,6 +157,7 @@ function LoginForm() {
             type: 'navidrome',
             salt: response.subsonicSalt,
             hash: response.subsonicToken,
+            token: response.token,
             id: crypto.randomUUID(),
           })
         );
