@@ -149,6 +149,11 @@ export function PlayerContent({}: {}) {
   }
 
   const songs = useQueueStore((state) => state.queue.songs);
+  const repeat = usePlayerStore((state) => state.repeat);
+
+  useEffect(() => {
+    console.log(repeat);
+  } , [repeat]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -161,8 +166,11 @@ export function PlayerContent({}: {}) {
           );
           console.log('Current index:', currentIndex);
           if (currentIndex === -1 || currentIndex === songs.length - 1) {
-            console.log('Moving to first song');
-            setCurrentSong(0);
+            console.log(repeat);
+            if (repeat == 1) {
+              console.log('Moving to first song');
+              setCurrentSong(0);
+            }
           } else {
             console.log('Moving to next song');
             setCurrentSong(currentIndex + 1);
