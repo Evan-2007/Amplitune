@@ -154,6 +154,7 @@ export function PlayerContent({}: {}) {
     if (audioRef.current) {
       audioRef.current.onended = () => {
         console.log('Song ended');
+        handleScrobble(true); // Submit scrobble
         if (songs.length > 0) {
           const currentIndex = songs.findIndex(
             (song) => song.id === currentSong?.track?.id
@@ -209,6 +210,50 @@ export function PlayerContent({}: {}) {
         );
     }
   }, [audioUrl]);
+
+
+
+  //listen for play for scrobbling
+    useEffect(() => {
+        let lastClickTime = 0;
+        const handlePlay = () => {
+            const now = Date.now();
+            if (now - lastClickTime < 300) {
+                console.log('Preventing multiple clicks');
+                return;
+            }
+            lastClickTime = now;
+            console.log('Playing');
+            handleScrobble();
+        };
+
+        if (audioRef.current) {
+            audioRef.current.addEventListener('play', handlePlay);
+        }
+
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.removeEventListener('play', handlePlay);
+            }
+        };
+    }, [audioRef.current]);
+
+    async function handleScrobble(submit = false) {
+        if (currentSong && currentSong.track) {
+            const url = await subsonicURL(
+                '/rest/scrobble',
+                `&id=${currentSong.track.id}&submission=${submit}`
+            );
+            fetch(url.toString(), {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+        } else {
+            console.log('Current song or track ID is not available');
+        }
+    }
 
   if (songData == null) {
     return (
