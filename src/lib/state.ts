@@ -33,23 +33,43 @@ export interface playerStore {
   setPlaying: (playing: boolean) => void;
   togglePlaying: () => void;
 
+  repeat: number;
+  toggleRepeat: () => void;
+
   volume: number;
   setVolume: (volume: number) => void;
 
   ref: React.RefObject<HTMLAudioElement>;
   setRef: (ref: React.RefObject<HTMLAudioElement>) => void;
+
 }
 
 export const usePlayerStore = create<playerStore>((set) => ({
   playing: false,
   setPlaying: (playing) => set({ playing }),
   togglePlaying: () => set((state) => ({ playing: !state.playing })),
+  repeat: 0,
 
   volume: 0.5,
   setVolume: (volume) => set({ volume }),
 
   ref: { current: null },
   setRef: (ref) => set((playerStore) => ({ ...playerStore, ref })),
+
+  toggleRepeat: () =>
+    set((state) => {
+      if (state.repeat === 2) {
+        return { 
+          ...state,
+          repeat: 0 
+        };
+      } else {
+        return { 
+          ...state,
+          repeat: state.repeat + 1 
+        };
+      }
+    }),
 }));
 
 interface configStore {

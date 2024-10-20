@@ -167,7 +167,7 @@ export const useQueueStore = create<queueStore>((set) => ({
     set((state) => ({
       queue: {
         ...state.queue,
-        repeat,
+        repeat: repeat,
       },
     })),
 
@@ -183,6 +183,16 @@ export const useQueueStore = create<queueStore>((set) => ({
               currentSong: {
                 track: state.queue.songs[currentIndex - 1],
                 index: currentIndex - 1,
+              },
+            },
+          };
+        } else if (state.queue.currentSong.index === 0) {
+          return {
+            queue: {
+              ...state.queue,
+              currentSong: {
+                track: state.queue.songs[state.queue.songs.length - 1],
+                index: state.queue.songs.length - 1,
               },
             },
           };
@@ -204,6 +214,16 @@ export const useQueueStore = create<queueStore>((set) => ({
               currentSong: {
                 track: state.queue.songs[currentIndex + 1],
                 index: currentIndex + 1,
+              },
+            },
+          };
+        } else if (state.queue.currentSong.index === state.queue.songs.length - 1) {
+          return {
+            queue: {
+              ...state.queue,
+              currentSong: {
+                track: state.queue.songs[0],
+                index: 0,
               },
             },
           };

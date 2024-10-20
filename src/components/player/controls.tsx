@@ -25,7 +25,6 @@ const formatTime = (time: number): string => {
 
 const Controls: React.FC<ControlsProps> = ({ className }) => {
   const [playing, setPlaying] = useState<boolean>(false);
-  const [repeat, setRepeat] = useState<number>(0);
   const [shuffle, setShuffle] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [sliderValue, setSliderValue] = useState<number>(0);
@@ -39,6 +38,9 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
   const audioRef = usePlayerStore((state) => state.ref);
 
   const songData = useQueueStore((state) => state.currentSong?.track);
+
+  const repeat = usePlayerStore((state) => state.repeat);
+  const toggleRepeat = usePlayerStore((state) => state.toggleRepeat);
 
   const timeLeftString: string = `-${formatTime(timeLeft)}`;
   const sliderTimestamp: string = formatTime((length * sliderValue) / 1000);
@@ -106,9 +108,10 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
     }
   }
 
+  const setRepeat = useQueueStore((queue) => queue.setRepeat);
+
   const togglePlayPause = () => setPlaying(!playing);
   const toggleShuffle = () => setShuffle(!shuffle);
-  const cycleRepeat = () => setRepeat((prev) => (prev + 1) % 3);
 
   return (
     <div className={cn('flex h-full flex-col', className)}>
@@ -130,7 +133,7 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
         <button onClick={() => skip()}>
           <ControlButton icon='next' onClick={() => skip} />
         </button>
-        <button onClick={cycleRepeat}>
+        <button onClick={toggleRepeat}>
           {repeat === 2 ? (
             <Repeat1 color='red' strokeWidth={2.5} size={24} />
           ) : repeat === 1 ? (
