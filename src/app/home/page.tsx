@@ -159,7 +159,7 @@ function DisplaySongs({
                 src={`${baseImageURL}&id=${song.id}`}
                 width={300}
                 height={300}
-                alt={song.orderTitle}
+                alt={song.orderTitle || song.name}
               />
               <p>{song.orderTitle}</p>
               <p>{song.artist}</p>
