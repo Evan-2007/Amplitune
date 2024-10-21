@@ -187,7 +187,7 @@ function Search() {
         {activeInput && (
           <>
             <div
-              className={`absolute top-10 z-20 mt-5 h-96 w-96 animate-[fadeIn_.001s] overflow-visible rounded-xl border border-border bg-card/50 backdrop-blur-sm duration-1000 ease-in-out`}
+              className={`absolute top-10 z-20 mt-5 h-96 w-96 animate-[fadeIn_.001s] overflow-visible rounded-xl border border-border bg-card/60 backdrop-blur-md duration-1000 ease-in-out`}
               ref={resultsContainerRef}
             >
               <ScrollArea className='relative h-full w-full overflow-visible'>
