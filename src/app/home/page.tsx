@@ -133,9 +133,9 @@ function MostPlayed({ baseImageUrl }: { baseImageUrl: string | null }) {
       <ScrollArea>
       <div className='grid grid-flow-col grid-rows-3 overflow-auto w-full' >
         {mostPlayed && baseImageUrl && (
-          mostPlayed.map((song: SongSearch) => {
+          mostPlayed.map((song: SongSearch, index) => {
             return (
-              <SongDisply song={song} baseImageUrl={baseImageUrl} />
+              <SongDisply song={song} baseImageUrl={baseImageUrl} key={index} />
             );
           })
         )}

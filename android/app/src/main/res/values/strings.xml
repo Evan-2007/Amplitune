@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">music-next</string>
-    <string name="title_activity_main">music-next</string>
-    <string name="package_name">dev.evanc.music</string>
-    <string name="custom_url_scheme">dev.evanc.music</string>
-</resources>

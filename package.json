@@ -9,8 +9,8 @@
     "build:web": "next build",
     "start": "next start",
     "lint": "next lint",
-    "dev": "concurrently -n \"NEXT,ELECTRON\" -c \"yellow,blue\" --kill-others \"next dev\" \"electron .\"",
-    "build": "next build && electron-builder",
+    "dev": "next dev",
+    "build": "next build",
     "start:ios": "next build && pnpm cap run ios",
     "start:android": "pnpm cap run android",
     "format": "prettier --check .",
@@ -69,6 +69,7 @@
   "devDependencies": {
     "@capacitor/cli": "^6.1.2",
     "@svgr/webpack": "^8.1.0",
+    "@tauri-apps/cli": "1",
     "@types/lodash": "^4.17.9",
     "@types/md5": "^2.3.5",
     "@types/node": "^22.7.2",
