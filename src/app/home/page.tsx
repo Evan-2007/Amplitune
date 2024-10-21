@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import {ScrollArea, ScrollBar} from '@/components/ui/scroll-area';
 
 export default function HomePage() {
   const [baseUrl, setBaseUrl] = useState<string | null>(null);
@@ -17,13 +18,13 @@ export default function HomePage() {
   };
 
   return (
-    <div className='flex h-full w-full flex-col p-10'>
+    <ScrollArea className='flex h-full w-full flex-col p-10 overflow-auto'>
+      <MostPlayed baseImageUrl={baseUrl} />
       <RecentlyPlayed baseImageUrl={baseUrl} />
-      <h1 className='text-3xl'>Most Played</h1>
       <h1 className='text-3xl'>Recently added</h1>
       <h1 className='text-3xl'>Artists</h1>
       <h1 className='text-3xl'>Albums</h1>
-    </div>
+    </ScrollArea>
   );
 }
 
@@ -61,6 +62,7 @@ interface SongSearch {
   createdAt?: string;
   updatedAt?: string;
   orderTitle?: string;
+  title?: string;
 }
 
 function RecentlyPlayed({ baseImageUrl }: { baseImageUrl: string | null }) {
@@ -98,6 +100,74 @@ function RecentlyPlayed({ baseImageUrl }: { baseImageUrl: string | null }) {
     </>
   );
 }
+
+
+function MostPlayed({ baseImageUrl }: { baseImageUrl: string | null }) {
+  const [mostPlayed, setMostPlayed] = useState<
+    SongSearch[] | undefined
+  >(undefined);
+  const router = useRouter();
+
+  useEffect(() => {
+    getMostPlayed();
+  }, []);
+
+  async function getMostPlayed() {
+    const response = await navidromeApi(
+      '/api/song?_end=15&_order=DESC&_sort=play_count&_start=0'
+    );
+    if (
+      response.error == 'not_authenticated' ||
+      response.error == 'no_server'
+    ) {
+      router.push('/servers');
+    }
+
+    if (response.response) {
+      setMostPlayed(response.response);
+    }
+  }
+  return (
+    <>
+      <p className='text-3xl'>Most Played</p>
+      <ScrollArea>
+      <div className='grid grid-flow-col grid-rows-3 overflow-auto w-full' >
+        {mostPlayed && baseImageUrl && (
+          mostPlayed.map((song: SongSearch) => {
+            return (
+              <SongDisply song={song} baseImageUrl={baseImageUrl} />
+            );
+          })
+        )}
+      </div>
+      <ScrollBar orientation="horizontal" />
+      </ScrollArea>
+    </>
+  );
+}
+
+
+function SongDisply ({song, baseImageUrl}: {song: SongSearch, baseImageUrl: string}) {
+  return (
+    <div key={song.id} className='flex flex-row w-[300px]  border-border border-b line-clamp-1 text-ellipsis space-x-3 mt-2 items-center mr-4 p-2 hover:bg-gray-700/60 rounded-md '>
+      <Image
+        src={`${baseImageUrl}&id=${song.id}`}
+        width={48}
+        height={48}
+        alt={song.orderTitle || song.name}
+        className='rounded-md'
+      />
+      <div className='flex flex-col'>
+        <div className='flex flex-col'>
+          <p className='line-clamp-1'>{song.title ?? song.orderTitle ?? song.name}</p>
+          <p className='line-clamp-1'>{song.artist}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 
 function DisplaySongs({
   songs,
@@ -151,7 +221,7 @@ function DisplaySongs({
               : undefined
         }
       />
-      <div className='flex space-x-5'>
+      <div className='flex space-x-5 '>
         {songs.slice(0, screenCount).map((song: SongSearch) => {
           return (
             <div key={song.id} className='flex flex-col'>
