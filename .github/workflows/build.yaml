@@ -62,8 +62,7 @@ jobs:
               with:
                 name: build ${{ matrix.os }} ${{ github.sha }}
                 path: |
-                  ./src-tauri/target/release/bundle/nsis
-                  ./src-tauri/target/release/bundle.js
+                  ./src-tauri/target/release/bundle
                 if-no-files-found: error
                 overwrite: true
 
