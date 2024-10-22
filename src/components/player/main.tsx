@@ -263,7 +263,7 @@ export function PlayerContent({}: {}) {
 
   if (songData == null) {
     return (
-      <div className='sticky flex h-[100px] w-screen'>
+      <div className='sticky flex h-[75px] w-screen flex-shrink-0 flex-grow-0'>
         <div className='flex h-full items-center justify-center'>
           <div className='h-full p-3'>
             <div className='aspect-square h-full rounded-lg bg-background'></div>
@@ -280,7 +280,7 @@ export function PlayerContent({}: {}) {
   }
 
   return (
-    <div className='sticky flex h-[100px] w-screen justify-between'>
+    <div className='sticky flex h-[75px] w-screen justify-between flex-shrink-0 flex-grow-0'>
       <div className='absolute flex h-full items-center justify-center'>
         <div className='group h-full'>
           <div className='absolute z-50 aspect-square h-full rounded-lg p-3'>
