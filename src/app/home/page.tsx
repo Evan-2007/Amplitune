@@ -150,7 +150,6 @@ function MostPlayed({ baseImageUrl }: { baseImageUrl: string | null }) {
   );
 }
 
-
 import { CirclePlay } from 'lucide-react';
 import { useQueueStore } from '@/lib/queue';
 function SongDisply({
@@ -164,22 +163,23 @@ function SongDisply({
   return (
     <div
       key={song.id}
-      className='mr-4 mt-2 line-clamp-1 flex w-[300px] flex-row items-center space-x-3 text-ellipsis rounded-md border-b border-border p-2 hover:bg-gray-700/60 group'
+      className='group mr-4 mt-2 line-clamp-1 flex w-[300px] flex-row items-center space-x-3 text-ellipsis rounded-md border-b border-border p-2 hover:bg-gray-700/60'
     >
-    <div className="flex w-[48px] h-[48px] flex-shrink-0">
-    <Image
-        src={`${baseImageUrl}&id=${song.id}`}
-        width={48}
-        height={48}
-        alt={song.orderTitle || song.name}
-        className='rounded-md'
-      />
-      <div className='invisible absolute z-50 flex w-[48px] h-[48px] items-center justify-center rounded-md bg-card/20 opacity-0 backdrop-blur-[2px] transition-all duration-200 ease-in group-hover:visible group-hover:opacity-100'
-        onClick={() => setPlayingSong(song.id)}
-      >
-        <CirclePlay className='m-auto h-8 w-8 text-white' strokeWidth={0.8} />
+      <div className='flex h-[48px] w-[48px] flex-shrink-0'>
+        <Image
+          src={`${baseImageUrl}&id=${song.id}`}
+          width={48}
+          height={48}
+          alt={song.orderTitle || song.name}
+          className='rounded-md'
+        />
+        <div
+          className='invisible absolute z-50 flex h-[48px] w-[48px] items-center justify-center rounded-md bg-card/20 opacity-0 backdrop-blur-[2px] transition-all duration-200 ease-in group-hover:visible group-hover:opacity-100'
+          onClick={() => setPlayingSong(song.id)}
+        >
+          <CirclePlay className='m-auto h-8 w-8 text-white' strokeWidth={0.8} />
+        </div>
       </div>
-    </div>
       <div className='flex flex-col'>
         <div className='flex flex-col'>
           <p className='line-clamp-1'>

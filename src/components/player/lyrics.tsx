@@ -316,20 +316,20 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
         block: 'center',
       });
     }
-  } , [isMouseMoving]);
+  }, [isMouseMoving]);
 
   return (
     <div
-      className={` overflow-auto no-scrollbar absolute top-24 flex h-[75vh] w-9/12 animate-[fade-in] flex-col backdrop-opacity-0 transition-all duration-700 ${isMouseMoving && 'bg-card/60 backdrop-blur-md backdrop-opacity-100'} rounded-2xl p-10`}
+      className={`no-scrollbar absolute top-24 flex h-[75vh] w-9/12 animate-[fade-in] flex-col overflow-auto backdrop-opacity-0 transition-all duration-700 ${isMouseMoving && 'bg-card/60 backdrop-blur-md backdrop-opacity-100'} rounded-2xl p-10`}
     >
-      <div className='top-24 flex justify-between '>
+      <div className='top-24 flex justify-between'>
         <div></div>
         <div>
           <h1>Clear</h1>
         </div>
       </div>
       <div className='mb-2 mr-10 mt-8 text-2xl font-bold'>Previous</div>
-      <div className='space-y-2 '>
+      <div className='space-y-2'>
         {queue.songs.map((song, index) => (
           <>
             {index < queue.currentSong.index && (
@@ -364,7 +364,12 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
         ))}
       </div>
       <div>
-        <h1 className='mb-2 mr-10 mt-8 text-2xl font-bold' ref={currentSongElement}>Playing</h1>
+        <h1
+          className='mb-2 mr-10 mt-8 text-2xl font-bold'
+          ref={currentSongElement}
+        >
+          Playing
+        </h1>
         <div className='flex justify-between'>
           <div className='flex space-x-4'>
             <img
