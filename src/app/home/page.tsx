@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { SongDropdown } from '@/components/song/dropdown';
 
 export default function HomePage() {
   const [baseUrl, setBaseUrl] = useState<string | null>(null);
@@ -149,6 +150,9 @@ function MostPlayed({ baseImageUrl }: { baseImageUrl: string | null }) {
   );
 }
 
+
+import { CirclePlay } from 'lucide-react';
+import { useQueueStore } from '@/lib/queue';
 function SongDisply({
   song,
   baseImageUrl,
@@ -156,18 +160,26 @@ function SongDisply({
   song: SongSearch;
   baseImageUrl: string;
 }) {
+  const setPlayingSong = useQueueStore((state) => state.play);
   return (
     <div
       key={song.id}
-      className='mr-4 mt-2 line-clamp-1 flex w-[300px] flex-row items-center space-x-3 text-ellipsis rounded-md border-b border-border p-2 hover:bg-gray-700/60'
+      className='mr-4 mt-2 line-clamp-1 flex w-[300px] flex-row items-center space-x-3 text-ellipsis rounded-md border-b border-border p-2 hover:bg-gray-700/60 group'
     >
-      <Image
+    <div className="flex w-[48px] h-[48px] flex-shrink-0">
+    <Image
         src={`${baseImageUrl}&id=${song.id}`}
         width={48}
         height={48}
         alt={song.orderTitle || song.name}
         className='rounded-md'
       />
+      <div className='invisible absolute z-50 flex w-[48px] h-[48px] items-center justify-center rounded-md bg-card/20 opacity-0 backdrop-blur-[2px] transition-all duration-200 ease-in group-hover:visible group-hover:opacity-100'
+        onClick={() => setPlayingSong(song.id)}
+      >
+        <CirclePlay className='m-auto h-8 w-8 text-white' strokeWidth={0.8} />
+      </div>
+    </div>
       <div className='flex flex-col'>
         <div className='flex flex-col'>
           <p className='line-clamp-1'>
@@ -176,6 +188,7 @@ function SongDisply({
           <p className='line-clamp-1'>{song.artist}</p>
         </div>
       </div>
+      <SongDropdown song={song.id} />
     </div>
   );
 }
@@ -254,6 +267,7 @@ function DisplaySongs({
 
 import { Car, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { set } from 'lodash';
 function TabSwitcher({
   next,
   previous,

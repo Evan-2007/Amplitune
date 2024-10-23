@@ -1,18 +1,20 @@
 import { create } from 'zustand';
+import { subsonicURL } from '@/lib/servers/navidrome';
 
 export interface queueStore {
   queue: queue;
-  addToQueue: (track: song) => void;
+  addToQueue: (track: song | string) => void;
   currentSong?: { track: song; index: number };
   removeFromQueue: (index: number) => void;
   clearQueue: () => void;
-  playNext: (track: song) => void;
+  playNext: (track: song | string) => void;
   setCurrentSong: (index: number) => void;
   setRepeat: (repeat: boolean) => void;
   playPrevious: () => void;
   skip: () => void;
   shuffle: () => void;
   setQueue: (songs: song[], shuffle: boolean, clearQueue: boolean) => void;
+  play: (song: song | string) => void;
 }
 
 interface queue {
@@ -109,13 +111,70 @@ export const useQueueStore = create<queueStore>((set) => ({
       },
     },
   },
-  addToQueue: (track) =>
-    set((state) => ({
-      queue: {
-        ...state.queue,
-        songs: [...state.queue.songs, track],
-      },
-    })),
+
+  play: async (track) => {
+    if (typeof track === 'string') {
+      await getSongData(track).then((song) => {
+        if (song) {
+          set((state) => ({
+            queue: {
+              ...state.queue,
+              currentSong: {
+                track: song,
+                index: state.queue.currentSong.index + 1,
+              },
+              songs: [
+                ...state.queue.songs.slice(
+                  0,
+                  state.queue.currentSong.index + 1
+                ),
+                song,
+                ...state.queue.songs.slice(state.queue.currentSong.index + 1),
+              ],
+            },
+          }));
+        }
+      });
+    } else {
+      set((state) => ({
+        queue: {
+          ...state.queue,
+          currentSong: {
+            track,
+            index: state.queue.currentSong.index + 1,
+          },
+          songs: [
+            ...state.queue.songs.slice(0, state.queue.currentSong.index + 1),
+            track,
+            ...state.queue.songs.slice(state.queue.currentSong.index + 1),
+          ],
+        },
+      }));
+    }
+  },
+
+  addToQueue: async (track) => {
+    if (typeof track === 'string') {
+      await getSongData(track).then((song) => {
+        if (song) {
+          set((state) => ({
+            queue: {
+              ...state.queue,
+              songs: [...state.queue.songs, song],
+            },
+          }));
+        }
+      });
+    } else {
+      set((state) => ({
+        queue: {
+          ...state.queue,
+          songs: [...state.queue.songs, track],
+        },
+      }));
+    }
+  },
+
   removeFromQueue: (index) =>
     set((state: queueStore) => {
       const newSongs = state.queue.songs.filter((_, i) => i !== index);
@@ -133,6 +192,7 @@ export const useQueueStore = create<queueStore>((set) => ({
         },
       };
     }),
+
   clearQueue: () =>
     set((state) => ({
       queue: {
@@ -140,17 +200,39 @@ export const useQueueStore = create<queueStore>((set) => ({
         songs: [],
       },
     })),
-  playNext: (track) =>
-    set((state) => ({
-      queue: {
-        ...state.queue,
-        songs: [
-          ...state.queue.songs.slice(0, state.queue.currentSong.index + 1),
-          track,
-          ...state.queue.songs.slice(state.queue.currentSong.index + 1),
-        ],
-      },
-    })),
+
+  playNext: async (track) => {
+    if (typeof track === 'string') {
+      await getSongData(track).then((song) => {
+        if (song) {
+          set((state) => ({
+            queue: {
+              ...state.queue,
+              songs: [
+                ...state.queue.songs.slice(
+                  0,
+                  state.queue.currentSong.index + 1
+                ),
+                song,
+                ...state.queue.songs.slice(state.queue.currentSong.index + 1),
+              ],
+            },
+          }));
+        }
+      });
+    } else {
+      set((state) => ({
+        queue: {
+          ...state.queue,
+          songs: [
+            ...state.queue.songs.slice(0, state.queue.currentSong.index + 1),
+            track,
+            ...state.queue.songs.slice(state.queue.currentSong.index + 1),
+          ],
+        },
+      }));
+    }
+  },
 
   setCurrentSong: (index) =>
     set((state) => ({
@@ -267,3 +349,17 @@ export const useQueueStore = create<queueStore>((set) => ({
       };
     }),
 }));
+
+const getSongData = async (id: string): Promise<song | undefined> => {
+  const baseUrl = await subsonicURL('/rest/getSong', '&id=' + id);
+  try {
+    const res = await fetch(baseUrl);
+    const data = await res.json();
+    if (data['subsonic-response'].song) {
+      return data['subsonic-response'].song;
+    }
+  } catch (err) {
+    console.log(err);
+  }
+  return undefined;
+};

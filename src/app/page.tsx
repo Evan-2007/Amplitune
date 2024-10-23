@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { CrossPlatformStorage } from '@/lib/storage/cross-platform-storage';
 import { isElectron } from '@/lib/utils';
+import { SongDropdown } from '@/components/song/dropdown';
 
 const localStorage = new CrossPlatformStorage();
 
