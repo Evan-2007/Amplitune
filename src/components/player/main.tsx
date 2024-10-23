@@ -280,7 +280,7 @@ export function PlayerContent({}: {}) {
   }
 
   return (
-    <div className='sticky flex h-[75px] w-screen justify-between flex-shrink-0 flex-grow-0'>
+    <div className='sticky flex h-[75px] w-screen flex-shrink-0 flex-grow-0 justify-between'>
       <div className='absolute flex h-full items-center justify-center'>
         <div className='group h-full'>
           <div className='absolute z-50 aspect-square h-full rounded-lg p-3'>

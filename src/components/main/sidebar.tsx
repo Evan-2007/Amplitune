@@ -13,7 +13,7 @@ export function Sidebar() {
   const [location, setLocation] = useState<Location | false>(false);
 
   return (
-    <div className='flex h-full w-64 flex-col justify-between lex-shrink-0f'>
+    <div className='lex-shrink-0f flex h-full w-64 flex-col justify-between'>
       <div></div>
       <div className='mb-3 flex h-10 w-full rounded-lg bg-red-700'>
         {!location ? (

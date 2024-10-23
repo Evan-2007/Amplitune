@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import {ScrollArea, ScrollBar} from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 export default function HomePage() {
   const [baseUrl, setBaseUrl] = useState<string | null>(null);
@@ -18,7 +18,7 @@ export default function HomePage() {
   };
 
   return (
-    <ScrollArea className='flex h-full w-full flex-col p-10 overflow-auto'>
+    <ScrollArea className='flex h-full w-full flex-col overflow-auto p-10'>
       <MostPlayed baseImageUrl={baseUrl} />
       <RecentlyPlayed baseImageUrl={baseUrl} />
       <h1 className='text-3xl'>Recently added</h1>
@@ -101,11 +101,10 @@ function RecentlyPlayed({ baseImageUrl }: { baseImageUrl: string | null }) {
   );
 }
 
-
 function MostPlayed({ baseImageUrl }: { baseImageUrl: string | null }) {
-  const [mostPlayed, setMostPlayed] = useState<
-    SongSearch[] | undefined
-  >(undefined);
+  const [mostPlayed, setMostPlayed] = useState<SongSearch[] | undefined>(
+    undefined
+  );
   const router = useRouter();
 
   useEffect(() => {
@@ -131,25 +130,37 @@ function MostPlayed({ baseImageUrl }: { baseImageUrl: string | null }) {
     <>
       <p className='text-3xl'>Most Played</p>
       <ScrollArea>
-      <div className='grid grid-flow-col grid-rows-3 overflow-auto w-full' >
-        {mostPlayed && baseImageUrl && (
-          mostPlayed.map((song: SongSearch, index) => {
-            return (
-              <SongDisply song={song} baseImageUrl={baseImageUrl} key={index} />
-            );
-          })
-        )}
-      </div>
-      <ScrollBar orientation="horizontal" />
+        <div className='grid w-full grid-flow-col grid-rows-3 overflow-auto'>
+          {mostPlayed &&
+            baseImageUrl &&
+            mostPlayed.map((song: SongSearch, index) => {
+              return (
+                <SongDisply
+                  song={song}
+                  baseImageUrl={baseImageUrl}
+                  key={index}
+                />
+              );
+            })}
+        </div>
+        <ScrollBar orientation='horizontal' />
       </ScrollArea>
     </>
   );
 }
 
-
-function SongDisply ({song, baseImageUrl}: {song: SongSearch, baseImageUrl: string}) {
+function SongDisply({
+  song,
+  baseImageUrl,
+}: {
+  song: SongSearch;
+  baseImageUrl: string;
+}) {
   return (
-    <div key={song.id} className='flex flex-row w-[300px]  border-border border-b line-clamp-1 text-ellipsis space-x-3 mt-2 items-center mr-4 p-2 hover:bg-gray-700/60 rounded-md '>
+    <div
+      key={song.id}
+      className='mr-4 mt-2 line-clamp-1 flex w-[300px] flex-row items-center space-x-3 text-ellipsis rounded-md border-b border-border p-2 hover:bg-gray-700/60'
+    >
       <Image
         src={`${baseImageUrl}&id=${song.id}`}
         width={48}
@@ -159,15 +170,15 @@ function SongDisply ({song, baseImageUrl}: {song: SongSearch, baseImageUrl: stri
       />
       <div className='flex flex-col'>
         <div className='flex flex-col'>
-          <p className='line-clamp-1'>{song.title ?? song.orderTitle ?? song.name}</p>
+          <p className='line-clamp-1'>
+            {song.title ?? song.orderTitle ?? song.name}
+          </p>
           <p className='line-clamp-1'>{song.artist}</p>
         </div>
       </div>
     </div>
   );
 }
-
-
 
 function DisplaySongs({
   songs,
@@ -221,7 +232,7 @@ function DisplaySongs({
               : undefined
         }
       />
-      <div className='flex space-x-5 '>
+      <div className='flex space-x-5'>
         {songs.slice(0, screenCount).map((song: SongSearch) => {
           return (
             <div key={song.id} className='flex flex-col'>

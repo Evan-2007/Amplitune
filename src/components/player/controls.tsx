@@ -114,7 +114,7 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
   const toggleShuffle = () => setShuffle(!shuffle);
 
   return (
-    <div className={cn('flex h-full flex-col flex-shrink-0', className)}>
+    <div className={cn('flex h-full flex-shrink-0 flex-col', className)}>
       <div className='mt-2 flex h-full items-center justify-center space-x-2'>
         <div className='w-9'></div>
         <button onClick={toggleShuffle}>
