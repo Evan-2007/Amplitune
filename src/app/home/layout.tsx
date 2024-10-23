@@ -12,9 +12,7 @@ export default function HomeLayout({
 }) {
   return (
     <div className='h-screen w-screen overflow-hidden'>
-      <div className='absolute inset-0 z-50'>
-        <FullScreenPlayer />
-      </div>
+    <div className='absolute'>{<FullScreenPlayer />}</div>
 
       <div className='flex h-full flex-col bg-card'>
         <Header />
@@ -22,7 +20,7 @@ export default function HomeLayout({
         <div className='flex min-h-0 flex-1'>
           <Sidebar />
 
-          <main className='flex-1 overflow-auto p-4'>
+          <main className='flex-1 overflow-auto p-4 '>
             <div className='h-full rounded-xl border border-border bg-background'>
               {children}
             </div>
