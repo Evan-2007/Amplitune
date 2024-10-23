@@ -294,6 +294,9 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
   const queue = useQueueStore((state) => state.queue);
   const [baseUrl, setBaseUrl] = useState<string>('');
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const currentSongElement = useRef<HTMLDivElement>(null);
+
   const localStorage = new CrossPlatformStorage();
   const setSong = useQueueStore((state) => state.setCurrentSong);
   const removeFromQueue = useQueueStore((state) => state.removeFromQueue);
@@ -306,18 +309,27 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
     setBaseUrl(await subsonicURL('/rest/getCoverArt', ''));
   };
 
+  useEffect(() => {
+    if (scrollRef.current && !isMouseMoving) {
+      currentSongElement.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  } , [isMouseMoving]);
+
   return (
     <div
-      className={`absolute top-24 flex h-[75vh] w-9/12 animate-[fade-in] flex-col backdrop-opacity-0 transition-all duration-700 ${isMouseMoving && 'bg-card/60 backdrop-blur-md backdrop-opacity-100'} rounded-2xl p-10`}
+      className={` overflow-auto no-scrollbar absolute top-24 flex h-[75vh] w-9/12 animate-[fade-in] flex-col backdrop-opacity-0 transition-all duration-700 ${isMouseMoving && 'bg-card/60 backdrop-blur-md backdrop-opacity-100'} rounded-2xl p-10`}
     >
-      <div className='top-24 flex justify-between'>
+      <div className='top-24 flex justify-between '>
         <div></div>
         <div>
           <h1>Clear</h1>
         </div>
       </div>
       <div className='mb-2 mr-10 mt-8 text-2xl font-bold'>Previous</div>
-      <div className='space-y-2'>
+      <div className='space-y-2 '>
         {queue.songs.map((song, index) => (
           <>
             {index < queue.currentSong.index && (
@@ -352,7 +364,7 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
         ))}
       </div>
       <div>
-        <h1 className='mb-2 mr-10 mt-8 text-2xl font-bold'>Playing</h1>
+        <h1 className='mb-2 mr-10 mt-8 text-2xl font-bold' ref={currentSongElement}>Playing</h1>
         <div className='flex justify-between'>
           <div className='flex space-x-4'>
             <img
