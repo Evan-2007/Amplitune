@@ -11,18 +11,24 @@ export default function HomeLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className='h-full w-screen'>
-      <div className='absolute'>{<FullScreenPlayer />}</div>
-      <div className='absolute flex h-screen w-full flex-col bg-card'>
+    <div className='h-screen w-screen overflow-hidden'>
+      <div className='absolute inset-0 z-50'>
+        <FullScreenPlayer />
+      </div>
+
+      <div className='flex h-full flex-col bg-card'>
         <Header />
-        <div className='flex h-full w-full'>
+
+        <div className='flex min-h-0 flex-1'>
           <Sidebar />
-          <div className='h-full w-full pr-4'>
-            <div className='h-full w-full rounded-xl border border-border bg-background'>
+
+          <main className='flex-1 overflow-auto p-4'>
+            <div className='h-full rounded-xl border border-border bg-background'>
               {children}
             </div>
-          </div>
+          </main>
         </div>
+
         <Player />
       </div>
     </div>
