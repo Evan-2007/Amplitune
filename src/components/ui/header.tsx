@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { use } from 'react';
 import { ModeToggle } from '../theme-toggle';
 import { Search as SearchIcon, CirclePlay } from 'lucide-react';
 import { Input } from '../ui/input';
@@ -75,6 +75,8 @@ function Search() {
   const [activeInput, setActiveInput] = useState(false);
   const [search, setSearch] = useState('');
   const [baseImageURL, setBaseImageURL] = useState('');
+
+  const play = useQueueStore((state) => state.play);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -242,9 +244,7 @@ function Search() {
                               key={index}
                               className='group relative flex w-full items-center filter-none'
                               onClick={() =>
-                                router.push(
-                                  `/home/?playing=${song.id}&play=true`
-                                )
+                                play(song)
                               }
                             >
                               <img
