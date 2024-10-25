@@ -13,11 +13,6 @@ import { SongDropdown } from '@/components/song/dropdown';
 const localStorage = new CrossPlatformStorage();
 
 export default function Home() {
-  const handleAcceleration = () => {
-    if (isElectron()) {
-      window.electronAPI.send('hardwareAcceleration', true);
-    }
-  };
 
   useEffect(() => {
     console.log(localStorage);
@@ -31,7 +26,7 @@ export default function Home() {
       <Button asChild>
         <Link href='/home'>Home</Link>
       </Button>
-      <Button onClick={handleAcceleration}>Toggle Acceleration</Button>
+      <Button disabled>Toggle Acceleration</Button>
       <ModeToggle />
     </div>
   );
