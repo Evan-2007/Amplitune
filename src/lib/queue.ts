@@ -71,7 +71,8 @@ export const useQueueStore = create<queueStore>((set) => ({
     songs: [],
     shuffledSongs: [],
     currentSong: {
-      index: 0,
+      //set to -1 to avoid adding first song at index of 1
+      index: -1,
       track: {
         id: '',
         parent: '',
