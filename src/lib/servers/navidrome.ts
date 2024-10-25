@@ -18,22 +18,26 @@ export const navidromeApi = async (path: string): Promise<navidromeRequest> => {
   }
 
   const url = `${parsedServer.url}${path}`;
-  const response = await fetch(url, {
-    headers: {
-      'X-Nd-Authorization': `Bearer ${parsedServer.token}`,
-    },
-  });
-  if (response.status === 401) {
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'X-Nd-Authorization': `Bearer ${parsedServer.token}`,
+      },
+    });
+    if (response.status === 401) {
+      return { response: null, error: 'not_authenticated' };
+    }
+    if (response.status === 404) {
+      return { response: null, error: 'not_found' };
+    }
+    if (response.ok) {
+      const data = await response.json();
+      return { response: data, error: 'error' };
+    }
+    return { response: null, error: 'error' };
+  } catch (err) {
     return { response: null, error: 'not_authenticated' };
   }
-  if (response.status === 404) {
-    return { response: null, error: 'not_found' };
-  }
-  if (response.ok) {
-    const data = await response.json();
-    return { response: data, error: 'error' };
-  }
-  return { response: null, error: 'error' };
 };
 
 interface server {
