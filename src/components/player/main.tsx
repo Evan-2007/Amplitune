@@ -65,152 +65,151 @@ export function PlayerContent({}: {}) {
 
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
 
-    //data about the song when song is not loaded from queue state
-    const getSongData = async (id: string) => {
-      const baseUrl = await subsonicURL('/rest/getSong', '&id=' + id);
-      const response = await fetch(baseUrl);
-      const data = await response.json();
-      console.log(id);
-      if (data['subsonic-response'].song) {
-        console.log(data['subsonic-response'].song);
-        play(data['subsonic-response'].song);
-      }
-      console.log("song: "+ songData);
-    };
-
-
-    //gets the song data from the search params
-    useEffect(() => {
-      if (searchParams.get('playing')) {
-        getSongData(searchParams.get('playing') as string);
-      }
-    }, [searchParams]);
-
-    //updates the search params when the song changes
-    const updateParams = () => {
-      if (songData) {
-        const params = new URLSearchParams();
-        params.set('playing', songData.id);
-        router.replace(`?${params.toString()}`);
-      }
-    };
-
-
-    //sets the audioRef in global state
-    useEffect(() => {
-      setAudioRef(audioRef);
-    } , [audioRef.current]);
-
-
-    //fetches the image url and audio url on song change
-    useEffect(() => {
-      getImageUrl();
-      fetchAudioUrl();
-      updateParams();
-    }, [songData]);
-
-    //fetches the audio url for the song and plays it
-    const fetchAudioUrl = async () => {
-      if (songData?.id) {
-        const url = await subsonicURL(`/rest/stream`, `&id=${songData.id}`);
-        if (audioRef.current) {
-          audioRef.current.src = url;
-          audioRef.current.play();
-        }
-      } else {
-        setError(new Error('No song data'));
-      }
-    };
-
-    //generates the image url for the song
-    const getImageUrl = async () => {
-      if (songData && songData.coverArt) {
-        console.log('test1'+ songData.id);
-        const url = await subsonicURL('/rest/getCoverArt', `&id=${songData.coverArt}`);
-        setImageUrl(url);
-      } else {
-        setImageUrl(undefined);
-      }
+  //data about the song when song is not loaded from queue state
+  const getSongData = async (id: string) => {
+    const baseUrl = await subsonicURL('/rest/getSong', '&id=' + id);
+    const response = await fetch(baseUrl);
+    const data = await response.json();
+    console.log(id);
+    if (data['subsonic-response'].song) {
+      console.log(data['subsonic-response'].song);
+      play(data['subsonic-response'].song);
     }
+    console.log('song: ' + songData);
+  };
 
-    //scrobbles the song
-    async function handleScrobble(submit = false) {
-      if (songData) {
-        const url = await subsonicURL(
-          '/rest/scrobble',
-          `&id=${songData.id}&submission=${submit}`
-        );
-        fetch(url.toString(), {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-      } else {
-        console.log('Current song or track ID is not available');
-      }
+  //gets the song data from the search params
+  useEffect(() => {
+    if (searchParams.get('playing')) {
+      getSongData(searchParams.get('playing') as string);
     }
+  }, [searchParams]);
 
+  //updates the search params when the song changes
+  const updateParams = () => {
+    if (songData) {
+      const params = new URLSearchParams();
+      params.set('playing', songData.id);
+      router.replace(`?${params.toString()}`);
+    }
+  };
 
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [error, setError] = useState<Error | null>(null);
+  //sets the audioRef in global state
+  useEffect(() => {
+    setAudioRef(audioRef);
+  }, [audioRef.current]);
 
-    //handle audio events
-    useEffect(() => {
-      const audio = audioRef.current;
-      if (!audio) return;
-  
-      const handleError = (e: ErrorEvent) => {
-        console.error('Audio error:', e);
-        setError(new Error('Audio playback error'));
-      };
-  
-      const handleStalled = () => {
-        console.warn('Audio stalled');
-      };
-  
-      const handleWaiting = () => {
-        setIsLoading(true);
-      };
-  
-      const handlePlaying = () => {
-        setIsLoading(false);
-        setError(null);
-      };
+  //fetches the image url and audio url on song change
+  useEffect(() => {
+    getImageUrl();
+    fetchAudioUrl();
+    updateParams();
+  }, [songData]);
 
-      const handleEnded = () => {
-        playNext();
-        handleScrobble(true);
+  //fetches the audio url for the song and plays it
+  const fetchAudioUrl = async () => {
+    if (songData?.id) {
+      const url = await subsonicURL(`/rest/stream`, `&id=${songData.id}`);
+      if (audioRef.current) {
+        audioRef.current.src = url;
+        audioRef.current.play();
       }
+    } else {
+      setError(new Error('No song data'));
+    }
+  };
 
-      let lastClickTime = 0;
-      const handlePlay = () => {
-        // prevent spamming play causing lots of scrobbles
-        const now = Date.now();
-        if (now - lastClickTime < 1000) {
-          console.log('Preventing multiple clicks');
-          return;
-        } else {
-          lastClickTime = now;
-          handleScrobble();
-        }
-      };
-  
-      audio.addEventListener('error', handleError);
-      audio.addEventListener('stalled', handleStalled);
-      audio.addEventListener('waiting', handleWaiting);
-      audio.addEventListener('playing', handlePlaying);
-      audio.addEventListener('ended', handleEnded);
-      audio.addEventListener('play', handlePlay);
-  
-      return () => {
-        audio.removeEventListener('error', handleError);
-        audio.removeEventListener('stalled', handleStalled);
-        audio.removeEventListener('waiting', handleWaiting);
-        audio.removeEventListener('playing', handlePlaying);
-        audio.removeEventListener('ended', handleEnded);
-      };
-    }, []);
+  //generates the image url for the song
+  const getImageUrl = async () => {
+    if (songData && songData.coverArt) {
+      console.log('test1' + songData.id);
+      const url = await subsonicURL(
+        '/rest/getCoverArt',
+        `&id=${songData.coverArt}`
+      );
+      setImageUrl(url);
+    } else {
+      setImageUrl(undefined);
+    }
+  };
+
+  //scrobbles the song
+  async function handleScrobble(submit = false) {
+    if (songData) {
+      const url = await subsonicURL(
+        '/rest/scrobble',
+        `&id=${songData.id}&submission=${submit}`
+      );
+      fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    } else {
+      console.log('Current song or track ID is not available');
+    }
+  }
+
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  //handle audio events
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleError = (e: ErrorEvent) => {
+      console.error('Audio error:', e);
+      setError(new Error('Audio playback error'));
+    };
+
+    const handleStalled = () => {
+      console.warn('Audio stalled');
+    };
+
+    const handleWaiting = () => {
+      setIsLoading(true);
+    };
+
+    const handlePlaying = () => {
+      setIsLoading(false);
+      setError(null);
+    };
+
+    const handleEnded = () => {
+      playNext();
+      handleScrobble(true);
+    };
+
+    let lastClickTime = 0;
+    const handlePlay = () => {
+      // prevent spamming play causing lots of scrobbles
+      const now = Date.now();
+      if (now - lastClickTime < 1000) {
+        console.log('Preventing multiple clicks');
+        return;
+      } else {
+        lastClickTime = now;
+        handleScrobble();
+      }
+    };
+
+    audio.addEventListener('error', handleError);
+    audio.addEventListener('stalled', handleStalled);
+    audio.addEventListener('waiting', handleWaiting);
+    audio.addEventListener('playing', handlePlaying);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('play', handlePlay);
+
+    return () => {
+      audio.removeEventListener('error', handleError);
+      audio.removeEventListener('stalled', handleStalled);
+      audio.removeEventListener('waiting', handleWaiting);
+      audio.removeEventListener('playing', handlePlaying);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, []);
 
   if (songData == undefined) {
     return (
@@ -248,7 +247,7 @@ export function PlayerContent({}: {}) {
           <div className='h-full p-3'>
             {imageUrl ? (
               <img
-                src={imageUrl}  
+                src={imageUrl}
                 alt='Album Cover'
                 className='h-full rounded-lg transition-all duration-700 group-hover:blur-xs'
               />
