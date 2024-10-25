@@ -61,6 +61,8 @@ export function PlayerContent({}: {}) {
   const setAudioRef = usePlayerStore((state) => state.setRef);
   const audioRef = useRef<HTMLAudioElement>(null);
   const playNext = useQueueStore((state) => state.skip);
+  const currentlyPlaying = useQueueStore((state) => state.currentSong);
+  const songs = useQueueStore((state) => state.queue.songs);
   const router = useRouter();
 
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
@@ -73,7 +75,9 @@ export function PlayerContent({}: {}) {
     console.log(id);
     if (data['subsonic-response'].song) {
       console.log(data['subsonic-response'].song);
-      play(data['subsonic-response'].song);
+      if (currentlyPlaying && data['subsonic-response'].song == songs[currentlyPlaying?.index + 1]) {
+        playNext();
+      }
     }
     console.log('song: ' + songData);
   };
@@ -88,9 +92,7 @@ export function PlayerContent({}: {}) {
   //updates the search params when the song changes
   const updateParams = () => {
     if (songData) {
-      const params = new URLSearchParams();
-      params.set('playing', songData.id);
-      router.replace(`?${params.toString()}`);
+      router.replace(`?${new URLSearchParams({ playing: songData.id })}`);
     }
   };
 
