@@ -77,6 +77,9 @@ dependencies:
   fs:
     specifier: 0.0.1-security
     version: 0.0.1-security
+  immer:
+    specifier: ^10.1.1
+    version: 10.1.1
   lodash:
     specifier: ^4.17.21
     version: 4.17.21
@@ -121,7 +124,7 @@ dependencies:
     version: 3.23.8
   zustand:
     specifier: 5.0.0-rc.2
-    version: 5.0.0-rc.2(@types/react@18.3.9)(react@18.3.1)
+    version: 5.0.0-rc.2(@types/react@18.3.9)(immer@10.1.1)(react@18.3.1)
 
 devDependencies:
   '@capacitor/cli':
@@ -5517,6 +5520,10 @@ packages:
     engines: {node: '>= 4'}
     dev: true
 
+  /immer@10.1.1:
+    resolution: {integrity: sha512-s2MPrmjovJcoMaHtx6K11Ra7oD05NT97w1IC5zpMkT6Atjr7H8LjaDd81iIxUYpMKSRRNMJE703M1Fhr/TctHw==}
+    dev: false
+
   /import-fresh@3.3.0:
     resolution: {integrity: sha512-veYYhQa+D1QBKznvhUHxb8faxlrwUnxseDAbAp457E0wLNio2bOSKnjYDhMj+YiAq61xrMGhQk9iXVk5FzgQMw==}
     engines: {node: '>=6'}
@@ -7576,7 +7583,7 @@ packages:
     resolution: {integrity: sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==}
     dev: false
 
-  /zustand@5.0.0-rc.2(@types/react@18.3.9)(react@18.3.1):
+  /zustand@5.0.0-rc.2(@types/react@18.3.9)(immer@10.1.1)(react@18.3.1):
     resolution: {integrity: sha512-o2Nwuvnk8vQBX7CcHL8WfFkZNJdxB/VKeWw0tNglw8p4cypsZ3tRT7rTRTDNeUPFS0qaMBRSKe+fVwL5xpcE3A==}
     engines: {node: '>=12.20.0'}
     peerDependencies:
@@ -7595,5 +7602,6 @@ packages:
         optional: true
     dependencies:
       '@types/react': 18.3.9
+      immer: 10.1.1
       react: 18.3.1
     dev: false
