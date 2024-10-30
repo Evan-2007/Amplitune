@@ -355,7 +355,7 @@ export const useQueueStore = create<queueStore>()(
     }),
     {
       name: 'queue-storage',
-      storage: createJSONStorage(() => sessionStorage),
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );
