@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { subsonicURL } from '@/lib/servers/navidrome';
+import { persist, createJSONStorage } from 'zustand/middleware'
 
 export interface queueStore {
   queue: queue;
@@ -64,292 +65,300 @@ interface song {
   samplingRate: number;
 }
 
-export const useQueueStore = create<queueStore>((set) => ({
-  queue: {
-    repeat: false,
-    shuffle: false,
-    songs: [],
-    shuffledSongs: [],
-    currentSong: {
-      //set to -1 to avoid adding first song at index of 1
-      index: -1,
-      track: {
-        id: '',
-        parent: '',
-        isDir: false,
-        title: '',
-        album: '',
-        artist: '',
-        track: 0,
-        year: 0,
-        coverArt: '',
-        size: 0,
-        contentType: '',
-        suffix: '',
-        duration: 0,
-        bitRate: 0,
-        path: '',
-        playCount: 0,
-        discNumber: 0,
-        created: '',
-        albumId: '',
-        artistId: '',
-        type: '',
-        isVideo: false,
-        played: false,
-        bpm: 0,
-        comment: '',
-        sortName: '',
-        mediaType: '',
-        musicBrainzId: '',
-        genres: [],
-        replayGain: {
-          trackPeak: 0,
-          trackGain: 0,
+export const useQueueStore = create<queueStore>()(
+  persist(
+    (set, get) => ({
+      queue: {
+        repeat: false,
+        shuffle: false,
+        songs: [],
+        shuffledSongs: [],
+        currentSong: {
+          //set to -1 to avoid adding first song at index of 1
+          index: -1,
+          track: {
+            id: '',
+            parent: '',
+            isDir: false,
+            title: '',
+            album: '',
+            artist: '',
+            track: 0,
+            year: 0,
+            coverArt: '',
+            size: 0,
+            contentType: '',
+            suffix: '',
+            duration: 0,
+            bitRate: 0,
+            path: '',
+            playCount: 0,
+            discNumber: 0,
+            created: '',
+            albumId: '',
+            artistId: '',
+            type: '',
+            isVideo: false,
+            played: false,
+            bpm: 0,
+            comment: '',
+            sortName: '',
+            mediaType: '',
+            musicBrainzId: '',
+            genres: [],
+            replayGain: {
+              trackPeak: 0,
+              trackGain: 0,
+            },
+            channelCount: 0,
+            samplingRate: 0,
+          },
         },
-        channelCount: 0,
-        samplingRate: 0,
       },
-    },
-  },
-
-  play: async (track) => {
-    if (typeof track === 'string') {
-      await getSongData(track).then((song) => {
-        if (song) {
+    
+      play: async (track) => {
+        if (typeof track === 'string') {
+          await getSongData(track).then((song) => {
+            if (song) {
+              set((state) => ({
+                queue: {
+                  ...state.queue,
+                  currentSong: {
+                    track: song,
+                    index: state.queue.currentSong.index + 1,
+                  },
+                  songs: [
+                    ...state.queue.songs.slice(
+                      0,
+                      state.queue.currentSong.index + 1
+                    ),
+                    song,
+                    ...state.queue.songs.slice(state.queue.currentSong.index + 1),
+                  ],
+                },
+              }));
+            }
+          });
+        } else {
           set((state) => ({
             queue: {
               ...state.queue,
               currentSong: {
-                track: song,
+                track,
                 index: state.queue.currentSong.index + 1,
               },
               songs: [
-                ...state.queue.songs.slice(
-                  0,
-                  state.queue.currentSong.index + 1
-                ),
-                song,
+                ...state.queue.songs.slice(0, state.queue.currentSong.index + 1),
+                track,
                 ...state.queue.songs.slice(state.queue.currentSong.index + 1),
               ],
             },
           }));
         }
-      });
-    } else {
-      set((state) => ({
-        queue: {
-          ...state.queue,
-          currentSong: {
-            track,
-            index: state.queue.currentSong.index + 1,
-          },
-          songs: [
-            ...state.queue.songs.slice(0, state.queue.currentSong.index + 1),
-            track,
-            ...state.queue.songs.slice(state.queue.currentSong.index + 1),
-          ],
-        },
-      }));
-    }
-  },
-
-  addToQueue: async (track) => {
-    if (typeof track === 'string') {
-      await getSongData(track).then((song) => {
-        if (song) {
+      },
+    
+      addToQueue: async (track) => {
+        if (typeof track === 'string') {
+          await getSongData(track).then((song) => {
+            if (song) {
+              set((state) => ({
+                queue: {
+                  ...state.queue,
+                  songs: [...state.queue.songs, song],
+                },
+              }));
+            }
+          });
+        } else {
           set((state) => ({
             queue: {
               ...state.queue,
-              songs: [...state.queue.songs, song],
+              songs: [...state.queue.songs, track],
             },
           }));
         }
-      });
-    } else {
-      set((state) => ({
-        queue: {
-          ...state.queue,
-          songs: [...state.queue.songs, track],
-        },
-      }));
-    }
-  },
-
-  removeFromQueue: (index) =>
-    set((state: queueStore) => {
-      const newSongs = state.queue.songs.filter((_, i) => i !== index);
-      const isCurrentSong = state.queue.currentSong.index === index;
-      return {
-        queue: {
-          ...state.queue,
-          songs: newSongs,
-          currentSong: isCurrentSong
-            ? {
-                track: newSongs[index] || state.queue.songs[index + 1],
-                index: index,
-              }
-            : state.queue.currentSong,
-        },
-      };
-    }),
-
-  clearQueue: () =>
-    set((state) => ({
-      queue: {
-        ...state.queue,
-        songs: [],
       },
-    })),
-
-  playNext: async (track) => {
-    if (typeof track === 'string') {
-      await getSongData(track).then((song) => {
-        if (song) {
+    
+      removeFromQueue: (index) =>
+        set((state: queueStore) => {
+          const newSongs = state.queue.songs.filter((_, i) => i !== index);
+          const isCurrentSong = state.queue.currentSong.index === index;
+          return {
+            queue: {
+              ...state.queue,
+              songs: newSongs,
+              currentSong: isCurrentSong
+                ? {
+                    track: newSongs[index] || state.queue.songs[index + 1],
+                    index: index,
+                  }
+                : state.queue.currentSong,
+            },
+          };
+        }),
+    
+      clearQueue: () =>
+        set((state) => ({
+          queue: {
+            ...state.queue,
+            songs: [],
+          },
+        })),
+    
+      playNext: async (track) => {
+        if (typeof track === 'string') {
+          await getSongData(track).then((song) => {
+            if (song) {
+              set((state) => ({
+                queue: {
+                  ...state.queue,
+                  songs: [
+                    ...state.queue.songs.slice(
+                      0,
+                      state.queue.currentSong.index + 1
+                    ),
+                    song,
+                    ...state.queue.songs.slice(state.queue.currentSong.index + 1),
+                  ],
+                },
+              }));
+            }
+          });
+        } else {
           set((state) => ({
             queue: {
               ...state.queue,
               songs: [
-                ...state.queue.songs.slice(
-                  0,
-                  state.queue.currentSong.index + 1
-                ),
-                song,
+                ...state.queue.songs.slice(0, state.queue.currentSong.index + 1),
+                track,
                 ...state.queue.songs.slice(state.queue.currentSong.index + 1),
               ],
             },
           }));
         }
-      });
-    } else {
-      set((state) => ({
-        queue: {
-          ...state.queue,
-          songs: [
-            ...state.queue.songs.slice(0, state.queue.currentSong.index + 1),
-            track,
-            ...state.queue.songs.slice(state.queue.currentSong.index + 1),
-          ],
-        },
-      }));
-    }
-  },
-
-  setCurrentSong: (index) =>
-    set((state) => ({
-      queue: {
-        ...state.queue,
-        currentSong: {
-          track: state.queue.songs[index],
-          index,
-        },
       },
-    })),
-
-  setRepeat: (repeat) =>
-    set((state) => ({
-      queue: {
-        ...state.queue,
-        repeat: repeat,
-      },
-    })),
-
-  playPrevious: () =>
-    set((state) => {
-      console.log('playPrevious');
-      if (state.queue.currentSong) {
-        const currentIndex = state.queue.currentSong.index;
-        if (currentIndex > 0) {
-          return {
-            queue: {
-              ...state.queue,
-              currentSong: {
-                track: state.queue.songs[currentIndex - 1],
-                index: currentIndex - 1,
-              },
-            },
-          };
-        } else if (state.queue.currentSong.index === 0) {
-          return {
-            queue: {
-              ...state.queue,
-              currentSong: {
-                track: state.queue.songs[state.queue.songs.length - 1],
-                index: state.queue.songs.length - 1,
-              },
-            },
-          };
-        }
-      }
-      return {};
-    }),
-
-  skip: () =>
-    set((state) => {
-      console.log('skip');
-      console.log(state.currentSong);
-      if (state.queue.currentSong) {
-        const currentIndex = state.queue.currentSong.index;
-        if (currentIndex < state.queue.songs.length - 1) {
-          return {
-            queue: {
-              ...state.queue,
-              currentSong: {
-                track: state.queue.songs[currentIndex + 1],
-                index: currentIndex + 1,
-              },
-            },
-          };
-        } else if (
-          state.queue.currentSong.index ===
-          state.queue.songs.length - 1
-        ) {
-          return {
-            queue: {
-              ...state.queue,
-              currentSong: {
-                track: state.queue.songs[0],
-                index: 0,
-              },
-            },
-          };
-        }
-      }
-      return {};
-    }),
-
-  shuffle: () =>
-    set((state) => {
-      console.log('shuffle');
-      if (state.queue.shuffle) {
-        return {
+    
+      setCurrentSong: (index) =>
+        set((state) => ({
           queue: {
             ...state.queue,
-            shuffledSongs: state.queue.songs.sort(() => Math.random() - 0.5),
+            currentSong: {
+              track: state.queue.songs[index],
+              index,
+            },
           },
-        };
-      }
-      return {};
+        })),
+    
+      setRepeat: (repeat) =>
+        set((state) => ({
+          queue: {
+            ...state.queue,
+            repeat: repeat,
+          },
+        })),
+    
+      playPrevious: () =>
+        set((state) => {
+          console.log('playPrevious');
+          if (state.queue.currentSong) {
+            const currentIndex = state.queue.currentSong.index;
+            if (currentIndex > 0) {
+              return {
+                queue: {
+                  ...state.queue,
+                  currentSong: {
+                    track: state.queue.songs[currentIndex - 1],
+                    index: currentIndex - 1,
+                  },
+                },
+              };
+            } else if (state.queue.currentSong.index === 0) {
+              return {
+                queue: {
+                  ...state.queue,
+                  currentSong: {
+                    track: state.queue.songs[state.queue.songs.length - 1],
+                    index: state.queue.songs.length - 1,
+                  },
+                },
+              };
+            }
+          }
+          return {};
+        }),
+    
+      skip: () =>
+        set((state) => {
+          console.log('skip');
+          console.log(state.currentSong);
+          if (state.queue.currentSong) {
+            const currentIndex = state.queue.currentSong.index;
+            if (currentIndex < state.queue.songs.length - 1) {
+              return {
+                queue: {
+                  ...state.queue,
+                  currentSong: {
+                    track: state.queue.songs[currentIndex + 1],
+                    index: currentIndex + 1,
+                  },
+                },
+              };
+            } else if (
+              state.queue.currentSong.index ===
+              state.queue.songs.length - 1
+            ) {
+              return {
+                queue: {
+                  ...state.queue,
+                  currentSong: {
+                    track: state.queue.songs[0],
+                    index: 0,
+                  },
+                },
+              };
+            }
+          }
+          return {};
+        }),
+    
+      shuffle: () =>
+        set((state) => {
+          console.log('shuffle');
+          if (state.queue.shuffle) {
+            return {
+              queue: {
+                ...state.queue,
+                shuffledSongs: state.queue.songs.sort(() => Math.random() - 0.5),
+              },
+            };
+          }
+          return {};
+        }),
+    
+      setQueue: (songs, shuffle, clearQueue) =>
+        set((state) => {
+          console.log('setQueue');
+          return {
+            queue: {
+              ...state.queue,
+              currentSong: clearQueue
+                ? {
+                    track: songs[0],
+                    index: 0,
+                  }
+                : state.queue.currentSong,
+              songs: clearQueue ? songs : [...state.queue.songs, ...songs],
+              shuffledSongs: shuffle ? songs.sort(() => Math.random() - 0.5) : [],
+            },
+          };
+        }),
     }),
-
-  setQueue: (songs, shuffle, clearQueue) =>
-    set((state) => {
-      console.log('setQueue');
-      return {
-        queue: {
-          ...state.queue,
-          currentSong: clearQueue
-            ? {
-                track: songs[0],
-                index: 0,
-              }
-            : state.queue.currentSong,
-          songs: clearQueue ? songs : [...state.queue.songs, ...songs],
-          shuffledSongs: shuffle ? songs.sort(() => Math.random() - 0.5) : [],
-        },
-      };
-    }),
-}));
+    {
+      name: 'queue-storage',
+      storage: createJSONStorage(() => sessionStorage),
+    }
+  )
+);
 
 const getSongData = async (id: string): Promise<song | undefined> => {
   const baseUrl = await subsonicURL('/rest/getSong', '&id=' + id);
