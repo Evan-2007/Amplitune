@@ -20,6 +20,7 @@ import { useRef } from 'react';
 
 export default function FullScreenPlayer({}: {}) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [layout, setLayout] = useState<number>(1);
   const storage = new CrossPlatformStorage();
 
   const songData = useQueueStore((state) => state.queue.currentSong?.track);
@@ -136,7 +137,7 @@ export default function FullScreenPlayer({}: {}) {
           : { background: 'linear-gradient(180deg, #000, #000)' }
       }
     >
-      <div className='absolute z-50 flex h-full w-full'>
+      <div className='absolute z-50 flex h-full w-full md:flex-row flex-col'>
         <Left audioRef={audioRef} />
         <div className='flex h-full w-1/2 flex-col items-center justify-center'>
           {songData && <Lyrics audioRef={audioRef} />}
