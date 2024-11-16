@@ -35,8 +35,9 @@ import { useQueueStore } from '@/lib/queue';
 import { usePlayerStore, useUiStore } from '@/lib/state';
 import Image from 'next/image';
 import { subsonicURL } from '@/lib/servers/navidrome';
-import { useMediaSession } from '@mebtte/react-media-session';
+import MediaSession from '@mebtte/react-media-session';
 import { update } from 'lodash';
+import { HAS_MEDIA_SESSION } from '@mebtte/react-media-session';
 
 const localStorage = new CrossPlatformStorage();
 
@@ -103,44 +104,7 @@ export function PlayerContent({}: {}) {
   };
 
   //updates the media session
-  useMediaSession({
-    title: songData.title,
-    artist: songData.artist,
-    album: songData.album,
-    artwork: [
-      {
-        src: imageUrl || '/favicon.ico',
-        sizes: '512x512',
-        type: 'image/png',
-      },
-    ],
-    onPlay: () => {
-      if (audioRef.current) {
-        audioRef.current.play();
-      }
-    },
-    onPause: () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-    },
-    onPreviousTrack: () => {
-      playPrev();
-    },
-    onNextTrack: () => {
-      playNext();
-    },
-    onSeekBackward: () => {
-      if (audioRef.current) {
-        audioRef.current.currentTime -= 10;
-      }
-    },
-    onSeekForward: () => {
-      if (audioRef.current) {
-        audioRef.current.currentTime += 10;
-      }
-    },
-  });
+  
 
   //sets the audioRef in global state
   useEffect(() => {
@@ -149,10 +113,71 @@ export function PlayerContent({}: {}) {
 
   //fetches the image url and audio url on song change
   useEffect(() => {
-    getImageUrl();
+
     fetchAudioUrl();
     updateParams();
+
+    getImageUrl();
+
+    //update the media session on song change before image url is fetched
+    updateMediaSession();
   }, [songData]);
+
+  //updates the media session after image url is fetched to load new image
+  useEffect(() => {
+    updateMediaSession();
+  } , [imageUrl]);
+
+
+  //updates the media session
+  const updateMediaSession = () => {
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: songData?.title,
+        artist: songData?.artist,
+        album: songData?.album,
+        artwork: [
+          {
+            src: imageUrl || '/',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+        ],
+      });
+    }
+
+    navigator.mediaSession.setActionHandler('play', () => {
+      if (audioRef.current) {
+        audioRef.current.play();
+      }
+    });
+
+    navigator.mediaSession.setActionHandler('pause', () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    });
+
+    navigator.mediaSession.setActionHandler('previoustrack', () => {
+      playPrev();
+    });
+
+    navigator.mediaSession.setActionHandler('nexttrack', () => {
+      playNext();
+    });
+
+    navigator.mediaSession.setActionHandler('seekbackward', () => {
+      if (audioRef.current) {
+        audioRef.current.currentTime -= 10;
+      }
+    });
+
+    navigator.mediaSession.setActionHandler('seekforward', () => {
+      if (audioRef.current) {
+        audioRef.current.currentTime += 10;
+      }
+    });
+  };
 
   //fetches the audio url for the song and plays it
   const fetchAudioUrl = async () => {
@@ -176,6 +201,7 @@ export function PlayerContent({}: {}) {
         `&id=${songData.coverArt}`
       );
       setImageUrl(url);
+      return url;
     } else {
       setImageUrl(undefined);
     }
@@ -346,6 +372,7 @@ export function PlayerContent({}: {}) {
         <RightControls audioRef={audioRef} />
       </div>
       <audio ref={audioRef} />
+
     </div>
   );
 }
