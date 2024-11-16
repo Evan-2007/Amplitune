@@ -20,6 +20,9 @@ dependencies:
   '@hookform/resolvers':
     specifier: ^3.9.0
     version: 3.9.0(react-hook-form@7.53.0)
+  '@mebtte/react-media-session':
+    specifier: ^1.1.2
+    version: 1.1.2(react@18.3.1)
   '@nextui-org/dropdown':
     specifier: ^2.1.31
     version: 2.1.31(@nextui-org/system@2.2.6)(@nextui-org/theme@2.2.11)(@types/react@18.3.9)(framer-motion@11.7.0)(react-dom@18.3.1)(react@18.3.1)
@@ -1761,6 +1764,15 @@ packages:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
+
+  /@mebtte/react-media-session@1.1.2(react@18.3.1):
+    resolution: {integrity: sha512-cf+E/ZXOvmDG76nRuuNBFgDvQURsAaM4B8w0p+P0ugy6tUGErEE0eHPtz66p/FnXrEtj2F+45iPEKDzW2R0+Bw==}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+    peerDependencies:
+      react: '>=16.8.0'
+    dependencies:
+      react: 18.3.1
+    dev: false
 
   /@next/env@14.2.13:
     resolution: {integrity: sha512-s3lh6K8cbW1h5Nga7NNeXrbe0+2jIIYK9YaA9T7IufDWnZpozdFUp6Hf0d5rNWUKu4fEuSX2rCKlGjCrtylfDw==}

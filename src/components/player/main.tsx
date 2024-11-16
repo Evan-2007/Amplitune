@@ -35,6 +35,8 @@ import { useQueueStore } from '@/lib/queue';
 import { usePlayerStore, useUiStore } from '@/lib/state';
 import Image from 'next/image';
 import { subsonicURL } from '@/lib/servers/navidrome';
+import { useMediaSession } from '@mebtte/react-media-session';
+import { update } from 'lodash';
 
 const localStorage = new CrossPlatformStorage();
 
@@ -61,6 +63,7 @@ export function PlayerContent({}: {}) {
   const setAudioRef = usePlayerStore((state) => state.setRef);
   const audioRef = useRef<HTMLAudioElement>(null);
   const playNext = useQueueStore((state) => state.skip);
+  const playPrev = useQueueStore((state) => state.playPrevious);
   const currentlyPlaying = useQueueStore((state) => state.currentSong);
   const songs = useQueueStore((state) => state.queue.songs);
   const router = useRouter();
@@ -95,6 +98,46 @@ export function PlayerContent({}: {}) {
       router.replace(`?${new URLSearchParams({ playing: songData.id })}`);
     }
   };
+
+  //updates the media session
+    useMediaSession({
+      title: songData.title,
+      artist: songData.artist,
+      album: songData.album,
+      artwork: [
+        {
+          src: imageUrl || '/favicon.ico',
+          sizes: '512x512',
+          type: 'image/png',
+        },
+      ],
+      onPlay: () => {
+        if (audioRef.current) {
+          audioRef.current.play();
+        }
+      },
+      onPause: () => {
+        if (audioRef.current) {
+          audioRef.current.pause();
+        }
+      },
+      onPreviousTrack: () => {
+        playPrev();
+      },
+      onNextTrack: () => {
+        playNext();
+      },
+      onSeekBackward: () => {
+        if (audioRef.current) {
+          audioRef.current.currentTime -= 10;
+        }
+      },
+      onSeekForward: () => {
+        if (audioRef.current) {
+          audioRef.current.currentTime += 10;
+        }
+      },
+    });
 
   //sets the audioRef in global state
   useEffect(() => {
