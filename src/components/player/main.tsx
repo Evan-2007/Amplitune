@@ -35,9 +35,7 @@ import { useQueueStore } from '@/lib/queue';
 import { usePlayerStore, useUiStore } from '@/lib/state';
 import Image from 'next/image';
 import { subsonicURL } from '@/lib/servers/navidrome';
-import MediaSession from '@mebtte/react-media-session';
 import { update } from 'lodash';
-import { HAS_MEDIA_SESSION } from '@mebtte/react-media-session';
 
 const localStorage = new CrossPlatformStorage();
 

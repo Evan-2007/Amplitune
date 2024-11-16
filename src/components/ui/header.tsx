@@ -37,8 +37,6 @@ export function Header() {
       <LeftMenu />
       <Search />
       <RightMenu />
-
-      {isElectronApp && <WindowControls />}
     </div>
   );
 }
