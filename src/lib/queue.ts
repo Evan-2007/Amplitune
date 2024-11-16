@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { subsonicURL } from '@/lib/servers/navidrome';
-import { persist, createJSONStorage } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 export interface queueStore {
   queue: queue;
@@ -115,7 +115,7 @@ export const useQueueStore = create<queueStore>()(
           },
         },
       },
-    
+
       play: async (track) => {
         if (typeof track === 'string') {
           await getSongData(track).then((song) => {
@@ -133,7 +133,9 @@ export const useQueueStore = create<queueStore>()(
                       state.queue.currentSong.index + 1
                     ),
                     song,
-                    ...state.queue.songs.slice(state.queue.currentSong.index + 1),
+                    ...state.queue.songs.slice(
+                      state.queue.currentSong.index + 1
+                    ),
                   ],
                 },
               }));
@@ -148,7 +150,10 @@ export const useQueueStore = create<queueStore>()(
                 index: state.queue.currentSong.index + 1,
               },
               songs: [
-                ...state.queue.songs.slice(0, state.queue.currentSong.index + 1),
+                ...state.queue.songs.slice(
+                  0,
+                  state.queue.currentSong.index + 1
+                ),
                 track,
                 ...state.queue.songs.slice(state.queue.currentSong.index + 1),
               ],
@@ -156,7 +161,7 @@ export const useQueueStore = create<queueStore>()(
           }));
         }
       },
-    
+
       addToQueue: async (track) => {
         if (typeof track === 'string') {
           await getSongData(track).then((song) => {
@@ -178,7 +183,7 @@ export const useQueueStore = create<queueStore>()(
           }));
         }
       },
-    
+
       removeFromQueue: (index) =>
         set((state: queueStore) => {
           const newSongs = state.queue.songs.filter((_, i) => i !== index);
@@ -196,7 +201,7 @@ export const useQueueStore = create<queueStore>()(
             },
           };
         }),
-    
+
       clearQueue: () =>
         set((state) => ({
           queue: {
@@ -204,7 +209,7 @@ export const useQueueStore = create<queueStore>()(
             songs: [],
           },
         })),
-    
+
       playNext: async (track) => {
         if (typeof track === 'string') {
           await getSongData(track).then((song) => {
@@ -218,7 +223,9 @@ export const useQueueStore = create<queueStore>()(
                       state.queue.currentSong.index + 1
                     ),
                     song,
-                    ...state.queue.songs.slice(state.queue.currentSong.index + 1),
+                    ...state.queue.songs.slice(
+                      state.queue.currentSong.index + 1
+                    ),
                   ],
                 },
               }));
@@ -229,7 +236,10 @@ export const useQueueStore = create<queueStore>()(
             queue: {
               ...state.queue,
               songs: [
-                ...state.queue.songs.slice(0, state.queue.currentSong.index + 1),
+                ...state.queue.songs.slice(
+                  0,
+                  state.queue.currentSong.index + 1
+                ),
                 track,
                 ...state.queue.songs.slice(state.queue.currentSong.index + 1),
               ],
@@ -237,7 +247,7 @@ export const useQueueStore = create<queueStore>()(
           }));
         }
       },
-    
+
       setCurrentSong: (index) =>
         set((state) => ({
           queue: {
@@ -248,7 +258,7 @@ export const useQueueStore = create<queueStore>()(
             },
           },
         })),
-    
+
       setRepeat: (repeat) =>
         set((state) => ({
           queue: {
@@ -256,7 +266,7 @@ export const useQueueStore = create<queueStore>()(
             repeat: repeat,
           },
         })),
-    
+
       playPrevious: () =>
         set((state) => {
           console.log('playPrevious');
@@ -286,7 +296,7 @@ export const useQueueStore = create<queueStore>()(
           }
           return {};
         }),
-    
+
       skip: () =>
         set((state) => {
           console.log('skip');
@@ -320,7 +330,7 @@ export const useQueueStore = create<queueStore>()(
           }
           return {};
         }),
-    
+
       shuffle: () =>
         set((state) => {
           console.log('shuffle');
@@ -328,13 +338,15 @@ export const useQueueStore = create<queueStore>()(
             return {
               queue: {
                 ...state.queue,
-                shuffledSongs: state.queue.songs.sort(() => Math.random() - 0.5),
+                shuffledSongs: state.queue.songs.sort(
+                  () => Math.random() - 0.5
+                ),
               },
             };
           }
           return {};
         }),
-    
+
       setQueue: (songs, shuffle, clearQueue) =>
         set((state) => {
           console.log('setQueue');
@@ -348,7 +360,9 @@ export const useQueueStore = create<queueStore>()(
                   }
                 : state.queue.currentSong,
               songs: clearQueue ? songs : [...state.queue.songs, ...songs],
-              shuffledSongs: shuffle ? songs.sort(() => Math.random() - 0.5) : [],
+              shuffledSongs: shuffle
+                ? songs.sort(() => Math.random() - 0.5)
+                : [],
             },
           };
         }),

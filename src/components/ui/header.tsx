@@ -204,9 +204,7 @@ function Search() {
                               key={index}
                               className='group relative flex w-full items-center pb-2 pt-2 filter-none'
                               onClick={() =>
-                                router.push(
-                                  `/home/artists/${artist.id}`
-                                )
+                                router.push(`/home/artists/${artist.id}`)
                               }
                             >
                               <img
@@ -243,9 +241,7 @@ function Search() {
                             <button
                               key={index}
                               className='group relative flex w-full items-center filter-none'
-                              onClick={() =>
-                                play(song)
-                              }
+                              onClick={() => play(song)}
                             >
                               <img
                                 className='absolute w-11 rounded-md'

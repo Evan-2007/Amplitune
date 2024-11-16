@@ -13,7 +13,6 @@ import { SongDropdown } from '@/components/song/dropdown';
 const localStorage = new CrossPlatformStorage();
 
 export default function Home() {
-
   useEffect(() => {
     console.log(localStorage);
   }, []);
