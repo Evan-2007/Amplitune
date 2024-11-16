@@ -102,7 +102,6 @@ export function PlayerContent({}: {}) {
   };
 
   //updates the media session
-  
 
   //sets the audioRef in global state
   useEffect(() => {
@@ -111,7 +110,6 @@ export function PlayerContent({}: {}) {
 
   //fetches the image url and audio url on song change
   useEffect(() => {
-
     fetchAudioUrl();
     updateParams();
 
@@ -124,8 +122,7 @@ export function PlayerContent({}: {}) {
   //updates the media session after image url is fetched to load new image
   useEffect(() => {
     updateMediaSession();
-  } , [imageUrl]);
-
+  }, [imageUrl]);
 
   //updates the media session
   const updateMediaSession = () => {
@@ -370,7 +367,6 @@ export function PlayerContent({}: {}) {
         <RightControls audioRef={audioRef} />
       </div>
       <audio ref={audioRef} />
-
     </div>
   );
 }
