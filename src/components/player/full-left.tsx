@@ -79,11 +79,11 @@ export default function Left({
     >
       {songData && imageUrl && songData.title ? (
         <>
-          <img
-            src={imageUrl}
-            alt=''
-            className='aspect-square max-h-[58.33%] rounded-2xl border-[1px] border-border'
-          />
+          <div
+            className='aspect-square h-[58.33%] rounded-2xl w-full'
+          > 
+            <ImageSlider />
+          </div>
           <div className='flex w-full flex-col overflow-hidden text-nowrap px-12 text-center'>
             <h1 className='mt-4 text-2xl font-bold text-white'>
               {songData.title}
@@ -94,7 +94,7 @@ export default function Left({
           </div>
         </>
       ) : (
-        <div className='aspect-square max-h-[58.33%] bg-gray-800'></div>
+        <div className='aspect-square max-h-[58.33%] bg-gray-800 w-full'></div>
       )}
       <div
         className={`'w-full h-0 ${isMouseMoving && 'mt-6'} ' transition-all duration-700`}
@@ -108,3 +108,149 @@ export default function Left({
     </div>
   );
 }
+
+import { useRef, useLayoutEffect  } from 'react';
+
+
+function ImageSlider() {
+  const queue = useQueueStore((state) => state.queue.songs);
+  const currentSong = useQueueStore((state) => state.queue.currentSong);
+  const setCurrentSong = useQueueStore((state) => state.setCurrentSong);
+
+  const [isDragging, setIsDragging] = useState(false);
+  const sliderRef = useRef<HTMLDivElement | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(currentSong.index);
+  const [images, setImages] = useState<{ url: string; id: string }[]>([]);
+  const [startX, setStartX] = useState(0);
+  const [translateX, setTranslateX] = useState(0);
+  const [shouldAnimate, setShouldAnimate] = useState(true);
+
+  const previousIndexRef = useRef(currentIndex);
+
+  useEffect(() => {
+    const fetchImages = async () => {
+      const imagePromises = queue.map(async (song) => {
+        const url = await subsonicURL('/rest/getCoverArt', `&id=${song.coverArt}`);
+        return {
+          url: url.toString(),
+          id: song.id,
+        };
+      });
+      const images = await Promise.all(imagePromises);
+      setImages(images);
+    };
+
+    fetchImages();
+  }, [queue]);
+
+  useEffect(() => {
+    const previousIndex = previousIndexRef.current;
+    const difference = Math.abs(currentSong.index - previousIndex);
+
+    if (difference > 1) {
+      setShouldAnimate(false);
+    } else {
+      setShouldAnimate(true);
+    }
+
+    setCurrentIndex(currentSong.index);
+
+    // Reset shouldAnimate to prevent slider from not animating
+    setTimeout(() => {
+      setShouldAnimate(true);
+    }, 100);
+
+    previousIndexRef.current = currentSong.index;
+  }, [currentSong.index]);
+
+  const handleDragStart = (
+    e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>
+  ) => {
+    if (e.type === 'touchstart' && 'touches' in e) {
+      const pageX = e.touches[0].pageX;
+      setStartX(pageX);
+    } else if (e.type === 'mousedown' && 'pageX' in e) {
+      const pageX = e.pageX;
+      setStartX(pageX);
+    }
+    setIsDragging(true);
+    setShouldAnimate(false);
+  };
+
+  const handleDragMove = (
+    e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>
+  ) => {
+    if (!isDragging) return;
+
+    const pageX =
+      e.type === 'touchmove' && 'touches' in e ? e.touches[0].pageX : 'pageX' in e ? e.pageX : 0;
+    const deltaX = pageX - startX;
+    setTranslateX(deltaX);
+  };
+
+  const handleDragEnd = () => {
+    if (!isDragging || !sliderRef.current) return;
+
+    const slideWidth = sliderRef.current.clientWidth;
+    // min distance to swipe
+    const threshold = slideWidth / 4; 
+
+    if (translateX > threshold && currentIndex > 0) {
+      // Swipe right
+      setCurrentSong(currentIndex - 1);
+    } else if (translateX < -threshold && currentIndex < images.length - 1) {
+      // Swipe left
+      setCurrentSong(currentIndex + 1);
+    }
+
+    setIsDragging(false);
+    setTranslateX(0);
+    setShouldAnimate(true);
+  };
+
+  if (images.length < 1) return null;
+
+  return (
+    <div className="w-full mx-auto select-none h-full">
+      <div className="relative overflow-hidden h-full w-full">
+        <div
+          ref={sliderRef}
+          className="relative w-full h-full cursor-grab active:cursor-grabbing select-none"
+          onMouseDown={handleDragStart}
+          onMouseMove={handleDragMove}
+          onMouseUp={handleDragEnd}
+          onMouseLeave={handleDragEnd}
+          onTouchStart={handleDragStart}
+          onTouchMove={handleDragMove}
+          onTouchEnd={handleDragEnd}
+        >
+          <div
+            className={`flex h-full select-none ${
+              shouldAnimate ? 'transition-transform duration-300 ease-out' : ''
+            }`}
+            style={{
+              transform: `translateX(calc(-${currentIndex * 100}% + ${translateX}px))`,
+              userSelect: 'none',
+            }}
+          >
+            {images.map((song, index) => (
+              <div
+                key={index}
+                className="w-full h-full flex-shrink-0 select-none flex justify-center items-center"
+                style={{ flex: '0 0 100%' }}
+              >
+                <img
+                  src={song.url}
+                  alt={`Slide ${index + 1}`}
+                  className="aspect-square rounded-2xl border-[1px] border-border h-full"
+                  draggable="false"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
