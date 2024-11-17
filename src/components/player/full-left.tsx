@@ -79,9 +79,7 @@ export default function Left({
     >
       {songData && imageUrl && songData.title ? (
         <>
-          <div
-            className='aspect-square h-[58.33%] rounded-2xl w-full'
-          > 
+          <div className='aspect-square h-[58.33%] w-full rounded-2xl'>
             <ImageSlider />
           </div>
           <div className='flex w-full flex-col overflow-hidden text-nowrap px-12 text-center'>
@@ -94,7 +92,7 @@ export default function Left({
           </div>
         </>
       ) : (
-        <div className='aspect-square max-h-[58.33%] bg-gray-800 w-full'></div>
+        <div className='aspect-square max-h-[58.33%] w-full bg-gray-800'></div>
       )}
       <div
         className={`'w-full h-0 ${isMouseMoving && 'mt-6'} ' transition-all duration-700`}
@@ -109,8 +107,7 @@ export default function Left({
   );
 }
 
-import { useRef, useLayoutEffect  } from 'react';
-
+import { useRef, useLayoutEffect } from 'react';
 
 function ImageSlider() {
   const queue = useQueueStore((state) => state.queue.songs);
@@ -130,7 +127,10 @@ function ImageSlider() {
   useEffect(() => {
     const fetchImages = async () => {
       const imagePromises = queue.map(async (song) => {
-        const url = await subsonicURL('/rest/getCoverArt', `&id=${song.coverArt}`);
+        const url = await subsonicURL(
+          '/rest/getCoverArt',
+          `&id=${song.coverArt}`
+        );
         return {
           url: url.toString(),
           id: song.id,
@@ -183,7 +183,11 @@ function ImageSlider() {
     if (!isDragging) return;
 
     const pageX =
-      e.type === 'touchmove' && 'touches' in e ? e.touches[0].pageX : 'pageX' in e ? e.pageX : 0;
+      e.type === 'touchmove' && 'touches' in e
+        ? e.touches[0].pageX
+        : 'pageX' in e
+          ? e.pageX
+          : 0;
     const deltaX = pageX - startX;
     setTranslateX(deltaX);
   };
@@ -193,7 +197,7 @@ function ImageSlider() {
 
     const slideWidth = sliderRef.current.clientWidth;
     // min distance to swipe
-    const threshold = slideWidth / 4; 
+    const threshold = slideWidth / 4;
 
     if (translateX > threshold && currentIndex > 0) {
       // Swipe right
@@ -211,11 +215,11 @@ function ImageSlider() {
   if (images.length < 1) return null;
 
   return (
-    <div className="w-full mx-auto select-none h-full">
-      <div className="relative overflow-hidden h-full w-full">
+    <div className='mx-auto h-full w-full select-none'>
+      <div className='relative h-full w-full overflow-hidden'>
         <div
           ref={sliderRef}
-          className="relative w-full h-full cursor-grab active:cursor-grabbing select-none"
+          className='relative h-full w-full cursor-grab select-none active:cursor-grabbing'
           onMouseDown={handleDragStart}
           onMouseMove={handleDragMove}
           onMouseUp={handleDragEnd}
@@ -236,14 +240,14 @@ function ImageSlider() {
             {images.map((song, index) => (
               <div
                 key={index}
-                className="w-full h-full flex-shrink-0 select-none flex justify-center items-center"
+                className='flex h-full w-full flex-shrink-0 select-none items-center justify-center'
                 style={{ flex: '0 0 100%' }}
               >
                 <img
                   src={song.url}
                   alt={`Slide ${index + 1}`}
-                  className="aspect-square rounded-2xl border-[1px] border-border h-full"
-                  draggable="false"
+                  className='aspect-square h-full rounded-2xl border-[1px] border-border'
+                  draggable='false'
                 />
               </div>
             ))}
@@ -253,4 +257,3 @@ function ImageSlider() {
     </div>
   );
 }
-
