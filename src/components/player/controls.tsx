@@ -99,7 +99,7 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
 
   function handlePrevious() {
     if (audioRef.current) {
-      if (audioRef.current.currentTime > 2) {
+      if (audioRef.current.currentTime > 5) {
         audioRef.current.currentTime = 0;
         audioRef.current.play();
       } else {
