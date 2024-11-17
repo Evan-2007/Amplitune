@@ -52,10 +52,6 @@ jobs:
             - name: Install dependencies
               run: pnpm install
 
-            - name: Build
-              run: pnpm tauri build
-              env:
-                GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
             - uses: tauri-apps/tauri-action@v0
               env:
