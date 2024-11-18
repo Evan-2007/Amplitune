@@ -73,7 +73,7 @@ jobs:
                 echo "Certificate imported."
             - name: write api key to file
               run: |
-                echo "${{ secrets.APPLE_API_KEY }}" > ${{ github.workspace }}/apple-api-key.p8
+                echo "${{ secrets.APPLE_API_KEY_PATH }}" > ${{ github.workspace }}/apple-api-key.p8
                 chmod 600 ${{ github.workspace }}/apple-api-key.p8
             - uses: tauri-apps/tauri-action@v0
               env:
