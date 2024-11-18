@@ -52,10 +52,7 @@ jobs:
             - name: Install dependencies
               run: pnpm install
 
-            - name: Build
-              run: pnpm tauri build
-              env:
-                GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
 
 
             - name: Import Apple Developer Certificate
