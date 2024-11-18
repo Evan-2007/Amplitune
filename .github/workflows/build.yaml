@@ -88,6 +88,7 @@ jobs:
                 args: ${{ matrix.args }}
 
             - uses: tauri-apps/tauri-action@v0
+              if: (matrix.os == 'windows-latest') || (matrix.os == 'ubuntu-latest')
               with:
                 tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
                 releaseName: 'App v__VERSION__'
