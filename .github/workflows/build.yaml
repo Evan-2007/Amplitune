@@ -62,6 +62,13 @@ jobs:
                 p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
                 p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
                 keychain-password: ${{ secrets.KEYCHAIN_PASSWORD }}
+                name: build.keychain
+                default-keychain: true
+                unlock-keychain: true
+                set-key-partition-list: true
+                keychain-settings: 'lock-after-sleep timeout=300s lock-on-sleep'
+                find-identity: true
+                find-identity-name: 'Developer ID Application'
 
             - name: Verify Certificate
               if: (matrix.os == 'macos-latest') || (matrix.os == 'macos-13')
