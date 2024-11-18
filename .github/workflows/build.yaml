@@ -62,7 +62,7 @@ jobs:
                 p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
                 p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
                 keychain-password: ${{ secrets.KEYCHAIN_PASSWORD }}
-                keychain: build.keychain
+                keychain: build
 
             - name: Verify Certificate
               if: (matrix.os == 'macos-latest') || (matrix.os == 'macos-13')
