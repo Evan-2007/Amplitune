@@ -75,13 +75,13 @@ export default function Left({
   }, [debouncedMouseStop]);
   return (
     <div
-      className='group z-50 flex h-full w-full flex-col pt-[20vh] md:mt-0 md:w-1/2'
+      className='group z-50 flex h-full w-full flex-col max-sm:pt-[20vh] md:mt-0 md:w-1/2 md:items-center md:justify-center'
       onMouseMove={handleMouseMove}
       onMouseLeave={() => setIsMouseMoving(false)}
     >
       {songData && imageUrl && songData.title ? (
         <>
-          <div className='w-full rounded-2xl md:h-[58.33%]'>
+          <div className='aspect-square rounded-2xl max-sm:w-full md:h-[58.33%]'>
             <ImageSlider />
           </div>
           <div className='flex w-full flex-col overflow-hidden text-nowrap px-12 text-center'>
@@ -250,7 +250,7 @@ function ImageSlider() {
                 <img
                   src={song.url}
                   alt={`Slide ${index + 1}`}
-                  className='aspect-square h-full w-5/6 rounded-2xl border-[1px] border-border'
+                  className='aspect-square rounded-2xl border-[1px] border-border max-sm:w-5/6 md:h-full'
                   draggable='false'
                 />
               </div>

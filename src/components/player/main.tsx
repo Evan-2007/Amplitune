@@ -366,10 +366,10 @@ export function PlayerContent({}: {}) {
         </div>
       </div>
       <div></div>
-      <div>
+      <div className='hidden md:flex'>
         <Controls songData={songData} />
       </div>
-      <div>
+      <div className='hidden md:flex'>
         <RightControls audioRef={audioRef} />
       </div>
       <audio ref={audioRef} />
