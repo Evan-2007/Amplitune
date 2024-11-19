@@ -15,12 +15,16 @@ import { useQueueStore } from '@/lib/queue';
 import { usePlayerStore, useUiStore } from '@/lib/state';
 import { subsonicURL } from '@/lib/servers/navidrome';
 import { useRouter } from 'next/navigation';
+import styles from './ignore-safe-area.module.css'
+import { cn} from '@/lib/utils';
+
 
 import { useRef } from 'react';
 
 export default function FullScreenPlayer({}: {}) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [layout, setLayout] = useState<number>(1);
+  
   const storage = new CrossPlatformStorage();
 
   const songData = useQueueStore((state) => state.queue.currentSong?.track);
@@ -123,24 +127,66 @@ export default function FullScreenPlayer({}: {}) {
     return { r, g, b };
   }
 
+
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+
+  useEffect (() => {
+    const event = window.matchMedia('(max-width: 768px)');
+    const listener = (event: MediaQueryListEvent) => {
+      setIsMobile(event.matches);
+    };
+    event.addEventListener('change', listener);
+    listener(event);
+    return () => {
+      event.removeEventListener('change', listener);
+    };
+  } , []);
+
+
+
+useEffect(() => {
+  const adjustHeight = () => {
+    const containerElement = container.current;
+    if (containerElement) {
+      const safeAreaTop = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-top)')) || 0;
+      const safeAreaBottom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-bottom)')) || 0;
+      containerElement.style.height = `calc(100vh + ${safeAreaTop}px + ${safeAreaBottom}px)`;
+    }
+  };
+
+  adjustHeight(); // Initial adjustment
+  window.addEventListener('resize', adjustHeight); // Adjust on resize
+
+  // Cleanup event listener on unmount
+  return () => {
+    window.removeEventListener('resize', adjustHeight);
+  };
+}, []);
+
+
+  
+  
+
   if (!fullScreen) return null;
 
   return (
     <div
-      className='relative bottom-0 z-50 h-screen w-screen animate-[grow-height_.3s_ease-out]'
+      className={cn('z-50 animate-[grow-height_.3s_ease-out] inset-0 ', styles.container)}
       ref={container}
       style={
         colors.length > 0
           ? {
               background: `${colors[0].hex} linear-gradient(180deg, ${colors[0].hex}, ${colors[0].hex})`,
+              
             }
-          : { background: 'linear-gradient(180deg, #000, #000)' }
+          : { background: 'linear-gradient(180deg, #000, #000)',               
+          }
       }
     >
-      <div className='absolute z-50 flex h-full w-full flex-col md:flex-row'>
-        <Left audioRef={audioRef} />
-        <div className='flex h-full w-1/2 flex-col items-center justify-center'>
-          {songData && <Lyrics audioRef={audioRef} />}
+      <div className={cn('absolute z-50 flex h-full w-full flex-col md:flex-row justify-center items-center', styles.container)}>
+        <Left audioRef={audioRef} isMobile={isMobile} />
+        <div className='md:flex h-full w-1/2 flex-col items-center justify-center hidden '>
+          {songData && !isMobile && <Lyrics audioRef={audioRef} />}
         </div>
       </div>
       <div

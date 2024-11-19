@@ -68,6 +68,7 @@ export function PlayerContent({}: {}) {
   const router = useRouter();
 
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
+  const [firstLoad, setFirstLoad] = useState<boolean>(true);
 
   //data about the song when song is not loaded from queue state
   const getSongData = async (id: string) => {
@@ -180,7 +181,12 @@ export function PlayerContent({}: {}) {
       const url = await subsonicURL(`/rest/stream`, `&id=${songData.id}`);
       if (audioRef.current) {
         audioRef.current.src = url;
-        audioRef.current.play();
+        if (firstLoad) {
+          setFirstLoad(false);
+        } else {
+          audioRef.current.play();
+          updateMediaSession();
+        }
       }
     } else {
       setError(new Error('No song data'));

@@ -8,10 +8,12 @@ import { CrossPlatformStorage } from '@/lib/storage/cross-platform-storage';
 import { useRouter } from 'next/navigation';
 import { subsonicURL } from '@/lib/servers/navidrome';
 
+
 export default function Left({
-  audioRef,
+  audioRef, isMobile,
 }: {
   audioRef: React.RefObject<HTMLAudioElement>;
+  isMobile: boolean;
 }) {
   const [isMouseMoving, setIsMouseMoving] = useState<boolean>(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -73,13 +75,13 @@ export default function Left({
   }, [debouncedMouseStop]);
   return (
     <div
-      className='group z-50 flex h-full w-1/2 flex-col items-center justify-center'
+      className='group z-50 flex h-full md:w-1/2 w-full flex-col pt-[20vh] md:mt-0'
       onMouseMove={handleMouseMove}
       onMouseLeave={() => setIsMouseMoving(false)}
     >
       {songData && imageUrl && songData.title ? (
         <>
-          <div className='aspect-square h-[58.33%] w-full rounded-2xl'>
+          <div className='w-full md:h-[58.33%]  rounded-2xl '>
             <ImageSlider />
           </div>
           <div className='flex w-full flex-col overflow-hidden text-nowrap px-12 text-center'>
@@ -95,10 +97,10 @@ export default function Left({
         <div className='aspect-square max-h-[58.33%] w-full bg-gray-800'></div>
       )}
       <div
-        className={`'w-full h-0 ${isMouseMoving && 'mt-6'} ' transition-all duration-700`}
+        className={`'w-full  ${isMouseMoving && 'md:mt-6'} ' transition-all duration-700`}
       >
         <div
-          className={`pulse_3s_ease-out_infinite opacity-0 transition-opacity duration-700 ${isMouseMoving && 'opacity-100'}`}
+          className={`pulse_3s_ease-out_infinite md:opacity-0 mr-6 mt-[3vh] md:mt-0 transition-opacity duration-700 ${isMouseMoving && 'md:opacity-100'}`}
         >
           <Controls songData={songData} />
         </div>
@@ -123,6 +125,8 @@ function ImageSlider() {
   const [shouldAnimate, setShouldAnimate] = useState(true);
 
   const previousIndexRef = useRef(currentIndex);
+
+  const GAP_SIZE = 32; // 2rem/32px gap
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -215,7 +219,7 @@ function ImageSlider() {
   if (images.length < 1) return null;
 
   return (
-    <div className='mx-auto h-full w-full select-none'>
+    <div className='mx-auto h-full w-full select-none  '>
       <div className='relative h-full w-full overflow-hidden'>
         <div
           ref={sliderRef}
@@ -229,11 +233,11 @@ function ImageSlider() {
           onTouchEnd={handleDragEnd}
         >
           <div
-            className={`flex h-full select-none ${
+            className={`flex h-full select-none space-x-[32px]  ${
               shouldAnimate ? 'transition-transform duration-300 ease-out' : ''
             }`}
             style={{
-              transform: `translateX(calc(-${currentIndex * 100}% + ${translateX}px))`,
+              transform: `translateX(calc(-${currentIndex * 100 }% + ${translateX}px - ${GAP_SIZE * currentIndex}px))`,
               userSelect: 'none',
             }}
           >
@@ -246,7 +250,7 @@ function ImageSlider() {
                 <img
                   src={song.url}
                   alt={`Slide ${index + 1}`}
-                  className='aspect-square h-full rounded-2xl border-[1px] border-border'
+                  className='aspect-square h-full rounded-2xl border-[1px] border-border w-5/6'
                   draggable='false'
                 />
               </div>
