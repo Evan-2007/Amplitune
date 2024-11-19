@@ -188,8 +188,7 @@ export default function FullScreenPlayer({}: {}) {
     >
       <div
         className={cn(
-          'absolute z-50 flex h-full w-full flex-col items-center justify-center md:flex-row',
-          styles.container
+          'absolute z-50 flex h-full w-full flex-col items-center justify-center md:flex-row'
         )}
       >
         <Left audioRef={audioRef} isMobile={isMobile} />
