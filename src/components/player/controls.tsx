@@ -154,7 +154,7 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
               <Slider
                 max={1000}
                 step={1}
-                className='mx-2 md:w-96 w-[60vw]'
+                className='mx-2 w-[60vw] md:w-96'
                 value={[Math.round(sliderValue)]}
                 onValueChange={(e: number[]) => setSliderValue(e[0])}
                 onValueCommit={(e: number[]) => handleSliderCommit(e[0])}

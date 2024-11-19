@@ -12,12 +12,13 @@ export default function HomeLayout({
 }) {
   return (
     <div className='h-screen w-screen overflow-hidden'>
-      <div className='absolute'><FullScreenPlayer /></div>
-
+      <div className='absolute'>
+        <FullScreenPlayer />
+      </div>
 
       <div className='flex h-full flex-col bg-card'>
         <Header />
-        <Player /> 
+        <Player />
 
         <div className='flex min-h-0 flex-1'>
           <Sidebar />
