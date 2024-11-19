@@ -129,15 +129,17 @@ export default function FullScreenPlayer({}: {}) {
   const [isMobile, setIsMobile] = useState<boolean>(false);
 
   useEffect(() => {
-    const event = window.matchMedia('(max-width: 768px)');
-    const listener = (event: MediaQueryListEvent) => {
-      setIsMobile(event.matches);
-    };
-    event.addEventListener('change', listener);
-    listener(event);
-    return () => {
-      event.removeEventListener('change', listener);
-    };
+    function handleResize() {
+      if (window.innerWidth < 768) {
+        setIsMobile(true);
+      } else {
+        setIsMobile(false);
+      }
+    }
+
+    window.addEventListener('resize', handleResize);
+
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
