@@ -131,14 +131,14 @@ const Background: React.FC<BackgroundProps> = ({ colors }) => {
         canvas.height = window.innerHeight;
         blurredCanvas.width = window.innerWidth + 100;
         blurredCanvas.height = window.innerHeight + 100;
-        blurredCtx.filter = `blur(${CUSTOMIZATION.BLUR_AMOUNT}px)`;
+//        blurredCtx.filter = `blur(${CUSTOMIZATION.BLUR_AMOUNT}px)`;
       }
     };
 
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    blurredCtx.filter = `blur(${CUSTOMIZATION.BLUR_AMOUNT}px)`;
+//    blurredCtx.filter = `blur(${CUSTOMIZATION.BLUR_AMOUNT}px)`;
 
     let ovals: Oval[] = [];
     let lastOvalCreatedAt = 0;
@@ -234,11 +234,17 @@ const Background: React.FC<BackgroundProps> = ({ colors }) => {
         className='bg-transparent'
         style={{ position: 'absolute', top: 0, left: 0, display: 'none' }}
       />
-      <canvas
-        ref={blurredCanvasRef}
-        className='bg-transparent'
-        style={{ position: 'absolute', top: 0, left: 0, display: 'block' }}
-      />
+  <canvas
+    ref={blurredCanvasRef}
+    className='bg-transparent'
+    style={{
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      display: 'block',
+      filter: `blur(${CUSTOMIZATION.BLUR_AMOUNT}px)`,
+    }}
+  />
     </div>
   );
 };
