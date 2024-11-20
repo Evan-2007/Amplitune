@@ -8,3 +8,8 @@
   overflow: hidden;
   height: calc(100% + env(safe-area-inset-top) + env(safe-area-inset-bottom));
 }
+
+.avoidSafeArea {
+  margin-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
