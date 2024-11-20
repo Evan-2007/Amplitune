@@ -88,8 +88,19 @@ jobs:
               with:
                 args: ${{ matrix.args }}
 
+            - name: ios build (macos only)
+              env: 
+                IOS_CERTIFICATE: ${{ secrets.IOS_CERTIFICATE }}
+                IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+                IOS_MOBILE_PROVISION: ${{ secrets.IOS_MOBILE_PROVISION }}
+              if: matrix.os == 'macos-latest'
+              run: |
+                pnpm tauri ios build --export-method app-store-connect
+#                xcrun altool --upload-app --file "src-tauri/gen/apple/build/arm64/$APPNAME.ipa" --apiKey ${{ secrets.APPLE_API_KEY }} --apiIssuer ${{ secrets.APPLE_API_ISSUER }} --skip-submission
+                
+                
 
-            
+
             - name: publish artifacts
               uses: actions/upload-artifact@v4
               with:
