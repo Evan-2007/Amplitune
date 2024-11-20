@@ -17,9 +17,17 @@ import { subsonicURL } from '@/lib/servers/navidrome';
 import { useRouter } from 'next/navigation';
 import styles from './ignore-safe-area.module.css';
 import { cn } from '@/lib/utils';
+import {
+  MessageSquareQuote as LyricsIcon,
+  Airplay,
+  ListMusic,
+} from 'lucide-react';
 
 import { useRef } from 'react';
-
+interface FinalColor {
+  hex: string;
+  area: number;
+}
 export default function FullScreenPlayer({}: {}) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [layout, setLayout] = useState<number>(1);
@@ -36,8 +44,11 @@ export default function FullScreenPlayer({}: {}) {
   const setFullScreen = useUiStore((state) => state.toggleFullScreenPlayer);
 
   const container = useRef<HTMLDivElement>(null);
+  const buttonsRef = useRef<HTMLDivElement>(null);
   function handleClose() {
     container.current?.classList.add('animate-[shrink-height_.3s_ease-out]');
+    buttonsRef.current?.classList.remove('opacity-100');
+    buttonsRef.current?.classList.add('opacity-0');
     setTimeout(() => {
       setFullScreen();
     }, 300);
@@ -48,11 +59,6 @@ export default function FullScreenPlayer({}: {}) {
       container.current.addEventListener;
     }
   }, [container]);
-
-  interface FinalColor {
-    hex: string;
-    area: number;
-  }
 
   const [colors, setColors] = useState<FinalColor[]>([]);
 
@@ -171,6 +177,8 @@ export default function FullScreenPlayer({}: {}) {
     };
   }, []);
 
+  const [tab, setTab] = useState<number>(0);
+
   if (!fullScreen) return null;
 
   return (
@@ -188,14 +196,23 @@ export default function FullScreenPlayer({}: {}) {
           : { background: 'linear-gradient(180deg, #000, #000)' }
       }
     >
+      {tab !== 0 && (
+        <TopPlayer
+          imageUrl={imageUrl}
+          colors={colors}
+          setTab={(value) => setTab(value)}
+        />
+      )}
       <div
         className={cn(
-          'absolute z-50 flex h-full w-full flex-col items-center justify-center md:flex-row'
+          'absolute z-40 flex h-full w-full flex-col items-center justify-center md:flex-row'
         )}
       >
-        <Left audioRef={audioRef} isMobile={isMobile} />
-        <div className='hidden h-full w-1/2 flex-col items-center justify-center md:flex'>
-          {songData && !isMobile && <Lyrics audioRef={audioRef} />}
+        <Left audioRef={audioRef} isMobile={isMobile} tab={tab} />
+        <div
+          className={`h-full w-full flex-col items-center justify-center md:flex ${tab === 0 ? 'hidden md:w-1/2' : 'visible w-full'}`}
+        >
+          <Lyrics audioRef={audioRef} tab={tab} setTab={(tab) => setTab(tab)} />{' '}
         </div>
       </div>
       <div
@@ -206,6 +223,205 @@ export default function FullScreenPlayer({}: {}) {
       </div>
       <div className='absolute'>
         <Background colors={colors.slice(1).map((color) => color.hex)} />
+      </div>
+      <div
+        className='fixed bottom-10 z-50 flex w-screen flex-row items-center justify-between px-[15%] opacity-100 md:hidden'
+        ref={buttonsRef}
+      >
+        <button
+          className={`color-white flex aspect-square h-9 items-center justify-center rounded-lg opacity-75 ${tab === 1 && 'color-gray-950 bg-slate-300'}`}
+          onClick={() => setTab(tab === 1 ? 0 : 1)}
+        >
+          <LyricsIcon color={(tab === 1 && 'grey') || 'white'} size={24} />
+        </button>
+        <button
+          className={`color-white flex aspect-square h-10 items-center justify-center rounded-full opacity-75 ${tab === 3 && 'color-gray-950 bg-slate-300'}`}
+          onClick={() => setTab(tab === 3 ? 0 : 3)}
+        >
+          <Airplay color={(tab === 3 && 'grey') || 'white'} size={24} />
+        </button>
+        <button
+          className={`color-white flex aspect-square h-10 items-center justify-center rounded-full opacity-75 ${tab === 2 && 'color-gray-950 bg-slate-300'}`}
+          onClick={() => setTab(tab === 2 ? 0 : 2)}
+        >
+          <ListMusic color={(tab === 2 && 'grey') || 'white'} size={24} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function TopPlayer({
+  imageUrl,
+  colors,
+  setTab,
+}: {
+  imageUrl: string | null;
+  colors: FinalColor[];
+  setTab: (tab: number) => void;
+}) {
+  const progressRef = useRef<HTMLDivElement>(null);
+  const progressContainerRef = useRef<HTMLDivElement>(null);
+  const audioRef = usePlayerStore((state) => state.ref);
+  const animationFrameRef = useRef<number>();
+
+  const updateProgress = useCallback(() => {
+    if (!progressRef.current || !audioRef?.current) return;
+
+    // Check if audio is loaded and has duration
+    if (isNaN(audioRef.current.duration)) {
+      progressRef.current.style.transform = 'scaleX(0)';
+      return;
+    }
+
+    const progress =
+      audioRef.current.currentTime / audioRef.current.duration || 0;
+    const boundedProgress = Math.min(Math.max(progress, 0), 1);
+
+    progressRef.current.style.transform = `scaleX(${boundedProgress})`;
+
+    if (Math.abs(boundedProgress - 1) < 0.001) {
+      progressRef.current.style.borderRadius = '24px';
+    } else {
+      progressRef.current.style.borderRadius = '24px 0 0 24px';
+    }
+
+    if (!audioRef.current.paused) {
+      animationFrameRef.current = requestAnimationFrame(updateProgress);
+    }
+  }, []);
+
+  // Reset on song change
+  useEffect(() => {
+    if (!progressRef.current || !audioRef?.current) return;
+
+    const handleSourceChange = () => {
+      if (progressRef.current) {
+        progressRef.current.style.transform = 'scaleX(0)';
+        progressRef.current.style.borderRadius = '24px 0 0 24px';
+      }
+
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+
+      // Start new animation if playing
+      if (!audioRef.current?.paused) {
+        animationFrameRef.current = requestAnimationFrame(updateProgress);
+      }
+    };
+
+    const audio = audioRef.current;
+    audio.addEventListener('loadstart', handleSourceChange);
+
+    return () => {
+      audio.removeEventListener('loadstart', handleSourceChange);
+    };
+  }, [updateProgress]);
+
+  // Handle playback state changes
+  useEffect(() => {
+    if (!audioRef?.current) return;
+
+    const handlePlay = () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      animationFrameRef.current = requestAnimationFrame(updateProgress);
+    };
+
+    const handlePause = () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+
+    const handleTimeUpdate = () => {
+      if (!animationFrameRef.current) {
+        updateProgress();
+      }
+    };
+
+    const handleSeeking = () => {
+      updateProgress();
+    };
+
+    const audio = audioRef.current;
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('timeupdate', handlePlay);
+    audio.addEventListener('seeking', handleSeeking);
+    audio.addEventListener('seeked', handleSeeking);
+
+    // Initial state
+    if (!audio.paused) {
+      handlePlay();
+    }
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('seeking', handleSeeking);
+      audio.removeEventListener('seeked', handleSeeking);
+    };
+  }, [updateProgress]);
+
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, []);
+
+  const songData = useQueueStore((state) => state.queue.currentSong?.track);
+
+  return (
+    <div
+      className={cn(
+        'bg-gray absolute z-50 flex aspect-square h-[10vh] w-full animate-[fade-in] items-center justify-center px-[5vw] py-[2vh] opacity-100 duration-1000 ease-in-out',
+        styles.avoidSafeArea
+      )}
+    >
+      <div
+        ref={progressContainerRef}
+        className='absolute z-50 h-[8vh] w-[90vw] overflow-hidden rounded-3xl border border-border bg-gray-800 backdrop-blur-md'
+      >
+        <div
+          ref={progressRef}
+          className='h-full w-full origin-left bg-gray-700'
+          style={{
+            borderRadius: '24px 0 0 24px',
+            transform: 'scaleX(0)',
+            transition: 'transform 50ms linear, border-radius 150ms ease',
+          }}
+        ></div>
+      </div>
+      <div
+        className='flex h-full w-full items-center p-4'
+        onClick={() => setTab(0)}
+      >
+        {imageUrl && colors.length > 0 ? (
+          <img
+            src={imageUrl}
+            className='relative z-[55] h-[6vh] rounded-lg border border-border object-cover'
+            alt='Album art'
+          />
+        ) : (
+          <div className='h-full w-full bg-gray-800'></div>
+        )}
+        <div className='ml-4 flex flex-col'>
+          <h1 className='z-[55] line-clamp-1 text-lg font-bold text-white'>
+            {songData?.title}
+          </h1>
+          <h2 className='z-[55] line-clamp-1 text-sm text-gray-300'>
+            {songData?.album} - {songData?.artist}
+          </h2>
+        </div>
       </div>
     </div>
   );
