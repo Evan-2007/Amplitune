@@ -49,9 +49,28 @@ jobs:
                 # webkitgtk 4.0 is for Tauri v1 - webkitgtk 4.1 is for Tauri v2.
                 # You can remove the one that doesn't apply to your app to speed up the workflow a bit.
 
+                
             - name: Install dependencies
               run: pnpm install
 
+            - name: write api key to file
+              run: |
+                echo "${{ secrets.APPLE_API_KEY_PATH }}" > ${{ github.workspace }}/apple-api-key.p8
+                chmod 600 ${{ github.workspace }}/apple-api-key.p8
+
+            - name: ios build (macos only)
+              env: 
+#                IOS_CERTIFICATE: ${{ secrets.IOS_CERTIFICATE }}
+#                IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+#                IOS_MOBILE_PROVISION: ${{ secrets.IOS_MOBILE_PROVISION }}
+                APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+                APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+                APPLE_API_KEY_PATH: ${{ github.workspace }}/apple-api-key.p8
+                
+              if: matrix.os == 'macos-latest'
+              run: |
+                pnpm tauri ios build --export-method app-store-connect
+#                xcrun altool --upload-app --file "src-tauri/gen/apple/build/arm64/$APPNAME.ipa" --apiKey ${{ secrets.APPLE_API_KEY }} --apiIssuer ${{ secrets.APPLE_API_ISSUER }} --skip-submission
 
 
 
@@ -71,10 +90,6 @@ jobs:
                 CERT_ID=$(echo "$CERT_INFO" | awk -F'"' '{print $2}')
                 echo "CERT_ID=$CERT_ID" >> $GITHUB_ENV
                 echo "Certificate imported."
-            - name: write api key to file
-              run: |
-                echo "${{ secrets.APPLE_API_KEY_PATH }}" > ${{ github.workspace }}/apple-api-key.p8
-                chmod 600 ${{ github.workspace }}/apple-api-key.p8
             - uses: tauri-apps/tauri-action@v0
               env:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -88,16 +103,7 @@ jobs:
               with:
                 args: ${{ matrix.args }}
 
-            - name: ios build (macos only)
-              env: 
-                IOS_CERTIFICATE: ${{ secrets.IOS_CERTIFICATE }}
-                IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
-                IOS_MOBILE_PROVISION: ${{ secrets.IOS_MOBILE_PROVISION }}
-              if: matrix.os == 'macos-latest'
-              run: |
-                pnpm tauri ios build --export-method app-store-connect
-#                xcrun altool --upload-app --file "src-tauri/gen/apple/build/arm64/$APPNAME.ipa" --apiKey ${{ secrets.APPLE_API_KEY }} --apiIssuer ${{ secrets.APPLE_API_ISSUER }} --skip-submission
-                
+
                 
 
 
