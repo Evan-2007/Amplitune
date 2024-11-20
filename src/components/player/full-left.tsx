@@ -11,9 +11,11 @@ import { subsonicURL } from '@/lib/servers/navidrome';
 export default function Left({
   audioRef,
   isMobile,
+  tab,
 }: {
   audioRef: React.RefObject<HTMLAudioElement>;
   isMobile: boolean;
+  tab: number;
 }) {
   const [isMouseMoving, setIsMouseMoving] = useState<boolean>(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -75,14 +77,14 @@ export default function Left({
   }, [debouncedMouseStop]);
   return (
     <div
-      className='group z-50 flex h-full w-full flex-col max-sm:pt-[20vh] md:mt-0 md:w-1/2 md:items-center md:justify-center'
+      className={`${tab === 0 ? 'group z-50 flex h-full w-full flex-col justify-center md:mt-0 md:w-1/2 md:items-center' : 'hidden'} animate-[fade-in] transition-all duration-1000 ease-in-out`}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => setIsMouseMoving(false)}
     >
       {songData && imageUrl && songData.title ? (
         <>
-          <div className='aspect-square rounded-2xl max-sm:w-full md:h-[58.33%]'>
-            <ImageSlider />
+          <div className='aspect-square rounded-2xl max-md:w-full md:h-[58.33%]'>
+            <ImageSlider enabled={tab === 0 ? true : false} />
           </div>
           <div className='flex w-full flex-col overflow-hidden text-nowrap px-12 text-center'>
             <h1 className='mt-4 text-2xl font-bold text-white'>
@@ -102,7 +104,7 @@ export default function Left({
         <div
           className={`pulse_3s_ease-out_infinite mr-6 mt-[3vh] transition-opacity duration-700 md:mt-0 md:opacity-0 ${isMouseMoving && 'md:opacity-100'}`}
         >
-          <Controls songData={songData} />
+          {tab === 0 && <Controls songData={songData} />}
         </div>
       </div>
     </div>
@@ -111,7 +113,7 @@ export default function Left({
 
 import { useRef, useLayoutEffect } from 'react';
 
-function ImageSlider() {
+function ImageSlider({ enabled = true }: { enabled: boolean }) {
   const queue = useQueueStore((state) => state.queue.songs);
   const currentSong = useQueueStore((state) => state.queue.currentSong);
   const setCurrentSong = useQueueStore((state) => state.setCurrentSong);
@@ -224,13 +226,13 @@ function ImageSlider() {
         <div
           ref={sliderRef}
           className='relative h-full w-full cursor-grab select-none active:cursor-grabbing'
-          onMouseDown={handleDragStart}
-          onMouseMove={handleDragMove}
-          onMouseUp={handleDragEnd}
-          onMouseLeave={handleDragEnd}
-          onTouchStart={handleDragStart}
-          onTouchMove={handleDragMove}
-          onTouchEnd={handleDragEnd}
+          onMouseDown={enabled ? handleDragStart : undefined}
+          onMouseMove={enabled ? handleDragMove : undefined}
+          onMouseUp={enabled ? handleDragEnd : undefined}
+          onMouseLeave={enabled ? handleDragEnd : undefined}
+          onTouchStart={enabled ? handleDragStart : undefined}
+          onTouchMove={enabled ? handleDragMove : undefined}
+          onTouchEnd={enabled ? handleDragEnd : undefined}
         >
           <div
             className={`flex h-full select-none space-x-[32px] ${
@@ -250,7 +252,7 @@ function ImageSlider() {
                 <img
                   src={song.url}
                   alt={`Slide ${index + 1}`}
-                  className='aspect-square rounded-2xl border-[1px] border-border max-sm:w-5/6 md:h-full'
+                  className={`aspect-square rounded-2xl border-[1px] border-border max-md:w-5/6 md:h-full`}
                   draggable='false'
                 />
               </div>
