@@ -22,8 +22,12 @@ import { subsonicURL } from '@/lib/servers/navidrome';
 
 export default function Lyrics({
   audioRef,
+  tab,
+  setTab,
 }: {
   audioRef: React.RefObject<HTMLAudioElement>;
+  tab: number;
+  setTab: React.Dispatch<React.SetStateAction<number>>;
 }) {
   interface LyricLine {
     start: number;
@@ -34,13 +38,12 @@ export default function Lyrics({
 
   const localStorage = new CrossPlatformStorage();
 
-  const [tab, setTab] = useState<'lyrics' | 'queue'>('lyrics');
-
   const [lyrics, setLyrics] = useState<LyricLine[] | null>(null);
   const [currentLine, setCurrentLine] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [isMouseMoving, setIsMouseMoving] = useState<boolean>(false);
   const [synced, setSynced] = useState<boolean>(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const router = useRouter();
 
@@ -76,12 +79,31 @@ export default function Lyrics({
   }, [songData]);
 
   useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
     if (lyricsContainerRef.current && synced) {
       const container = lyricsContainerRef.current;
       const currentLineElement = container.querySelector(
         `[data-line="${currentLine}"]`
       );
-      if (currentLineElement) {
+      if (currentLineElement && isMobile) {
+        const elementRect = currentLineElement.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        const targetOffset = window.innerHeight * 0.2; // 20vh
+
+        container.scrollTop =
+          container.scrollTop +
+          (elementRect.top - containerRect.top) -
+          targetOffset;
+      } else if (currentLineElement) {
         currentLineElement.scrollIntoView({
           block: 'center',
         });
@@ -95,14 +117,26 @@ export default function Lyrics({
       const currentLineElement = container.querySelector(
         `[data-line="${currentLine}"]`
       );
-      if (currentLineElement) {
+      if (currentLineElement && isMobile) {
+        const elementRect = currentLineElement.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        const targetOffset = window.innerHeight * 0.23; // 20vh
+
+        container.scrollTo({
+          top:
+            container.scrollTop +
+            (elementRect.top - containerRect.top) -
+            targetOffset,
+          behavior: 'smooth',
+        });
+      } else if (currentLineElement) {
         currentLineElement.scrollIntoView({
           behavior: 'smooth',
           block: 'center',
         });
       }
     }
-  }, [currentLine, isMouseMoving]);
+  }, [currentLine, isMouseMoving, isMobile]);
 
   const debouncedMouseStop = useCallback(
     debounce(() => {
@@ -111,9 +145,16 @@ export default function Lyrics({
     []
   );
 
+  const debounceTouchStop = useCallback(
+    debounce(() => {
+      setIsMouseMoving(false);
+    }, 5000),
+    []
+  );
+
   const handleMouseMove = useCallback(() => {
     setIsMouseMoving(true);
-    debouncedMouseStop();
+    isMobile ? debouncedMouseStop() : debounceTouchStop();
   }, [debouncedMouseStop]);
 
   async function fetchLyrics() {
@@ -200,22 +241,25 @@ export default function Lyrics({
   const currentlyPlaying = useQueueStore((state) => state.queue.currentSong);
 
   return (
-    <div className='relative flex h-full w-full items-center justify-center overflow-hidden'>
+    <div className='relative flex h-full w-full justify-center overflow-hidden overflow-x-clip overscroll-none md:items-center'>
       <div
         ref={lyricsContainerRef}
-        className={`${synced ? 'py-[50vh]' : 'py-[10vh]'} no-scrollbar group mr-10 flex h-full w-full flex-col items-center overflow-y-auto`}
+        className={`${synced ? 'py-[20vh] md:py-[50vh]' : 'py-[10vh]'} no-scrollbar group flex h-full w-full flex-col items-center overflow-y-auto overflow-x-hidden overscroll-none md:mr-10`}
         style={{ scrollBehavior: 'smooth' }}
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setIsMouseMoving(false)}
+        onTouchStart={handleMouseMove}
+        onTouchMove={handleMouseMove}
+        onTouchEnd={handleMouseMove}
       >
-        {tab === 'lyrics' &&
+        {tab === 1 &&
           lyrics &&
           synced &&
           lyrics.map((line, index) => (
             <button key={index} onClick={() => handleLyricClick(index)}>
               <p
                 data-line={index}
-                className={`z-50 animate-[fade-in] text-wrap px-16 pb-12 text-center text-6xl font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] transition-all duration-1000 ease-in-out ${index === currentLine ? 'scale-110 pb-10 text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]' : index > currentLine && !isMouseMoving ? 'scale-[80%] text-gray-400 blur-[7px]' : index > currentLine && isMouseMoving ? 'scale-[80%] text-gray-400 blur-0' : isMouseMoving ? 'group-hover:scale-[80%] group-hover:opacity-100' : 'text-gray-400 opacity-0 blur-[7px] transition-all duration-1000'} `}
+                className={`z-40 animate-[fade-in] text-wrap px-10 pb-6 text-center text-3xl font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] transition-all duration-1000 ease-in-out md:px-16 md:pb-12 md:text-6xl ${index === currentLine ? 'scale-110 pb-10 text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]' : index > currentLine && !isMouseMoving ? 'scale-[80%] text-gray-400 blur-[7px]' : index > currentLine && isMouseMoving ? 'scale-[80%] text-gray-400 blur-0' : isMouseMoving ? 'group-hover:scale-[80%] group-hover:opacity-100' : 'text-gray-400 opacity-0 blur-[7px] transition-all duration-1000'} `}
               >
                 {line.value}
               </p>
@@ -231,7 +275,7 @@ export default function Lyrics({
           ))}
 
         <div className='mb-[30vh] flex h-full w-full flex-col items-center justify-start'>
-          {tab === 'lyrics' &&
+          {tab === 1 &&
             lyrics &&
             !synced &&
             lyrics.map((line, index) => (
@@ -243,16 +287,16 @@ export default function Lyrics({
             ))}
         </div>
 
-        {tab === 'lyrics' && !lyrics && (
+        {tab === 1 && !lyrics && (
           <p className='mt-6 text-center text-4xl font-bold text-gray-400 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]'>
             No lyrics found
           </p>
         )}
 
-        {tab === 'queue' && <QueueList isMouseMoving={isMouseMoving} />}
+        {tab === 2 && <QueueList isMouseMoving={isMouseMoving} />}
 
         <div
-          className={`absolute bottom-24 flex w-full items-center justify-center transition-all duration-1000 ease-in-out ${isMouseMoving ? 'opacity-100' : 'opacity-100'}`}
+          className={`absolute bottom-24 flex w-full items-center justify-center transition-all duration-1000 ease-in-out ${isMouseMoving ? 'opacity-100' : 'opacity-100'} max-md:hidden`}
         >
           <div
             className={`h-11 w-64 rounded-md transition-all duration-1000 ease-in-out ${isMouseMoving ? 'bg-gray-900/70 backdrop-blur-[5px]' : 'bg-gray-900/0'}`}
@@ -262,22 +306,22 @@ export default function Lyrics({
             >
               <div className='absolute z-50 h-full w-full p-1'>
                 <div
-                  className={`absolute left-0 z-50 h-9 w-32 transform rounded-md bg-gray-600 px-1 transition-all duration-500 ease-in-out ${tab === 'lyrics' ? 'ml-1 translate-x-0' : 'ml-[-4px] translate-x-full'} `}
+                  className={`absolute left-0 z-50 h-9 w-32 transform rounded-md bg-gray-600 px-1 transition-all duration-500 ease-in-out ${tab === 1 ? 'ml-1 translate-x-0' : 'ml-[-4px] translate-x-full'} `}
                 ></div>
               </div>
               <div
                 className='z-[60] flex h-full w-3/6 items-center justify-center'
-                onClick={() => setTab('lyrics')}
+                onClick={() => setTab(1)}
               >
                 <MessageSquareQuote
                   size={32}
                   className='z-50 pl-1'
-                  onClick={() => setTab('lyrics')}
+                  onClick={() => setTab(1)}
                 />
               </div>
               <div
                 className='z-[60] flex h-full w-3/6 items-center justify-center'
-                onClick={() => setTab('queue')}
+                onClick={() => setTab(2)}
               >
                 <Queue className='z-50 h-8 w-10 fill-white pr-1' />
               </div>
@@ -292,7 +336,7 @@ export default function Lyrics({
 function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
   const currentlyPlaying = useQueueStore((state) => state.queue.currentSong);
   const queue = useQueueStore((state) => state.queue);
-  const [baseUrl, setBaseUrl] = useState<string>('');
+  const [baseUrl, setBaseUrl] = useState<string | undefined>(undefined);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const currentSongElement = useRef<HTMLDivElement>(null);
@@ -320,7 +364,7 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
 
   return (
     <div
-      className={`no-scrollbar absolute top-24 flex h-[75vh] w-9/12 animate-[fade-in] flex-col overflow-auto backdrop-opacity-0 transition-all duration-700 ${isMouseMoving && 'bg-card/60 backdrop-blur-md backdrop-opacity-100'} rounded-2xl p-10`}
+      className={`no-scrollbar absolute top-24 flex h-[75vh] w-9/12 animate-[fade-in] flex-col overflow-auto backdrop-opacity-0 transition-all duration-700 max-md:bg-card/30 ${isMouseMoving && 'bg-card/60 backdrop-blur-md backdrop-opacity-100'} overscroll-none rounded-2xl p-10`}
     >
       <div className='top-24 flex justify-between'>
         <div></div>
@@ -330,38 +374,39 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
       </div>
       <div className='mb-2 mr-10 mt-8 text-2xl font-bold'>Previous</div>
       <div className='space-y-2'>
-        {queue.songs.map((song, index) => (
-          <>
-            {index < queue.currentSong.index && (
-              <div className='flex justify-between'>
-                <div className='group/image flex space-x-4'>
-                  <div className='' onClick={() => setSong(index)}>
-                    <img
-                      src={`${baseUrl}&id=${song.coverArt}`}
-                      alt='cover art'
-                      className='absolute h-12 w-12 rounded-md'
-                    />
-                    <div className='invisible z-50 flex h-12 w-12 cursor-pointer items-center justify-center rounded-md bg-card/20 opacity-0 backdrop-blur-[2px] transition-all duration-300 ease-in group-hover/image:visible group-hover/image:opacity-100'>
-                      <CirclePlay
-                        className='m-auto h-8 w-8 text-white'
-                        strokeWidth={0.8}
+        {baseUrl !== undefined &&
+          queue.songs.map((song, index) => (
+            <>
+              {index < queue.currentSong.index && (
+                <div className='flex justify-between'>
+                  <div className='group/image flex space-x-4'>
+                    <div className='' onClick={() => setSong(index)}>
+                      <img
+                        src={`${baseUrl}&id=${song.coverArt}`}
+                        alt='cover art'
+                        className='absolute h-12 w-12 rounded-md'
                       />
+                      <div className='invisible z-50 flex h-12 w-12 cursor-pointer items-center justify-center rounded-md bg-card/20 opacity-0 backdrop-blur-[2px] transition-all duration-300 ease-in group-hover/image:visible group-hover/image:opacity-100'>
+                        <CirclePlay
+                          className='m-auto h-8 w-8 text-white'
+                          strokeWidth={0.8}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <h1>{song.title}</h1>
+                      <h1>
+                        {song.artist} - {song.album}
+                      </h1>
                     </div>
                   </div>
-                  <div>
-                    <h1>{song.title}</h1>
-                    <h1>
-                      {song.artist} - {song.album}
-                    </h1>
+                  <div className='flex items-center justify-center'>
+                    <DropdownComponent index={index} song={song} />
                   </div>
                 </div>
-                <div className='flex items-center justify-center'>
-                  <DropdownComponent index={index} song={song} />
-                </div>
-              </div>
-            )}
-          </>
-        ))}
+              )}
+            </>
+          ))}
       </div>
       <div>
         <h1
