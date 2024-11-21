@@ -67,7 +67,7 @@ jobs:
 #                IOS_MOBILE_PROVISION: ${{ secrets.IOS_MOBILE_PROVISION }}
                 APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
                 APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-                APPLE_API_KEY_PATH: ${{ github.workspace }}/apple-api-key.p8
+                APPLE_API_KEY_PATH: ~/private_keys/authkey\_${{secrets.APPLE_API_KEY_ID}}.p8
 
               if: matrix.os == 'macos-latest'
               run: |
