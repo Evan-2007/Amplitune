@@ -14,7 +14,6 @@
   margin-bottom: env(safe-area-inset-bottom);
 }
 
-
 .fillSafeArea {
   height: calc(100vh - env(safe-area-inset-top));
 }
