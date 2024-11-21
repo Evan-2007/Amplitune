@@ -309,7 +309,7 @@ export function PlayerContent({}: {}) {
   }
 
   return (
-    <div className='relative' >
+    <div className='relative'>
       {!fullScreen && (
         <MobilePlayer
           currentlyPlaying={currentlyPlaying}
@@ -608,7 +608,7 @@ function MobilePlayer({
     }
   }
 
-  const handleFullScreen = e => {
+  const handleFullScreen = (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (e.target.tagName === 'BUTTON') return;
@@ -616,10 +616,14 @@ function MobilePlayer({
   };
 
   return (
-    <div className={cn('bg-gray absolute bottom-safe-or-0 z-50 flex aspect-square h-[10vh] w-full animate-[fade-in] items-center justify-center px-[5vw] py-[2vh] opacity-100 duration-100 ease-in-out md:hidden ')}>
+    <div
+      className={cn(
+        'bg-gray absolute z-50 flex aspect-square h-[10vh] w-full animate-[fade-in] items-center justify-center px-[5vw] py-[2vh] opacity-100 duration-100 ease-in-out bottom-safe-or-0 md:hidden'
+      )}
+    >
       <div
         ref={progressContainerRef}
-        className='absolute z-50 h-[6vh] w-[90vw] overflow-hidden rounded-3xl  bg-gray-800/60 backdrop-blur-md'
+        className='absolute z-50 h-[6vh] w-[90vw] overflow-hidden rounded-3xl bg-gray-800/60 backdrop-blur-md'
       >
         <div
           ref={progressRef}
@@ -632,7 +636,7 @@ function MobilePlayer({
         ></div>
       </div>
       <div
-        className='flex w-[90vw] items-center justify-between'
+        className='z-50 flex h-[6vh] w-[90vw] items-center justify-between'
         onClick={handleFullScreen}
       >
         <div className='flex h-full w-full items-center p-4'>
@@ -651,7 +655,7 @@ function MobilePlayer({
             </h1>
           </div>
         </div>
-        <div className='z-[60] w-full flex justify-end mr-10 items-center'>
+        <div className='z-[60] mr-10 flex w-full items-center justify-end'>
           <button onClick={() => handlePrevious()}>
             <ControlButton icon='previous' />
           </button>
