@@ -54,27 +54,27 @@ jobs:
             - name: Install dependencies
               run: pnpm install
 
-            - name: write api key to file
+            - name: Write API key to file
               run: |
-                mkdir -p private_keys
-                echo "${{ secrets.APPLE_API_KEY_PATH }}" > private_keys/authkey\_${{secrets.APPLE_API_KEY}}.p8
-                chmod 600 ~/private_keys/authkey\_${{secrets.APPLE_API_KEY}}.p8
-
-            - name: ios build (macos only)
+                # Create the required directory
+                mkdir -p $HOME/private_keys
+                # Write the key to the file with the correct naming convention
+                echo "${{ secrets.APPLE_API_KEY_PATH }}" > $HOME/private_keys/AuthKey_${{ secrets.APPLE_API_KEY }}.p8
+                # Ensure the file has the correct permissions
+                chmod 600 $HOME/private_keys/AuthKey_${{ secrets.APPLE_API_KEY }}.p8
+                # Debug: List the file to confirm its presence
+                ls -l $HOME/private_keys/
+            
+            - name: iOS build (macOS only)
               env: 
-#                IOS_CERTIFICATE: ${{ secrets.IOS_CERTIFICATE }}
-#                IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
-#                IOS_MOBILE_PROVISION: ${{ secrets.IOS_MOBILE_PROVISION }}
                 APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
                 APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-                APPLE_API_KEY_PATH: private_keys/authkey\_${{secrets.APPLE_API_KEY}}.p8
-
+                APPLE_API_KEY_PATH: $HOME/private_keys/AuthKey_${{ secrets.APPLE_API_KEY }}.p8
               if: matrix.os == 'macos-latest'
               run: |
                 rustup target add aarch64-apple-ios
                 pnpm tauri ios build --export-method app-store-connect
-                xcrun altool --upload-app --type ios --file "src-tauri/gen/apple/build/arm64/amplitune.ipa"  --apiKey ${{ secrets.APPLE_API_KEY }} --apiIssuer ${{ secrets.APPLE_API_ISSUER }} --skip-submission
-
+                xcrun altool --upload-app --type ios --file "src-tauri/gen/apple/build/arm64/amplitune.ipa" --apiKey ${{ secrets.APPLE_API_KEY }} --apiIssuer ${{ secrets.APPLE_API_ISSUER }} --skip-submission
 
 
             - name: Import Apple Developer Certificate
