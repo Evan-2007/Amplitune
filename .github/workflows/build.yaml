@@ -101,7 +101,7 @@ jobs:
                 APPLE_SIGNING_IDENTITY: ${{ env.CERT_ID }}
                 APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
                 APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-                APPLE_API_KEY_PATH: ${{ github.workspace }}/apple-api-key.p8
+                APPLE_API_KEY_PATH: ~/private_keys/authkey_${{secrets.APPLE_API_KEY}}.p8
 
               with:
                 args: ${{ matrix.args }}
