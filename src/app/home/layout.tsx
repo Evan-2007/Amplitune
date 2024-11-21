@@ -4,6 +4,8 @@ import { Header } from '@/components/ui/header';
 
 import FullScreenPlayer from '@/components/player/full-player';
 import { Sidebar } from '@/components/main/sidebar';
+import {cn} from '@/lib/utils';
+import styles from '@/components/player/ignore-safe-area.module.css';
 
 export default function HomeLayout({
   children,
@@ -11,27 +13,28 @@ export default function HomeLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className='h-screen w-screen overflow-hidden'>
+    <div className={cn('h-screen md:w-screen ', styles.fillSafeArea)}>
       <div className='absolute'>
         <FullScreenPlayer />
       </div>
 
       <div className='flex h-full flex-col bg-card'>
         <Header />
-        <Player />
+        {/* <Player /> */}
 
         <div className='flex min-h-0 flex-1'>
           <Sidebar />
 
-          <main className='flex-1 overflow-auto p-4'>
-            <div className='h-full rounded-xl border border-border bg-background'>
+          <main className='flex-1 overflow-auto md:p-4'>
+            <div className='h-full md:rounded-xl md:border border-border bg-background'>
               {children}
             </div>
           </main>
         </div>
 
-        {/* <Player /> */}
+        <Player />
       </div>
+
     </div>
   );
 }

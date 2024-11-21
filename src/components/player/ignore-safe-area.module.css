@@ -11,5 +11,10 @@
 
 .avoidSafeArea {
   margin-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
+  margin-bottom: env(safe-area-inset-bottom);
+}
+
+
+.fillSafeArea {
+  height: calc(100vh - env(safe-area-inset-top));
 }

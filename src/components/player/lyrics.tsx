@@ -234,6 +234,7 @@ export default function Lyrics({
         audioRef.current.currentTime = seconds;
         setCurrentLine(index);
         audioRef.current.play();
+        setIsMouseMoving(false);
       }
     }
   }
