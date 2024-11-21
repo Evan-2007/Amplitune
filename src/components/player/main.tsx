@@ -464,6 +464,7 @@ function MobilePlayer({
   currentlyPlaying: any;
   setFullScreen: any;
   playing: boolean;
+  imageUrl: string | undefined;
 }) {
   const progressRef = useRef<HTMLDivElement>(null);
   const progressContainerRef = useRef<HTMLDivElement>(null);
@@ -608,10 +609,11 @@ function MobilePlayer({
     }
   }
 
-  const handleFullScreen = (e) => {
+  const handleFullScreen = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.target.tagName === 'BUTTON') return;
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'BUTTON') return;
     setFullScreen(true);
   };
 
@@ -662,9 +664,9 @@ function MobilePlayer({
 
           <button className='' onClick={handlePlayPause}>
             {!playing ? (
-              <PlayIcon size={24} strokeWidth={3} />
+              <PlayIcon />
             ) : (
-              <PauseIcon size={24} strokeWidth={3} />
+              <PauseIcon />
             )}
           </button>
 
@@ -675,6 +677,12 @@ function MobilePlayer({
       </div>
     </div>
   );
+}
+
+
+interface ControlButtonProps {
+  icon: 'previous' | 'next';
+  onClick?: () => void;
 }
 
 const ControlButton: React.FC<ControlButtonProps> = ({ icon }) => (
