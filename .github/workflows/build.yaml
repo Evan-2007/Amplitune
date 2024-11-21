@@ -56,7 +56,8 @@ jobs:
 
             - name: write api key to file
               run: |
-                echo "${{ secrets.APPLE_API_KEY_PATH }}" > ${{ github.workspace }}/apple-api-key.p8
+                mkdir -p ~/private_keys
+                echo "${{ secrets.APPLE_API_KEY_PATH }}" > ~/private_keys/authkey\_${{secrets.APPLE_API_KEY_ID}}.p8
                 chmod 600 ${{ github.workspace }}/apple-api-key.p8
 
             - name: ios build (macos only)
@@ -72,7 +73,7 @@ jobs:
               run: |
                 rustup target add aarch64-apple-ios
                 pnpm tauri ios build --export-method app-store-connect
-                xcrun altool --upload-app --type ios --file "src-tauri/gen/apple/build/arm64/amplitune.ipa"  --apiKey ${{ secrets.APPLE_API_KEY_PATH }} --apiIssuer ${{ secrets.APPLE_API_ISSUER }} --skip-submission
+                xcrun altool --upload-app --type ios --file "src-tauri/gen/apple/build/arm64/amplitune.ipa"  --apiKey ${{ secrets.APPLE_API_KEY_ID }} --apiIssuer ${{ secrets.APPLE_API_ISSUER }} --skip-submission
 
 
 
