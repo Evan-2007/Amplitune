@@ -611,8 +611,7 @@ function MobilePlayer({
   const handleFullScreen = e => {
     e.preventDefault();
     e.stopPropagation();
-    console.log(e.target.tagName);
-    if (e.target.tagName !== 'DIV') return;
+    if (e.target.tagName === 'BUTTON') return;
     setFullScreen(true);
   };
 
