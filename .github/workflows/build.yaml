@@ -58,7 +58,7 @@ jobs:
               run: |
                 mkdir -p ~/private_keys
                 echo "${{ secrets.APPLE_API_KEY_PATH }}" > ~/private_keys/authkey\_${{secrets.APPLE_API_KEY_ID}}.p8
-                chmod 600 ${{ github.workspace }}/apple-api-key.p8
+                chmod 600 ~/private_keys/authkey\_${{secrets.APPLE_API_KEY_ID}}.p8
 
             - name: ios build (macos only)
               env: 
