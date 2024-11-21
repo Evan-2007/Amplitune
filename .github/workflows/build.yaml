@@ -56,8 +56,8 @@ jobs:
 
             - name: write api key to file
               run: |
-                mkdir -p ~/private_keys
-                echo "${{ secrets.APPLE_API_KEY_PATH }}" > ~/private_keys/authkey\_${{secrets.APPLE_API_KEY}}.p8
+                mkdir -p private_keys
+                echo "${{ secrets.APPLE_API_KEY_PATH }}" > private_keys/authkey\_${{secrets.APPLE_API_KEY}}.p8
                 chmod 600 ~/private_keys/authkey\_${{secrets.APPLE_API_KEY}}.p8
 
             - name: ios build (macos only)
@@ -67,7 +67,7 @@ jobs:
 #                IOS_MOBILE_PROVISION: ${{ secrets.IOS_MOBILE_PROVISION }}
                 APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
                 APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-                APPLE_API_KEY_PATH: ~/private_keys/authkey\_${{secrets.APPLE_API_KEY}}.p8
+                APPLE_API_KEY_PATH: private_keys/authkey\_${{secrets.APPLE_API_KEY}}.p8
 
               if: matrix.os == 'macos-latest'
               run: |
