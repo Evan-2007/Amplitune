@@ -72,7 +72,7 @@ jobs:
               run: |
                 rustup target add aarch64-apple-ios
                 pnpm tauri ios build --export-method app-store-connect
-                xcrun altool --upload-app --file --type ios "src-tauri/gen/apple/build/arm64/amplitune.ipa"  --apiKey ${{ secrets.APPLE_API_KEY_PATH }} --apiIssuer ${{ secrets.APPLE_API_ISSUER }} --skip-submission
+                xcrun altool --upload-app --type ios --file "src-tauri/gen/apple/build/arm64/amplitune.ipa"  --apiKey ${{ secrets.APPLE_API_KEY_PATH }} --apiIssuer ${{ secrets.APPLE_API_ISSUER }} --skip-submission
 
 
 
