@@ -1,5 +1,5 @@
 'use client';
-import { navidromeApi, subsonicURL } from '@/lib/servers/navidrome';
+import { navidromeApi, subsonicURL } from '@/lib/sources/navidrome';
 import { useEffect } from 'react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';

@@ -6,7 +6,7 @@ import { debounce } from 'lodash';
 import { useQueueStore } from '@/lib/queue';
 import { CrossPlatformStorage } from '@/lib/storage/cross-platform-storage';
 import { useRouter } from 'next/navigation';
-import { subsonicURL } from '@/lib/servers/navidrome';
+import { subsonicURL } from '@/lib/sources/navidrome';
 
 export default function Left({
   audioRef,

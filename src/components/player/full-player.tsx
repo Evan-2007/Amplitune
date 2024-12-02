@@ -13,7 +13,7 @@ import Lyrics from './lyrics';
 import Left from './full-left';
 import { useQueueStore } from '@/lib/queue';
 import { usePlayerStore, useUiStore } from '@/lib/state';
-import { subsonicURL } from '@/lib/servers/navidrome';
+import { subsonicURL } from '@/lib/sources/navidrome';
 import { useRouter } from 'next/navigation';
 import styles from './ignore-safe-area.module.css';
 import { cn } from '@/lib/utils';

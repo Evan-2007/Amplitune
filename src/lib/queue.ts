@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { subsonicURL } from '@/lib/servers/navidrome';
+import { subsonicURL } from '@/lib/sources/navidrome';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
 export interface queueStore {

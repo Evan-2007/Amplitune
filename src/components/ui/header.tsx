@@ -13,7 +13,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useQueueStore } from '@/lib/queue';
-import { subsonicURL } from '@/lib/servers/navidrome';
+import { subsonicURL } from '@/lib/sources/navidrome';
 
 import {
   Dropdown,

@@ -17,7 +17,7 @@ import { Song } from '@/components/player/types';
 
 import { Ellipsis } from 'lucide-react';
 import { useQueueStore } from '@/lib/queue';
-import { subsonicURL } from '@/lib/servers/navidrome';
+import { subsonicURL } from '@/lib/sources/navidrome';
 import { useEffect, useState } from 'react';
 
 export function SongDropdown({ song }: { song: Song | string }) {

@@ -18,7 +18,7 @@ import {
   DropdownSection,
   DropdownItem,
 } from '@nextui-org/dropdown';
-import { subsonicURL } from '@/lib/servers/navidrome';
+import { subsonicURL } from '@/lib/sources/navidrome';
 
 export default function Lyrics({
   audioRef,

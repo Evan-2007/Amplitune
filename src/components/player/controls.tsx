@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Shuffle, Repeat, Repeat1 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
+import { SourceManager } from '@/lib/sources/source-manager';
 import {
   Tooltip,
   TooltipContent,
@@ -17,100 +18,85 @@ interface ControlsProps {
   className?: string;
 }
 
-const formatTime = (time: number): string => {
-  const minutes = Math.floor(time / 60);
-  const seconds = Math.floor(time % 60);
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-};
-
 const Controls: React.FC<ControlsProps> = ({ className }) => {
-  const [playing, setPlaying] = useState<boolean>(false);
+  const [playing, setPlaying] = useState<'playing' | 'paused' | 'ended'>('paused');
   const [shuffle, setShuffle] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [sliderValue, setSliderValue] = useState<number>(0);
   const [sliderActive, setSliderActive] = useState<boolean>(false);
   const [length, setLength] = useState<number>(0);
-  const [timeLeft, setTimeLeft] = useState<number>(0);
 
+  const sourceManager = SourceManager.getInstance();
   const skip = useQueueStore((state) => state.skip);
   const previous = useQueueStore((state) => state.playPrevious);
-
-  const audioRef = usePlayerStore((state) => state.ref);
-
   const songData = useQueueStore((state) => state.currentSong?.track);
-
   const repeat = usePlayerStore((state) => state.repeat);
   const toggleRepeat = usePlayerStore((state) => state.toggleRepeat);
 
-  const timeLeftString: string = `-${formatTime(timeLeft)}`;
-  const sliderTimestamp: string = formatTime((length * sliderValue) / 1000);
 
-  const updateTime = useCallback(() => {
-    if (audioRef.current) {
-      setLength(audioRef.current.duration);
-      setTimeLeft(audioRef.current.duration - audioRef.current.currentTime);
-      setCurrentTime(audioRef.current.currentTime);
-    }
-  }, [audioRef]);
+  const timeLeft = length - currentTime;
+  const timeLeftString = `-${sourceManager.formatTime(timeLeft)}`;
+  const sliderTimestamp = sourceManager.formatTime((length * sliderValue) / 1000);
+
+  
+
 
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+    const cleanup = sourceManager.onTimeUpdate((position, duration) => {
+//      console.log(position, duration);
+      setCurrentTime(position);
+      setLength(duration);
+      
+      if (!sliderActive) {
+        setSliderValue((position / duration) * 1000);
+      }
+    });
 
-    const handlePlayPause = () => setPlaying(!audio.paused);
+    return cleanup;
+  }, []);
 
-    audio.addEventListener('timeupdate', updateTime);
-    audio.addEventListener('play', handlePlayPause);
-    audio.addEventListener('pause', handlePlayPause);
-
-    setPlaying(!audio.paused);
-    audio.loop = repeat === 2;
-
-    return () => {
-      audio.removeEventListener('timeupdate', updateTime);
-      audio.removeEventListener('play', handlePlayPause);
-      audio.removeEventListener('pause', handlePlayPause);
-    };
-  }, [audioRef, repeat, updateTime]);
-
-  function handlePlayPause() {
-    if (audioRef.current) {
-      audioRef.current.paused
-        ? audioRef.current.play()
-        : audioRef.current.pause();
-      setPlaying(!audioRef.current.paused);
-    }
-  }
-
+  // Subscribe to play/pause updates 
   useEffect(() => {
-    if (!sliderActive) {
-      setSliderValue((currentTime / length) * 1000);
-    }
-  }, [currentTime, length, sliderActive]);
+    const cleanup = sourceManager.onPlayPause((playing) => {
+      setPlaying(playing);
+    });
 
-  const handleSliderCommit = (value: number) => {
-    const time = (length * value) / 1000;
-    setSliderActive(false);
-    setSliderValue(value);
-    if (audioRef.current) {
-      audioRef.current.currentTime = time;
+    return cleanup;
+  }, []);
+
+  // Handle play/pause
+  const handlePlayPause = async () => {
+    console.log(playing)
+    if (playing === 'playing') {
+      await sourceManager.pause();
+    } else {
+      await sourceManager.play();
     }
   };
 
-  function handlePrevious() {
-    if (audioRef.current) {
-      if (audioRef.current.currentTime > 5) {
-        audioRef.current.currentTime = 0;
-        audioRef.current.play();
-      } else {
-        previous();
-      }
+  useEffect(() => {
+    if (playing === 'ended') {
+      skip();
     }
-  }
+  } , [playing]);
 
-  const setRepeat = useQueueStore((queue) => queue.setRepeat);
+  // Handle seek
+  const handleSliderCommit = async (value: number) => {
+    const time = (length * value) / 1000;
+    setSliderActive(false);
+    setSliderValue(value);
+    await sourceManager.seek(time);
+  };
 
-  const togglePlayPause = () => setPlaying(!playing);
+  // Handle previous
+  const handlePrevious = async () => {
+    if (currentTime > 5) {
+      await sourceManager.seek(0);
+    } else {
+      previous();
+    }
+  };
+
   const toggleShuffle = () => setShuffle(!shuffle);
 
   return (
@@ -124,14 +110,14 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
             size={20}
           />
         </button>
-        <button onClick={() => handlePrevious()}>
+        <button onClick={handlePrevious}>
           <ControlButton icon='previous' />
         </button>
         <button onClick={handlePlayPause}>
           {playing ? <PauseIcon /> : <PlayIcon />}
         </button>
         <button onClick={() => skip()}>
-          <ControlButton icon='next' onClick={() => skip} />
+          <ControlButton icon='next' />
         </button>
         <button onClick={toggleRepeat}>
           {repeat === 2 ? (
@@ -146,7 +132,7 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
       </div>
       <div className='mb-4 flex flex-row items-center justify-center'>
         <div className='w-9 text-left'>
-          <p>{formatTime(currentTime)}</p>
+          <p>{sourceManager.formatTime(currentTime)}</p>
         </div>
         <TooltipProvider delayDuration={300}>
           <Tooltip>

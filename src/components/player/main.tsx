@@ -2,25 +2,13 @@
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState, useRef, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
-import { Song } from './types';
 import Link from 'next/link';
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
-import {
-  ChevronUp,
-  Repeat,
-  Repeat1,
-  Shuffle,
-  ListStart,
-  Volume,
-  Volume1,
-  Volume2,
-  VolumeX,
-} from 'lucide-react';
-
+import { ChevronUp, ListStart, Volume1 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import {
   Tooltip,
@@ -29,22 +17,21 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { CrossPlatformStorage } from '@/lib/storage/cross-platform-storage';
-import FullScreenPlayer from './full-player';
-import Controls from './controls';
 import { useQueueStore } from '@/lib/queue';
 import { usePlayerStore, useUiStore } from '@/lib/state';
-import Image from 'next/image';
-import { subsonicURL } from '@/lib/servers/navidrome';
-import { update } from 'lodash';
+import Controls from '@/components/player/controls';
+
+import { SourceManager } from '@/lib/sources/source-manager';
 
 const localStorage = new CrossPlatformStorage();
+const sourceManager = SourceManager.getInstance();
 
 function SearchParamsWrapper({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   return children;
 }
 
-export function Player({}: {}) {
+export function Player() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <SearchParamsWrapper>
@@ -54,80 +41,50 @@ export function Player({}: {}) {
   );
 }
 
-export function PlayerContent({}: {}) {
+export function PlayerContent() {
   const setFullScreen = useUiStore((state) => state.toggleFullScreenPlayer);
   const fullScreen = useUiStore((state) => state.fullScreenPlayer);
   const songData = useQueueStore((state) => state.queue.currentSong.track);
-  const play = useQueueStore((state) => state.play);
   const searchParams = useSearchParams();
   const setAudioRef = usePlayerStore((state) => state.setRef);
   const audioRef = useRef<HTMLAudioElement>(null);
-  const playNext = useQueueStore((state) => state.skip);
-  const playPrev = useQueueStore((state) => state.playPrevious);
   const currentlyPlaying = useQueueStore((state) => state.currentSong);
   const songs = useQueueStore((state) => state.queue.songs);
   const router = useRouter();
 
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
-  const [firstLoad, setFirstLoad] = useState<boolean>(true);
   const [playing, setPlaying] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  //data about the song when song is not loaded from queue state
-  const getSongData = async (id: string) => {
-    const baseUrl = await subsonicURL('/rest/getSong', '&id=' + id);
-    const response = await fetch(baseUrl);
-    const data = await response.json();
-    console.log(id);
-    if (data['subsonic-response'].song) {
-      console.log(data['subsonic-response'].song);
-      if (
-        currentlyPlaying &&
-        data['subsonic-response'].song == songs[currentlyPlaying?.index + 1]
-      ) {
-        playNext();
-      }
-    }
-    console.log('song: ' + songData);
-  };
+  // Initialize with Navidrome source
+  useEffect(() => {
+    // In a real implementation, this would be determined by the source of the song
+    sourceManager.playSong('navidrome', songData?.id || '');
+  }, [songData]);
 
-  //gets the song data from the search params
   useEffect(() => {
     if (searchParams.get('playing')) {
-      getSongData(searchParams.get('playing') as string);
+      console.log('Loading song:', searchParams.get('playing'));
+      // This would be handled by the source implementation
     }
   }, [searchParams]);
 
-  //updates the search params when the song changes
   const updateParams = () => {
     if (songData) {
       router.replace(`?${new URLSearchParams({ playing: songData.id })}`);
     }
   };
 
-  //updates the media session
 
-  //sets the audioRef in global state
-  useEffect(() => {
-    setAudioRef(audioRef);
-  }, [audioRef.current]);
 
-  //fetches the image url and audio url on song change
   useEffect(() => {
-    fetchAudioUrl();
     updateParams();
-
-    getImageUrl();
-
-    //update the media session on song change before image url is fetched
+    console.log('Fetching audio URL');
+    console.log('Getting image URL');
     updateMediaSession();
   }, [songData]);
 
-  //updates the media session after image url is fetched to load new image
-  useEffect(() => {
-    updateMediaSession();
-  }, [imageUrl]);
-
-  //updates the media session
   const updateMediaSession = () => {
     if ('mediaSession' in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
@@ -142,153 +99,18 @@ export function PlayerContent({}: {}) {
           },
         ],
       });
-    }
 
-    navigator.mediaSession.setActionHandler('play', () => {
-      if (audioRef.current) {
-        audioRef.current.play();
-      }
-    });
-
-    navigator.mediaSession.setActionHandler('pause', () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-    });
-
-    navigator.mediaSession.setActionHandler('previoustrack', () => {
-      playPrev();
-    });
-
-    navigator.mediaSession.setActionHandler('nexttrack', () => {
-      playNext();
-    });
-
-    navigator.mediaSession.setActionHandler('seekbackward', () => {
-      if (audioRef.current) {
-        audioRef.current.currentTime -= 10;
-      }
-    });
-
-    navigator.mediaSession.setActionHandler('seekforward', () => {
-      if (audioRef.current) {
-        audioRef.current.currentTime += 10;
-      }
-    });
-  };
-
-  //fetches the audio url for the song and plays it
-  const fetchAudioUrl = async () => {
-    if (songData?.id) {
-      const url = await subsonicURL(`/rest/stream`, `&id=${songData.id}`);
-      if (audioRef.current) {
-        audioRef.current.src = url;
-        if (firstLoad) {
-          setFirstLoad(false);
-        } else {
-          audioRef.current.play();
-          updateMediaSession();
-        }
-      }
-    } else {
-      setError(new Error('No song data'));
-    }
-  };
-
-  //generates the image url for the song
-  const getImageUrl = async () => {
-    if (songData && songData.coverArt) {
-      console.log('test1' + songData.id);
-      const url = await subsonicURL(
-        '/rest/getCoverArt',
-        `&id=${songData.coverArt}`
-      );
-      setImageUrl(url);
-      return url;
-    } else {
-      setImageUrl(undefined);
-    }
-  };
-
-  //scrobbles the song
-  async function handleScrobble(submit = false) {
-    if (songData) {
-      const url = await subsonicURL(
-        '/rest/scrobble',
-        `&id=${songData.id}&submission=${submit}`
-      );
-      fetch(url.toString(), {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      navigator.mediaSession.setActionHandler('play', () => {
+        sourceManager.play();
       });
-    } else {
-      console.log('Current song or track ID is not available');
+
+      navigator.mediaSession.setActionHandler('pause', () => {
+        sourceManager.pause();
+      });
+
     }
-  }
+  };
 
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  //handle audio events
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const handleError = (e: ErrorEvent) => {
-      console.error('Audio error:', e);
-      setError(new Error('Audio playback error'));
-    };
-
-    const handleStalled = () => {
-      console.warn('Audio stalled');
-    };
-
-    const handleWaiting = () => {
-      setIsLoading(true);
-    };
-
-    const handlePlaying = () => {
-      setIsLoading(false);
-      setPlaying(true);
-      setError(null);
-    };
-
-    const handleEnded = () => {
-      playNext();
-      handleScrobble(true);
-    };
-
-    let lastClickTime = 0;
-    const handlePlay = () => {
-      // prevent spamming play causing lots of scrobbles
-      const now = Date.now();
-      if (now - lastClickTime < 1000) {
-        console.log('Preventing multiple clicks');
-        return;
-      } else {
-        lastClickTime = now;
-        handleScrobble();
-      }
-    };
-
-    audio.addEventListener('error', handleError);
-    audio.addEventListener('stalled', handleStalled);
-    audio.addEventListener('waiting', handleWaiting);
-    audio.addEventListener('playing', handlePlaying);
-    audio.addEventListener('pause', () => setPlaying(false));
-    audio.addEventListener('ended', handleEnded);
-    audio.addEventListener('play', handlePlay);
-
-    return () => {
-      audio.removeEventListener('error', handleError);
-      audio.removeEventListener('stalled', handleStalled);
-      audio.removeEventListener('waiting', handleWaiting);
-      audio.removeEventListener('playing', handlePlaying);
-      audio.removeEventListener('ended', handleEnded);
-    };
-  }, []);
 
   if (songData == undefined) {
     return (
@@ -298,10 +120,7 @@ export function PlayerContent({}: {}) {
             <div className='aspect-square h-full rounded-lg bg-background'></div>
           </div>
           <div className=''>
-            <p>{songData}</p>
-            <div className='flex flex-row'>
-              <p className='pr-1 text-sm text-slate-500'>Not Playing</p>
-            </div>
+            <p>Not Playing</p>
           </div>
         </div>
       </div>
@@ -385,7 +204,6 @@ export function PlayerContent({}: {}) {
         <div className='hidden md:flex'>
           <RightControls audioRef={audioRef} />
         </div>
-        <audio ref={audioRef} />
       </div>
     </div>
   );
