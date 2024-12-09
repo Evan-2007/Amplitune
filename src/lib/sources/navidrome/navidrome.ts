@@ -70,4 +70,8 @@ export class Navidrome implements SourceInterface {
     onPlayPause(callback: (playing: 'playing' | 'paused' | 'ended') => void): void {
         this.platform.onPlayPause(callback);
     }
+
+    setVolume(volume: number): void {
+        this.platform.setVolume(volume);
+    }
 }

@@ -14,7 +14,7 @@ interface CurrentTrack {
 type TimeUpdateListener = (position: number, duration: number) => void;
 type PlayPauseListener = (playing: 'playing' | 'paused' | 'ended') => void;
 
-export class SourceManager {
+export class SourceManager implements SourceInterface {
     private static instance: SourceManager;
     private sources: Map<string, SourceInterface>;
     private activeSource: string | null = null;
@@ -128,7 +128,7 @@ export class SourceManager {
     // Playback control 
 
 
-    public async playSong(sourceId: string, trackId: string): Promise<void> {
+    public async playSong(trackId: string, sourceId: string,): Promise<void> {
         if (this.activeSource && this.activeSource !== sourceId) {
             const currentSource = this.sources.get(this.activeSource);
             if (currentSource) {
@@ -183,6 +183,14 @@ export class SourceManager {
         const source = this.sources.get(this.activeSource);
         if (source){
             await source.seek(position);
+        }
+    }
+
+    public async setVolume(volume: number): Promise<void> {
+        if (!this.activeSource) return;
+        const source = this.sources.get(this.activeSource);
+        if (source){
+            await source.setVolume(volume);
         }
     }
 

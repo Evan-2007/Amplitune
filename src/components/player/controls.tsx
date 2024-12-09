@@ -58,6 +58,7 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
   // Subscribe to play/pause updates 
   useEffect(() => {
     const cleanup = sourceManager.onPlayPause((playing) => {
+      console.log(playing);
       setPlaying(playing);
     });
 
@@ -114,7 +115,7 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
           <ControlButton icon='previous' />
         </button>
         <button onClick={handlePlayPause}>
-          {playing ? <PauseIcon /> : <PlayIcon />}
+          {playing == 'playing' ? <PauseIcon /> : <PlayIcon />}
         </button>
         <button onClick={() => skip()}>
           <ControlButton icon='next' />
@@ -152,7 +153,7 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
           </Tooltip>
         </TooltipProvider>
         <div className='w-4 text-nowrap text-left'>
-          <p>{timeLeftString}</p>
+          <p>{timeLeftString == '-NaN:NaN' ? 'Loading' : timeLeftString}</p>
         </div>
       </div>
     </div>

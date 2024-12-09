@@ -60,7 +60,7 @@ export function PlayerContent() {
   // Initialize with Navidrome source
   useEffect(() => {
     // In a real implementation, this would be determined by the source of the song
-    sourceManager.playSong('navidrome', songData?.id || '');
+    sourceManager.playSong( songData?.id, 'navidrome' || '');
   }, [songData]);
 
   useEffect(() => {
@@ -209,17 +209,18 @@ export function PlayerContent() {
   );
 }
 
+
 function RightControls({ audioRef }: { audioRef: any }) {
   const [open, setOpen] = useState<boolean>(false);
   const [volume, setVolume] = useState<number>(100);
+
+  const sourceManager = SourceManager.getInstance();
 
   const onChange = (e: number[]) => {
     const volumeValue = e[0];
     setVolume(volumeValue / 10);
     localStorage.setItem('volume', volumeValue.toString());
-    if (audioRef.current) {
-      audioRef.current.volume = volumeValue / 1000;
-    }
+    sourceManager.setVolume(volumeValue / 1000);
   };
 
   useEffect(() => {

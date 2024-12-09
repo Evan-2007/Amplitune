@@ -81,4 +81,8 @@ export class WebNavidrome implements SourceInterface {
     seek(time: number): void {
         this.audioPlayer.seek(time);
     }
+
+    setVolume(volume: number): void {
+        this.audioPlayer.setVolume(volume);
+    }
 }
