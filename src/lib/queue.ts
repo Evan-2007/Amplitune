@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { subsonicURL } from '@/lib/sources/navidrome';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { song } from '@/lib/sources/types';
 
 export interface queueStore {
   queue: queue;
@@ -26,44 +27,6 @@ interface queue {
   shuffledSongs: song[];
 }
 
-interface song {
-  nonShuffledIndex?: number;
-  id: string;
-  parent: string;
-  isDir: boolean;
-  title: string;
-  album: string;
-  artist: string;
-  track: number;
-  year: number;
-  coverArt: string;
-  size: number;
-  contentType: string;
-  suffix: string;
-  duration: number;
-  bitRate: number;
-  path: string;
-  playCount: number;
-  discNumber: number;
-  created: string;
-  albumId: string;
-  artistId: string;
-  type: string;
-  isVideo: boolean;
-  played: boolean;
-  bpm: number;
-  comment: string;
-  sortName: string;
-  mediaType: string;
-  musicBrainzId: string;
-  genres: string[];
-  replayGain: {
-    trackPeak: number;
-    trackGain: number;
-  };
-  channelCount: number;
-  samplingRate: number;
-}
 
 export const useQueueStore = create<queueStore>()(
   persist(
@@ -78,40 +41,15 @@ export const useQueueStore = create<queueStore>()(
           index: -1,
           track: {
             id: '',
-            parent: '',
-            isDir: false,
             title: '',
-            album: '',
             artist: '',
-            track: 0,
-            year: 0,
-            coverArt: '',
-            size: 0,
-            contentType: '',
-            suffix: '',
+            album: '',
             duration: 0,
-            bitRate: 0,
-            path: '',
-            playCount: 0,
-            discNumber: 0,
-            created: '',
-            albumId: '',
-            artistId: '',
-            type: '',
-            isVideo: false,
-            played: false,
-            bpm: 0,
-            comment: '',
-            sortName: '',
-            mediaType: '',
-            musicBrainzId: '',
-            genres: [],
-            replayGain: {
-              trackPeak: 0,
-              trackGain: 0,
-            },
-            channelCount: 0,
-            samplingRate: 0,
+            quality: '',
+            source: '',
+            availableSources: [],
+            imageUrl: '',
+            releaseDate: '',
           },
         },
       },

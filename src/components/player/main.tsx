@@ -60,7 +60,7 @@ export function PlayerContent() {
   // Initialize with Navidrome source
   useEffect(() => {
     // In a real implementation, this would be determined by the source of the song
-    sourceManager.playSong( songData?.id, 'navidrome' || '');
+    sourceManager.playSong( songData?.id, songData?.source || 'navidrome');
   }, [songData]);
 
   useEffect(() => {
@@ -154,7 +154,7 @@ export function PlayerContent() {
             <div className='h-full p-3'>
               {imageUrl ? (
                 <img
-                  src={imageUrl}
+                  src={currentlyPlaying.track.imageUrl}
                   alt='Album Cover'
                   className='h-full rounded-lg transition-all duration-700 group-hover:blur-xs'
                 />
@@ -184,12 +184,12 @@ export function PlayerContent() {
               <HoverCard>
                 <HoverCardTrigger>
                   <p className='border-1 rounded-md border pl-1 pr-1 text-sm text-slate-300'>
-                    {songData.suffix.toUpperCase()}
+                    {/* {songData.suffix.toUpperCase()} */}
                   </p>
                 </HoverCardTrigger>
                 <HoverCardContent>
                   <p className='text-slate-300'>
-                    {songData.suffix.toUpperCase()} ({songData.bitRate} Kbps -{' '}
+                    {/* {songData.suffix.toUpperCase()} ({songData.bitRate} Kbps -{' '} */}
                     {songData.samplingRate / 1000} Mhz)
                   </p>
                 </HoverCardContent>

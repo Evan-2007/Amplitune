@@ -1,8 +1,13 @@
+
+
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { HealthCheck } from '@/components/health-check';
+import { MusicKitProvider } from '@/components/music-kit-provider';
+
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -25,6 +30,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
   return (
     <html lang='en'>
       <head>
@@ -34,7 +40,9 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
+        <Script src='https://js-cdn.music.apple.com/musickit/v3/musickit.js'></Script>
         <HealthCheck />
+        <MusicKitProvider />
         <ThemeProvider
           attribute='class'
           defaultTheme='system'

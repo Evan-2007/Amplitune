@@ -3,7 +3,7 @@ import React, { use } from 'react';
 import { ModeToggle } from '../theme-toggle';
 import { Search as SearchIcon, CirclePlay } from 'lucide-react';
 import { Input } from '../ui/input';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { isElectron as checkIsElectron } from '@/lib/utils';
 import { CrossPlatformStorage } from '@/lib/storage/cross-platform-storage';
 import { Song, searchResult } from '@/components/player/types';
@@ -14,6 +14,8 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useQueueStore } from '@/lib/queue';
 import { subsonicURL } from '@/lib/sources/navidrome';
+import { SourceManager } from '@/lib/sources/source-manager';
+import { debounce } from 'lodash';
 
 import {
   Dropdown,
@@ -25,6 +27,7 @@ import {
 
 export function Header() {
   const localStorage = new CrossPlatformStorage();
+  
 
   const [isElectronApp, setIsElectronApp] = useState(false);
 
@@ -61,6 +64,7 @@ function RightMenu() {
 }
 
 function Search() {
+  const sourceManager = SourceManager.getInstance();
   const queue = useQueueStore((state) => state);
 
   const [results, setResults] = useState<searchResult | null>(null);
@@ -129,49 +133,19 @@ function Search() {
     console.log('rtesults: ' + results);
   }, [results]);
 
-  const handleUpdate = async (e: any) => {
-    try {
-      setSearch(e.target.value);
-      const url = await subsonicURL(
-        '/rest/search3.view',
-        `&query=${e.target.value}`
-      );
-      if (url === 'error') {
-        router.push('/servers');
-      }
-      const result = await fetch(url.toString(), {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      const response = await result.json();
-      if (response['subsonic-response'].status !== 'ok') {
-        console.error(
-          'An error occurred:',
-          response['subsonic-response'].error.message
-        );
-        throw new Error(response['subsonic-response'].error.status);
-      }
 
-      if (
-        response['subsonic-response'].searchResult3.song.length == 0 &&
-        response['subsonic-response'].searchResult3.artist.length == 0 &&
-        response['subsonic-response'].searchResult3.album.length == 0
-      ) {
-        setResults(null);
-      } else {
-        setResults(response['subsonic-response'].searchResult3);
-      }
-      console.log(response);
-    } catch (error) {
-      console.error('An error occurred:', error);
-      setResults(null);
-    }
-  };
+  
 
+  const handleUpdate = useMemo(
+    () =>
+      debounce(async (e: any) => {
+        const results = await sourceManager.search(e.target.value);
+        setResults(results);
+      }, 500),
+    []
+  );
   useEffect(() => {
-    console.log(results);
+    console.log(JSON.stringify(results));
   }, [results]);
 
   return (
@@ -243,7 +217,7 @@ function Search() {
                             >
                               <img
                                 className='absolute w-11 rounded-md'
-                                src={`${baseImageURL}&id=${song.coverArt}`}
+                                src={song.imageUrl}
                                 alt=''
                               />
                               <div className='invisible absolute z-50 flex h-11 w-11 items-center justify-center rounded-md bg-card/20 opacity-0 backdrop-blur-[2px] transition-all duration-300 ease-in group-hover:visible group-hover:opacity-100'>

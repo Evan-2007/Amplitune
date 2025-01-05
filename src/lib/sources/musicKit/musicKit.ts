@@ -1,10 +1,10 @@
 'use client'
 import { SourceInterface } from '../source-interface';
 import { platform } from '@tauri-apps/plugin-os';
-import { tidal as IosTidal } from './ios/tidal';
-import { tidal as AndroidTidal } from './android/tidal';
-import { tidal as WebTidal } from './web/tidal';
-import { Lyrics, song } from '../types';
+import { musicKit as IosMusicKit } from './ios/musicKit';
+import { musicKit as AndroidMusicKit } from './android/musicKit';
+import { musicKit as WebMusicKit } from './web/musicKit';
+import { Lyrics, song, searchResult } from '../types';
 
 
 type PlatformType = "windows" | "linux" | "macos" | "android" | "ios" | "web" | string;
@@ -14,7 +14,7 @@ const isTauri = () => {
 }
 
 
-export class Tidal implements SourceInterface {
+export class MusicKit implements SourceInterface {
     private platform: SourceInterface;
 
     constructor() {
@@ -24,9 +24,9 @@ export class Tidal implements SourceInterface {
 
     private getPlatformImplementation(platform: PlatformType): SourceInterface {
         const implementations: Record<string, new () => SourceInterface> = {
-            android: AndroidTidal,
-            ios: IosTidal,
-            web: WebTidal
+            android: AndroidMusicKit,
+            ios: IosMusicKit,
+            web: WebMusicKit
         };
 
         const Implementation = implementations[platform];
@@ -46,6 +46,7 @@ export class Tidal implements SourceInterface {
     }
 
     playSong(songId: string): void {
+        
         this.platform.playSong(songId);
     }
 
@@ -74,7 +75,8 @@ export class Tidal implements SourceInterface {
     getSongData(songId: string): Promise<song> {
         return this.platform.getSongData(songId);
     }
-    async search(query: string): void {
-        throw new Error('Method not implemented.');
+    async search(query: string): Promise<searchResult> {
+        console.log('searching')
+        return await this.platform.search(query);
     }
 }

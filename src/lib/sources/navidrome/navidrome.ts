@@ -2,6 +2,8 @@
 import { SourceInterface } from '../source-interface';
 import { platform } from '@tauri-apps/plugin-os';
 import { WebNavidrome } from './web/navidrome';
+import { Lyrics } from '../types';  
+import { song, searchResult } from '../types';
 
 
 type PlatformType = "windows" | "linux" | "macos" | "android" | "ios" | "web" | string;
@@ -56,8 +58,8 @@ export class Navidrome implements SourceInterface {
     getQueue(): void {
         this.platform.getQueue();
     }
-    getLyrics(): void {
-        this.platform.getLyrics();
+    async getLyrics(trackId: string): Promise<Lyrics> {
+        return await this.platform.getLyrics(trackId);
     }
     onTimeUpdate(callback: (currentTime: number, duration: number) => void): void {
         this.platform.onTimeUpdate(callback);
@@ -73,5 +75,12 @@ export class Navidrome implements SourceInterface {
 
     setVolume(volume: number): void {
         this.platform.setVolume(volume);
+    }
+
+    async getSongData(trackId: string): Promise<song> {
+        return await this.platform.getSongData(trackId);
+    }
+    async search(query: string): Promise<searchResult> {
+        return await this.platform.search(query);
     }
 }

@@ -2,11 +2,15 @@ import { SourceInterface } from '@/lib/sources/source-interface';
 //import {getSongData} from './getSong'
 import {subsonicBaseUrl} from './subsonic'
 import {AudioPlayer} from './audioPlayer'
+import {Lyrics} from '../../types'
+import {getLyrics} from './getLyrics'
+import {song} from '../../types'
 
 
 export class WebNavidrome implements SourceInterface {
     private audioPlayer: AudioPlayer;
     private currentTrack: string | null = null;
+    private currentTrackId: string | null = null;
     private timeUpdateCallback: ((currentTime: number, duration: number) => void) | null = null;
     private playPauseCallback: ((playing: 'playing' | 'paused' | 'ended') => void) | null = null;
 
@@ -68,12 +72,19 @@ export class WebNavidrome implements SourceInterface {
         await this.audioPlayer.load(url, trackId);
         this.currentTrack = trackId;
         await this.audioPlayer.play();
+        this.currentTrackId = trackId;
     }
     getAllPlaylists(): void {
         throw new Error('Method not implemented.');
     }
-    getLyrics(): void {
-        throw new Error('Method not implemented.');
+    async getLyrics(trackId: string): Promise<Lyrics>{
+        if (!this.currentTrackId) {
+            return {
+                error: 'No track playing',
+                source: 'navidrome'
+            }
+        }
+        return await getLyrics(trackId);
     }
     getQueue(): void {
         throw new Error('Method not implemented.');
@@ -84,5 +95,28 @@ export class WebNavidrome implements SourceInterface {
 
     setVolume(volume: number): void {
         this.audioPlayer.setVolume(volume);
+    }
+
+    async getSongData(trackId: string): Promise<song> {
+        return {
+            id: trackId,
+            title: 'Title',
+            artist: 'Artist',
+            album: 'Album',
+            duration: 0,
+            quality: 'quality',
+            source: 'navidrome',
+            availableSources: [],
+            imageUrl: '',
+            releaseDate: ''
+        }
+    }
+
+    async search(query: string): Promise<searchResult> {
+        return {
+            songs: [],
+            albums: [],
+            artists: []
+        }
     }
 }

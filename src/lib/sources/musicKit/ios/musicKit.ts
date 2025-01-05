@@ -1,8 +1,8 @@
 import { SourceInterface } from '@/lib/sources/source-interface';
-import { song, Lyrics } from '@/lib/sources/types';
+import { song, Lyrics, searchResult } from '@/lib/sources/types';
 
 
-export class tidal implements SourceInterface {
+export class musicKit implements SourceInterface {
 
     play(): void {
         throw new Error('Method not implemented.');
@@ -37,7 +37,7 @@ export class tidal implements SourceInterface {
     getSongData(): Promise<song> {
         throw new Error('Method not implemented.');
     }
-    async search(query: string): void {
+    async search(query: string): Promise<searchResult> {
         throw new Error('Method not implemented.');
     }
 }

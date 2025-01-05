@@ -8,7 +8,6 @@ import { MessageSquareQuote } from 'lucide-react';
 import { useQueueStore } from '@/lib/queue';
 import { ScrollArea } from '../ui/scroll-area';
 import { useRouter } from 'next/navigation';
-import { formatLyrics } from '@/lib/lyrics';
 import { CirclePlay } from 'lucide-react';
 import { Ellipsis } from 'lucide-react';
 import {
@@ -19,13 +18,13 @@ import {
   DropdownItem,
 } from '@nextui-org/dropdown';
 import { subsonicURL } from '@/lib/sources/navidrome';
+import {SourceManager} from '@/lib/sources/source-manager'
+import {ErrorLyrics} from '@/lib/sources/types'
 
 export default function Lyrics({
-  audioRef,
   tab,
   setTab,
 }: {
-  audioRef: React.RefObject<HTMLAudioElement>;
   tab: number;
   setTab: React.Dispatch<React.SetStateAction<number>>;
 }) {
@@ -35,6 +34,7 @@ export default function Lyrics({
   }
 
   const currentQueue = useQueueStore((state) => state.queue);
+  const sourceManager = SourceManager.getInstance();
 
   const localStorage = new CrossPlatformStorage();
 
@@ -52,10 +52,9 @@ export default function Lyrics({
   const songData = useQueueStore((state) => state.queue.currentSong?.track);
 
   useEffect(() => {
-    if (audioRef.current) {
       console.log(lyrics);
       const handleTimeUpdate = () => {
-        const currentTime = audioRef.current?.currentTime;
+        const currentTime = sourceManager.getPosition();
         if (currentTime && lyrics) {
           const milliseconds = currentTime * 1000;
           const currentLineIndex = lyrics.findIndex(
@@ -65,12 +64,11 @@ export default function Lyrics({
         }
       };
 
-      audioRef.current.addEventListener('timeupdate', handleTimeUpdate);
+      const removeEventListner = sourceManager.onTimeUpdate(handleTimeUpdate);
       return () => {
-        audioRef.current?.removeEventListener('timeupdate', handleTimeUpdate);
+        removeEventListner();
       };
-    }
-  }, [audioRef, lyrics]);
+  }, [lyrics]);
 
   useEffect(() => {
     fetchLyrics();
@@ -158,82 +156,34 @@ export default function Lyrics({
   }, [debouncedMouseStop]);
 
   async function fetchLyrics() {
-    if (!songData) return;
-    try {
-      const url = await subsonicURL(
-        '/rest/getLyricsBySongId.view',
-        `&id=${songData.id}`
-      );
-      if (url === 'error') {
-        router.push('/servers');
-      }
-      const response = await fetch(url.toString());
-      const data = await response.json();
-      if (!data['subsonic-response'].lyricsList.structuredLyrics) {
-        fetchLRCLIB();
-        return null;
-      }
-      if (data['subsonic-response'].status !== 'ok') {
-        throw new Error(data['subsonic-response'].error.message);
-      }
 
-      // If lyrics are not synced, try and fetch from lrclib
-      if (
-        data['subsonic-response'].lyricsList.structuredLyrics[0].synced ===
-        false
-      ) {
-        setSynced(false);
-        fetchLRCLIB(
-          data['subsonic-response'].lyricsList.structuredLyrics[0].line
-        );
+
+
+    const lyrics = await sourceManager.getLyrics(currentQueue.currentSong.track.id);
+    if ((lyrics as ErrorLyrics).error) {
+      console.error('An error occurred:', (lyrics as ErrorLyrics).error);
+      setLyrics(null);
+      setError('An error occurred while fetching the lyrics');
+    } else {
+      console.log(lyrics);
+      if ('lines' in lyrics && 'synced' in lyrics) {
+        setLyrics(lyrics.lines);
+        setSynced(lyrics.synced);
       } else {
-        setSynced(true);
-        setLyrics(
-          data['subsonic-response'].lyricsList.structuredLyrics[0].line
-        );
+        setError('An error occurred while fetching the lyrics');
       }
-    } catch (error) {
-      console.error('An error occurred:', error);
-      setError('An error occurred while fetching the lyrics');
     }
   }
 
-  async function fetchLRCLIB(lyrics?: LyricLine[]) {
-    if (!songData) return;
-    try {
-      await fetch(
-        'https://lrclib.net/api/get?artist_name=' +
-          songData.artist +
-          '&track_name=' +
-          songData.title +
-          '&album_name=' +
-          songData.album,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Lrclib-Client': `amplitune (https://github.com/Evan-2007/Amplitune)`,
-          },
-        }
-      ).then(async (response) => {
-        const data = await response.json();
-        setLyrics(formatLyrics(data.syncedLyrics));
-        setSynced(true);
-      });
-    } catch (error) {
-      console.error('An error occurred:', error);
-      setLyrics(lyrics ? lyrics : null);
-      setError('An error occurred while fetching the lyrics');
-    }
-  }
-
+ 
   function handleLyricClick(index: number) {
-    if (audioRef.current && lyricsContainerRef) {
+    if ( lyricsContainerRef) {
       const line = lyrics?.[index];
       if (line) {
         const seconds = line.start / 1000;
-        audioRef.current.currentTime = seconds;
+        sourceManager.seek(seconds);
         setCurrentLine(index);
-        audioRef.current.play();
+        sourceManager.play();
         setIsMouseMoving(false);
       }
     }
