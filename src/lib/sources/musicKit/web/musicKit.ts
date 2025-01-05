@@ -45,8 +45,12 @@ export class musicKit implements SourceInterface {
     }
     
 
-    play(): void {
-        throw new Error('Method not implemented.');
+    async play(): void {
+        if (!this.musicKitInstance) {
+            console.error('MusicKit not initialized');
+            return;
+        }
+        await this.musicKitInstance.play();
     }
     pause(): void {
         if (!this.musicKitInstance) {
