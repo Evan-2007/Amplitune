@@ -46,10 +46,8 @@ export class musicKit implements SourceInterface {
     
 
     async play(): void {
-        if (!this.musicKitInstance) {
-            console.error('MusicKit not initialized');
-            return;
-        }
+        await this.initializationPromise;
+
         await this.musicKitInstance.play();
     }
     pause(): void {
@@ -80,26 +78,55 @@ export class musicKit implements SourceInterface {
         throw new Error('Method not implemented.');
     }
     getLyrics(): Promise<Lyrics> {
-        throw new Error('Method not implemented.');
+        return {
+            error: 'No lyrics found',
+            source: 'musicKit'
+        }
     }
 
     public onTimeUpdate(callback: (currentTime: number, duration: number) => void): void {
         this.timeUpdateCallback = callback;
     }
 
-    private setUpPlayerEvents() {
-        this.timeUpdateCallback = (9, 10)
+    private async setUpPlayerEvents() {
+        await this.initializationPromise;
+        this.musicKitInstance.addEventListener('playbackTimeDidChange', (data: {currentPlaybackDuration: number, currentPlaybackTime: number, curentPlaybackTimeRemaining: number}) => {
+            if (this.timeUpdateCallback) {
+                this.timeUpdateCallback(data.currentPlaybackTime, data.currentPlaybackDuration);
+            }
+        });
     }
 
     public onPlayPause(callback: (playing: 'playing' | 'paused' | 'ended') => void): void {
         this.playPauseCallback = callback;
     }
 
-    private setupPlayPauseEvents() {
-        this.playPauseCallback = ('playing')
+    private async setupPlayPauseEvents() {
+        await this.initializationPromise;
+        this.musicKitInstance.addEventListener('playbackStateDidChange', (data: {state: number}) => {
+            console.log('Play state change', data);
+            if (this.playPauseCallback) {
+                if (data.state === 2) {
+                    this.playPauseCallback('playing');
+                } else if (data.state === 3) {
+                    this.playPauseCallback('paused');
+                } else if (data.state === -1) {
+                    this.playPauseCallback('ended');
+                } else {
+                console.log('No callback set');
+            }
+        }
+        });
     }
-    seek(): void {
-        throw new Error('Method not implemented.');
+    async seek(position: number): void {
+        await this.initializationPromise;
+        if (!this.musicKitInstance) {
+            console.error('MusicKit not initialized');
+            return;
+        }
+
+        this.musicKitInstance.seekToTime(position);
+        
     }
     setVolume(): void {
         throw new Error('Method not implemented.');

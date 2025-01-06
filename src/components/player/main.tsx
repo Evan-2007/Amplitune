@@ -60,7 +60,7 @@ export function PlayerContent() {
   // Initialize with Navidrome source
   useEffect(() => {
     // In a real implementation, this would be determined by the source of the song
-    sourceManager.playSong( songData?.id, songData?.source || 'navidrome');
+    sourceManager.playSong(songData);
   }, [songData]);
 
   useEffect(() => {
@@ -133,7 +133,7 @@ export function PlayerContent() {
         <MobilePlayer
           currentlyPlaying={currentlyPlaying}
           setFullScreen={setFullScreen}
-          imageUrl={imageUrl}
+          imageUrl={songData.imageUrl}
           playing={playing}
         />
       )}
@@ -152,9 +152,9 @@ export function PlayerContent() {
               </button>
             </div>
             <div className='h-full p-3'>
-              {imageUrl ? (
+              {songData.imageUrl ? (
                 <img
-                  src={currentlyPlaying.track.imageUrl}
+                  src={songData.imageUrl}
                   alt='Album Cover'
                   className='h-full rounded-lg transition-all duration-700 group-hover:blur-xs'
                 />
@@ -463,7 +463,7 @@ function MobilePlayer({
         <div className='flex h-full w-full items-center p-4'>
           {imageUrl ? (
             <img
-              src={imageUrl}
+              src={songData?.imageUrl}
               className='relative z-[55] h-[4vh] rounded-lg border border-border object-cover'
               alt='Album art'
             />

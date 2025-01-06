@@ -133,12 +133,8 @@ function ImageSlider({ enabled = true }: { enabled: boolean }) {
   useEffect(() => {
     const fetchImages = async () => {
       const imagePromises = queue.map(async (song) => {
-        const url = await subsonicURL(
-          '/rest/getCoverArt',
-          `&id=${song.coverArt}`
-        );
         return {
-          url: url.toString(),
+          url: song.imageUrl,
           id: song.id,
         };
       });

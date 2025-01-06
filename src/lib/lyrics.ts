@@ -4,7 +4,7 @@ interface formatedLyrics {
 }
 
 export function formatLyrics(lyrics: string): formatedLyrics[] {
-  //  console.log(lyrics);
+  //console.log(lyrics);
   const lines = lyrics.split('\n').filter((line) => line.length > 0);
   const formatedLyrics: formatedLyrics[] = [];
   lines.forEach((line) => {
@@ -15,6 +15,7 @@ export function formatLyrics(lyrics: string): formatedLyrics[] {
       value: value.trimStart(),
     });
   });
+
   return formatedLyrics;
 }
 

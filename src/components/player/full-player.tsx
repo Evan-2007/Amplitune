@@ -67,16 +67,7 @@ export default function FullScreenPlayer({}: {}) {
   }, [songData]);
 
   const updateImageUrl = async () => {
-    if (songData) {
-      const url = await subsonicURL(
-        '/rest/getCoverArt',
-        `&id=${songData.coverArt}`
-      );
-      if (url === 'error') {
-        router.push('/servers');
-      }
-      setImageUrl(url.toString());
-    }
+    setImageUrl(songData?.imageUrl || null);
   };
 
   useEffect(() => {
