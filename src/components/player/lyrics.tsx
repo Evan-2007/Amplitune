@@ -1,4 +1,5 @@
 import { Song } from './types';
+import {song } from '@/lib/sources/types';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { CrossPlatformStorage } from '@/lib/storage/cross-platform-storage';
 import { debounce } from 'lodash';
@@ -29,7 +30,7 @@ export default function Lyrics({
   setTab: React.Dispatch<React.SetStateAction<number>>;
 }) {
   interface LyricLine {
-    start: number;
+    start?: number;
     value: string;
   }
 
@@ -58,6 +59,7 @@ export default function Lyrics({
         if (currentTime && lyrics) {
           const milliseconds = currentTime * 1000;
           const currentLineIndex = lyrics.findIndex(
+            //@ts-ignore
             (line) => line.start > milliseconds
           );
           setCurrentLine(currentLineIndex - 1);
@@ -180,6 +182,9 @@ export default function Lyrics({
     if ( lyricsContainerRef) {
       const line = lyrics?.[index];
       if (line) {
+        if (!synced || !line.start) {
+          return;
+        }
         const seconds = line.start / 1000;
         sourceManager.seek(seconds);
         setCurrentLine(index);
@@ -295,6 +300,7 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
   const localStorage = new CrossPlatformStorage();
   const setSong = useQueueStore((state) => state.setCurrentSong);
   const removeFromQueue = useQueueStore((state) => state.removeFromQueue);
+  const clearQueue = useQueueStore((state) => state.clearQueue);
 
   useEffect(() => {
     setBaseImageUrl();
@@ -320,7 +326,9 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
       <div className='top-24 flex justify-between'>
         <div></div>
         <div>
-          <h1>Clear</h1>
+          <button onClick={() => clearQueue([])}>
+            <h1>Clear</h1>
+          </button>
         </div>
       </div>
       <div className='mb-2 mr-10 mt-8 text-2xl font-bold'>Previous</div>
@@ -333,7 +341,7 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
                   <div className='group/image flex space-x-4'>
                     <div className='' onClick={() => setSong(index)}>
                       <img
-                        src={`${baseUrl}&id=${song.coverArt}`}
+                        src={song.imageUrl}
                         alt='cover art'
                         className='absolute h-12 w-12 rounded-md'
                       />
@@ -369,7 +377,7 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
         <div className='flex justify-between'>
           <div className='flex space-x-4'>
             <img
-              src={`${baseUrl}&id=${currentlyPlaying.track.coverArt}`}
+              src={currentlyPlaying.track.imageUrl}
               alt='cover art'
               className='h-12 w-12 rounded-md'
             />
@@ -398,7 +406,7 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
                 <div className='group/image flex space-x-4'>
                   <div className='' onClick={() => setSong(index)}>
                     <img
-                      src={`${baseUrl}&id=${song.coverArt}`}
+                      src={currentlyPlaying.track.imageUrl}
                       alt='cover art'
                       className='absolute h-12 w-12 rounded-md'
                     />
@@ -428,7 +436,7 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
   );
 }
 
-function DropdownComponent({ index, song }: { index: number; song: Song }) {
+function DropdownComponent({ index, song }: { index: number; song: song }) {
   const removeFromQueue = useQueueStore((state) => state.removeFromQueue);
 
   const handleRemove = (index: number) => {

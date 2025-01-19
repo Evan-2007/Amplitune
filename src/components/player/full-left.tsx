@@ -9,11 +9,9 @@ import { useRouter } from 'next/navigation';
 import { subsonicURL } from '@/lib/sources/navidrome';
 
 export default function Left({
-  audioRef,
   isMobile,
   tab,
 }: {
-  audioRef: React.RefObject<HTMLAudioElement>;
   isMobile: boolean;
   tab: number;
 }) {
@@ -38,24 +36,8 @@ export default function Left({
     []
   );
 
-  useEffect(() => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-    if (songData) {
-      setImage();
-    }
-  }, [songData, credentials]);
 
-  const setImage = async () => {
-    const url = await subsonicURL(
-      '/rest/getCoverArt',
-      `&id=${songData.coverArt}`
-    );
-    if (url === 'error') {
-      router.push('/servers');
-    }
-    setImageUrl(url.toString());
-  };
 
   useEffect(() => {
     getCredentials();

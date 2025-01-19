@@ -45,7 +45,7 @@ export class musicKit implements SourceInterface {
     }
     
 
-    async play(): void {
+    async play(): Promise<void> {
         await this.initializationPromise;
 
         await this.musicKitInstance.play();
@@ -58,7 +58,7 @@ export class musicKit implements SourceInterface {
 
         this.musicKitInstance.pause();
     }
-    async playSong(trackId: string): void {
+    async playSong(trackId: string): Promise<void> {
         console.log('Playing song', trackId);
         if (!this.musicKitInstance) {
             console.error('MusicKit not initialized');
@@ -146,7 +146,11 @@ export class musicKit implements SourceInterface {
         }
         const params = { term: query, limit: 10, types: ["songs"] };
         const result = await this.musicKitInstance.api.music('/v1/catalog/{{storefrontId}}/search', params);
-        console.log(result);
+        
+        const queryParameters = { l: 'en-us' };
+        const me = await this.musicKitInstance.api.music('/v1/me/recent/played', queryParameters);
+
+        console.log(me);
 
         const response = await result
         
@@ -164,9 +168,14 @@ export class musicKit implements SourceInterface {
         }));
 
         console.log(songs);
+
+        const videos = await this.musicKitInstance.api.music('/v1/catalog/{{storefrontId}}/search', params);
+
+        
     
         return {
             songs,
+            videos: [],
             albums: [],
             artists: []
         };

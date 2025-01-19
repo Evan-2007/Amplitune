@@ -168,13 +168,13 @@ export function PlayerContent() {
               <p>{songData.title}</p>{' '}
             </Link>
             <div className='flex flex-row'>
-              <Link href={`/home/album/${songData.albumId}`}>
+              <Link href={`/home/album/${songData.album}`}>
                 <p className='pr-1 text-sm text-slate-500 hover:underline'>
                   {songData.album}
                 </p>
               </Link>
               <p className='pr-1 text-sm text-slate-500'>-</p>
-              <Link href={`/home/artist/${songData.artistId}`}>
+              <Link href={`/home/artist/${songData.artist}`}>
                 <p className='text-sm text-slate-500 hover:underline'>
                   {songData.artist}
                 </p>
@@ -190,7 +190,7 @@ export function PlayerContent() {
                 <HoverCardContent>
                   <p className='text-slate-300'>
                     {/* {songData.suffix.toUpperCase()} ({songData.bitRate} Kbps -{' '} */}
-                    {songData.samplingRate / 1000} Mhz)
+                    {/* {songData.samplingRate / 1000} Mhz) */}
                   </p>
                 </HoverCardContent>
               </HoverCard>

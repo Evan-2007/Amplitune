@@ -6,7 +6,6 @@ import { Input } from '../ui/input';
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { isElectron as checkIsElectron } from '@/lib/utils';
 import { CrossPlatformStorage } from '@/lib/storage/cross-platform-storage';
-import { Song, searchResult } from '@/components/player/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useRouter } from 'next/navigation';
@@ -16,6 +15,9 @@ import { useQueueStore } from '@/lib/queue';
 import { subsonicURL } from '@/lib/sources/navidrome';
 import { SourceManager } from '@/lib/sources/source-manager';
 import { debounce } from 'lodash';
+import { searchResult } from '@/lib/sources/types';
+import AMIcon from '@/assets/apple-music_dark.svg';
+import NavidromeIcon from '@/assets/navidrome_dark.svg';
 
 import {
   Dropdown,
@@ -167,9 +169,9 @@ function Search() {
               <ScrollArea className='relative h-full w-full overflow-visible'>
                 {results !== null ? (
                   <div className='flex h-full flex-col rounded-xl'>
-                    {results.artist &&
-                      results.artist.length > 0 &&
-                      results.artist.map((artist, index) => (
+                    {results.artists &&
+                      results.artists.length > 0 &&
+                      results.artists.map((artist, index) => (
                         <div className='' key={index}>
                           <div className='col-auto grid grid-cols-7 py-2 pl-2'>
                             <button
@@ -181,7 +183,7 @@ function Search() {
                             >
                               <img
                                 className='absolute w-11 rounded-full'
-                                src={`${baseImageURL}&id=${artist.coverArt}`}
+                                src={artist.imageUrl}
                                 alt=''
                               />
                             </button>
@@ -205,9 +207,9 @@ function Search() {
                         </div>
                       ))}
 
-                    {results.song &&
-                      results.song.length > 0 &&
-                      results.song.map((song, index) => (
+                    {results.songs &&
+                      results.songs.length > 0 &&
+                      results.songs.map((song, index) => (
                         <div className='' key={index}>
                           <div className='col-auto grid grid-cols-7 py-2 pl-2'>
                             <button
@@ -229,10 +231,18 @@ function Search() {
                             </button>
                             <div className='col-span-5 space-y-1 pr-3'>
                               <Link
-                                className='line-clamp-1 text-sm hover:underline'
+                                className='line-clamp-1 text-sm hover:underline flex'
                                 href={`/home/?playing=${song.id}&play=true`}
                               >
                                 {song.title}
+                                <div className='flex space-x-1 ml-2 items-center'>
+                                  {song.availableSources.includes('musicKit') && (
+                                    <AMIcon className='h-4 w-4 ' />
+                                  )}
+                                  {song.availableSources.includes('navidrome') && (
+                                    <NavidromeIcon className='h-4 w-4  ' />
+                                  )}
+                                </div>
                               </Link>
                               <Link
                                 className='line-clamp-1 text-[11px] text-gray-500 hover:underline'
@@ -263,10 +273,11 @@ function Search() {
                         </div>
                       ))}
 
-                    {results.album &&
-                      results.album.length > 0 &&
-                      results.album.map((album, index) =>
-                        album.songCount > 1 ? (
+                    {results.albums &&
+                      results.albums.length > 0 &&
+                      results.albums.map((album, index) =>
+                        //check count
+                        album ? (
                           <div className='overflow-visible' key={index}>
                             <div className='col-auto grid grid-cols-7 overflow-visible py-2 pl-2'>
                               <button
@@ -280,7 +291,7 @@ function Search() {
                               >
                                 <img
                                   className='absolute w-11 rounded-md'
-                                  src={`${baseImageURL}&id=${album.coverArt}`}
+                                  src={album.imageUrl}
                                   alt=''
                                 />
                                 <div className='invisible absolute z-50 flex h-11 w-11 items-center justify-center rounded-md bg-card/20 opacity-0 backdrop-blur-[2px] transition-all duration-300 ease-in group-hover:visible group-hover:opacity-100'>
@@ -295,7 +306,7 @@ function Search() {
                                   className='line-clamp-1 text-sm hover:underline'
                                   href={`/home/?playing=${album.id}&play=true`}
                                 >
-                                  {album.name}
+                                  {album.title}
                                 </Link>
                                 <Link
                                   className='line-clamp-1 text-[11px] text-gray-500 hover:underline'

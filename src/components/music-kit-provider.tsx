@@ -1,7 +1,6 @@
 'use client'
 import { useEffect } from 'react';
 import Script from 'next/script';
-import {sourceManager} from '@/lib/sources/source-manager';
 
 export function MusicKitProvider() {
 

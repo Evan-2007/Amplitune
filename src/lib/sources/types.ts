@@ -58,7 +58,7 @@ export interface artists {
 }
 
 export interface searchResult {
-    songs: song[];
+    songs: song [];
     albums: albums[];
     artists: artists[];
 }

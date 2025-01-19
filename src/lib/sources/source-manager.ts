@@ -159,9 +159,22 @@ export class SourceManager {
     // WAIT HERE for all async init to complete:
     await this.initializationPromise;
 
-    const sourceId = track.source || 'navidrome';
+    const sourcePriority = localStorage.getItem<string[]>('sourcePriority' || [])
+    
+    const parsedSourcePriority = JSON.parse(sourcePriority);
 
-    const source = this.sources.get(track.source || 'navidrome');
+    console.log('sourcePriority', sourcePriority);
+    
+    // Find the first available source
+    const sourceId = parsedSourcePriority.find(source => track.availableSources.includes(source));
+    console.log('sourceId', sourceId);
+    if (!sourceId) {
+      throw new Error('No available source');
+    }
+
+
+
+    const source = this.sources.get(sourceId);
     if (!source) {
       throw new Error(`Source ${sourceId} not found`);
     }
@@ -303,15 +316,10 @@ export class SourceManager {
     );
   }
 
-  public async search(query: string): Promise<({
-    song: song & { availableSources: string[] }
-    album: albums & { availableSources: string[] }
-    artist: artists & { availableSources: string[] }
-  })[]> {
+  public async search(query: string): Promise<searchResult> {
     await this.initializationPromise;
-
+  
     const promises = Array.from(this.sources.entries()).map(async ([sourceId, source]) => {
-      console.log(sourceId);
       try {
         const results = await source.search(query);
         return results.songs.map(song => ({
@@ -329,7 +337,7 @@ export class SourceManager {
     const allSongs = results.flat();
   
     const dedupedSongs = (s: song) => {
-      return `${s.title.toLowerCase()}|${s.artist.toLowerCase()}|${s.album.toLowerCase()}|${s.duration}`;
+      return `${s.title?.toLowerCase() ?? ''}|${s.artist?.toLowerCase() ?? ''}`;
     };
   
     interface ExtendedSong extends song {
@@ -360,13 +368,14 @@ export class SourceManager {
     mergedSongs.forEach(s => {
       delete (s as Partial<ExtendedSong>)._firstAppearanceIndex;
     });
-    
+  
     return {
-      song: mergedSongs,
-      album: [],
-      artist: []
+      songs: mergedSongs,
+      albums: [],
+      artists: []
     };
   }
+  
 
   // Cleanup
   public destroy(): void {

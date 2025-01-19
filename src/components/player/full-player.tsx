@@ -199,11 +199,11 @@ export default function FullScreenPlayer({}: {}) {
           'absolute z-40 flex h-full w-full flex-col items-center justify-center md:flex-row'
         )}
       >
-        <Left audioRef={audioRef} isMobile={isMobile} tab={tab} />
+        <Left  isMobile={isMobile} tab={tab} />
         <div
           className={`h-full w-full flex-col items-center justify-center md:flex ${tab === 0 ? 'hidden md:w-1/2' : 'visible w-full'}`}
         >
-          <Lyrics audioRef={audioRef} tab={tab} setTab={(tab) => setTab(tab)} />{' '}
+          <Lyrics  tab={tab} setTab={(tab) => setTab(tab)} />{' '}
         </div>
       </div>
       <div

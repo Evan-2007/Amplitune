@@ -8,13 +8,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Song } from './types';
+import { song } from '@/lib/sources/types';
 import { cn } from '@/lib/utils';
 import { useQueueStore } from '@/lib/queue';
 import { usePlayerStore } from '@/lib/state';
 
 interface ControlsProps {
-  songData: Song;
+  songData: song;
   className?: string;
 }
 
@@ -64,6 +64,10 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
 
     return cleanup;
   }, []);
+
+  const handleRepeat = async() => {
+      toggleRepeat();
+  }
 
   // Handle play/pause
   const handlePlayPause = async () => {
@@ -120,7 +124,7 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
         <button onClick={() => skip()}>
           <ControlButton icon='next' />
         </button>
-        <button onClick={toggleRepeat}>
+        <button onClick={() => handleRepeat()}>
           {repeat === 2 ? (
             <Repeat1 color='red' strokeWidth={2.5} size={24} />
           ) : repeat === 1 ? (

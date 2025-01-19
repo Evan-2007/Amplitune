@@ -113,8 +113,31 @@ export class WebNavidrome implements SourceInterface {
     }
 
     async search(query: string): Promise<searchResult> {
+
+        const url = await subsonicBaseUrl('/rest/search3', `&query=${query}`);
+
+        const response = await fetch(url);
+
+        const data = await response.json();
+
+        const songs = await Promise.all(data['subsonic-response'].searchResult3.song.map(async (song: any) => ({
+            id: song.id,
+            title: song.title,
+            artist: song.artist,
+            album: song.album,
+            duration: song.duration,
+            quality: 'N/A',
+            source: 'navidrome',
+            availableSources: ['navidrome'],
+            imageUrl: await subsonicBaseUrl('/rest/getCoverArt', `&id=${song.coverArt}`),
+            releaseDate: ''
+        })));
+
+        console.log(songs);
+
         return {
-            songs: [],
+            songs,
+            videos: [],
             albums: [],
             artists: []
         }
