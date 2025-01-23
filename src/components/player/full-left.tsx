@@ -59,11 +59,11 @@ export default function Left({
   }, [debouncedMouseStop]);
   return (
     <div
-      className={`${tab === 0 ? 'group z-50 flex h-full w-full flex-col justify-center md:mt-0 md:w-1/2 md:items-center' : 'hidden'} animate-[fade-in] transition-all duration-1000 ease-in-out`}
+      className={`${tab === 0 || !isMobile ? 'group z-50 flex h-full w-full flex-col justify-center md:mt-0 md:w-1/2 md:items-center' : 'hidden'} animate-[fade-in] transition-all duration-1000 ease-in-out`}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => setIsMouseMoving(false)}
     >
-      {songData && imageUrl && songData.title ? (
+      {songData && songData.title ? (
         <>
           <div className='aspect-square rounded-2xl max-md:w-full md:h-[58.33%]'>
             <ImageSlider enabled={tab === 0 ? true : false} />
@@ -86,7 +86,7 @@ export default function Left({
         <div
           className={`pulse_3s_ease-out_infinite mr-6 mt-[3vh] transition-opacity duration-700 md:mt-0 md:opacity-0 ${isMouseMoving && 'md:opacity-100'}`}
         >
-          {tab === 0 && <Controls songData={songData} />}
+          {(tab === 0 || !isMobile) && <Controls songData={songData} />}
         </div>
       </div>
     </div>
@@ -115,6 +115,7 @@ function ImageSlider({ enabled = true }: { enabled: boolean }) {
   useEffect(() => {
     const fetchImages = async () => {
       const imagePromises = queue.map(async (song) => {
+        console.log(song);
         return {
           url: song.imageUrl,
           id: song.id,

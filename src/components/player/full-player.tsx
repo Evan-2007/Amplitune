@@ -22,6 +22,7 @@ import {
   Airplay,
   ListMusic,
 } from 'lucide-react';
+import { SourceManager } from '@/lib/sources/source-manager';
 
 import { useRef } from 'react';
 interface FinalColor {
@@ -140,6 +141,12 @@ export default function FullScreenPlayer({}: {}) {
   }, []);
 
   useEffect(() => {
+    if (tab == 0) {
+      setTab(1);
+    }
+  }, [isMobile]);
+
+  useEffect(() => {
     const adjustHeight = () => {
       const containerElement = container.current;
       if (containerElement) {
@@ -187,7 +194,7 @@ export default function FullScreenPlayer({}: {}) {
           : { background: 'linear-gradient(180deg, #000, #000)' }
       }
     >
-      {tab !== 0 && (
+      {(tab !== 0 && isMobile) && (
         <TopPlayer
           imageUrl={imageUrl}
           colors={colors}
@@ -203,7 +210,7 @@ export default function FullScreenPlayer({}: {}) {
         <div
           className={`h-full w-full flex-col items-center justify-center md:flex ${tab === 0 ? 'hidden md:w-1/2' : 'visible w-full'}`}
         >
-          <Lyrics  tab={tab} setTab={(tab) => setTab(tab)} />{' '}
+          <Lyrics  tab={tab} isMobile={isMobile} setTab={(tab) => setTab(tab)} />{' '}
         </div>
       </div>
       <div
@@ -242,49 +249,52 @@ export default function FullScreenPlayer({}: {}) {
   );
 }
 
-function TopPlayer({
-  imageUrl,
-  colors,
-  setTab,
-}: {
+
+
+import { FinalColor } from '@/types';
+
+
+
+
+interface TopPlayerProps {
   imageUrl: string | null;
   colors: FinalColor[];
   setTab: (tab: number) => void;
-}) {
+}
+
+export function TopPlayer({ imageUrl, colors, setTab }: TopPlayerProps) {
   const progressRef = useRef<HTMLDivElement>(null);
   const progressContainerRef = useRef<HTMLDivElement>(null);
-  const audioRef = usePlayerStore((state) => state.ref);
   const animationFrameRef = useRef<number>();
+  const isPaused = usePlayerStore((state) => state.paused);
+  const [time, setTime] = useState<{ position: number; duration: number }>({
+    position: 0,
+    duration: 0,
+  });
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
   const updateProgress = useCallback(() => {
-    if (!progressRef.current || !audioRef?.current) return;
+    if (!progressRef.current) return;
 
-    // Check if audio is loaded and has duration
-    if (isNaN(audioRef.current.duration)) {
+    if (isNaN(time.duration)) {
       progressRef.current.style.transform = 'scaleX(0)';
       return;
     }
 
-    const progress =
-      audioRef.current.currentTime / audioRef.current.duration || 0;
+    const progress = time.position / time.duration || 0;
     const boundedProgress = Math.min(Math.max(progress, 0), 1);
 
     progressRef.current.style.transform = `scaleX(${boundedProgress})`;
+    progressRef.current.style.borderRadius = 
+      Math.abs(boundedProgress - 1) < 0.001 ? '24px' : '24px 0 0 24px';
 
-    if (Math.abs(boundedProgress - 1) < 0.001) {
-      progressRef.current.style.borderRadius = '24px';
-    } else {
-      progressRef.current.style.borderRadius = '24px 0 0 24px';
-    }
-
-    if (!audioRef.current.paused) {
+    if (!isPaused) {
       animationFrameRef.current = requestAnimationFrame(updateProgress);
     }
-  }, []);
+  }, [time.duration, time.position, isPaused]);
 
-  // Reset on song change
   useEffect(() => {
-    if (!progressRef.current || !audioRef?.current) return;
+    if (!progressRef.current) return;
 
     const handleSourceChange = () => {
       if (progressRef.current) {
@@ -296,78 +306,51 @@ function TopPlayer({
         cancelAnimationFrame(animationFrameRef.current);
       }
 
-      // Start new animation if playing
-      if (!audioRef.current?.paused) {
+      if (!isPaused) {
         animationFrameRef.current = requestAnimationFrame(updateProgress);
       }
     };
 
-    const audio = audioRef.current;
-    audio.addEventListener('loadstart', handleSourceChange);
+    handleSourceChange();
+  }, [updateProgress, isPaused]);
 
-    return () => {
-      audio.removeEventListener('loadstart', handleSourceChange);
-    };
-  }, [updateProgress]);
-
-  // Handle playback state changes
   useEffect(() => {
-    if (!audioRef?.current) return;
+    const audio = SourceManager.getInstance();
 
-    const handlePlay = () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
+    const playPause = audio.onPlayPause((playing) => {
+      setIsPlaying(playing === 'playing');
+      
+      if (playing === 'playing') {
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+        }
+        animationFrameRef.current = requestAnimationFrame(updateProgress);
+      } else {
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+        }
       }
-      animationFrameRef.current = requestAnimationFrame(updateProgress);
-    };
+    });
 
-    const handlePause = () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-
-    const handleTimeUpdate = () => {
+    const onTimeUpdate = audio.onTimeUpdate((position, duration) => {
+      setTime({ position, duration });
       if (!animationFrameRef.current) {
         updateProgress();
       }
-    };
+    });
 
-    const handleSeeking = () => {
-      updateProgress();
-    };
-
-    const audio = audioRef.current;
-    audio.addEventListener('play', handlePlay);
-    audio.addEventListener('pause', handlePause);
-    audio.addEventListener('timeupdate', handlePlay);
-    audio.addEventListener('seeking', handleSeeking);
-    audio.addEventListener('seeked', handleSeeking);
-
-    // Initial state
     if (!audio.paused) {
-      handlePlay();
+      animationFrameRef.current = requestAnimationFrame(updateProgress);
     }
 
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
-      audio.removeEventListener('play', handlePlay);
-      audio.removeEventListener('pause', handlePause);
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('seeking', handleSeeking);
-      audio.removeEventListener('seeked', handleSeeking);
+      playPause();
+      onTimeUpdate();
     };
   }, [updateProgress]);
-
-  useEffect(() => {
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, []);
 
   const songData = useQueueStore((state) => state.queue.currentSong?.track);
 
@@ -390,7 +373,7 @@ function TopPlayer({
             transform: 'scaleX(0)',
             transition: 'transform 50ms linear, border-radius 150ms ease',
           }}
-        ></div>
+        />
       </div>
       <div
         className='flex h-full w-full items-center p-4'
@@ -403,7 +386,7 @@ function TopPlayer({
             alt='Album art'
           />
         ) : (
-          <div className='h-full w-full bg-gray-800'></div>
+          <div className='h-full w-full bg-gray-800' />
         )}
         <div className='ml-4 flex flex-col'>
           <h1 className='z-[55] line-clamp-1 text-lg font-bold text-white'>

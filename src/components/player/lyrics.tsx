@@ -25,9 +25,11 @@ import {ErrorLyrics} from '@/lib/sources/types'
 export default function Lyrics({
   tab,
   setTab,
+  isMobile,
 }: {
   tab: number;
   setTab: React.Dispatch<React.SetStateAction<number>>;
+  setMobile: boolean;
 }) {
   interface LyricLine {
     start?: number;
@@ -44,7 +46,6 @@ export default function Lyrics({
   const [error, setError] = useState<string | null>(null);
   const [isMouseMoving, setIsMouseMoving] = useState<boolean>(false);
   const [synced, setSynced] = useState<boolean>(false);
-  const [isMobile, setIsMobile] = useState(false);
 
   const router = useRouter();
 
@@ -78,16 +79,7 @@ export default function Lyrics({
     setCurrentLine(0);
   }, [songData]);
 
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
+  
   useEffect(() => {
     if (lyricsContainerRef.current && synced) {
       const container = lyricsContainerRef.current;
@@ -109,7 +101,7 @@ export default function Lyrics({
         });
       }
     }
-  }, [tab]);
+  }, [tab, isMobile]);
 
   useEffect(() => {
     if (lyricsContainerRef.current && !isMouseMoving) {
