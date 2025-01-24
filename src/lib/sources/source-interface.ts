@@ -14,4 +14,5 @@ export interface SourceInterface {
     setVolume(volume: number): void;
     getSongData(trackId: string): Promise<song>;
     search(query: string): Promise<searchResult>;
+    setRepeat(repeat: boolean): Promise<void>;
 }

@@ -77,4 +77,7 @@ export class Tidal implements SourceInterface {
     async search(query: string): void {
         throw new Error('Method not implemented.');
     }
+    async setRepeat(repeat: boolean): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
 }

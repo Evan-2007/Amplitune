@@ -48,6 +48,7 @@ export class SourceManager {
     this.timeUpdateInterval = null;
     this.timeUpdateListeners = new Set();
     this.playPauseListeners = new Set();
+    this.repeatState = false;
 
     if (typeof window !== 'undefined') {
       // Begin async loading of sources (including MusicKit)
@@ -210,6 +211,7 @@ export class SourceManager {
       position: 0,
       album: track.album
     };
+    await source.setRepeat(this.repeatState);
     this.resetPlaybackState();
   }
 
@@ -246,6 +248,17 @@ export class SourceManager {
     const source = this.getActiveSource();
     if (source) {
       await source.seek(position);
+    }
+  }
+
+  public async setRepeat(repeat: boolean): Promise<void> {
+    // Optionally await initialization if needed:
+    await this.initializationPromise;
+    this.repeatState = repeat;
+    const source = this.getActiveSource();
+    if (source) {
+      await source.setRepeat(repeat);
+
     }
   }
 

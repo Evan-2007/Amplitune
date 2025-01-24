@@ -30,8 +30,8 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
   const skip = useQueueStore((state) => state.skip);
   const previous = useQueueStore((state) => state.playPrevious);
   const songData = useQueueStore((state) => state.currentSong?.track);
-  const repeat = usePlayerStore((state) => state.repeat);
-  const toggleRepeat = usePlayerStore((state) => state.toggleRepeat);
+  const repeat = useQueueStore((state) => state.queue.repeat);
+  const setRepeat = useQueueStore((state) => state.setRepeat);
 
 
   const timeLeft = length - currentTime;
@@ -66,7 +66,18 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
   }, []);
 
   const handleRepeat = async() => {
-      toggleRepeat();
+    if (repeat === 0) {
+      setRepeat(1);
+      sourceManager.setRepeat(false);
+    } else if (repeat === 1) {
+      setRepeat(2);
+      //toggle repeat in sourceManager
+      sourceManager.setRepeat(true);
+    } else {
+      setRepeat(0);
+      sourceManager.setRepeat(false);
+    }
+      
   }
 
   // Handle play/pause

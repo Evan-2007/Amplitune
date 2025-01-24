@@ -79,4 +79,8 @@ export class MusicKit implements SourceInterface {
         console.log('searching')
         return await this.platform.search(query);
     }
+
+    setRepeat(repeat: boolean): Promise<void> {
+        return this.platform.setRepeat(repeat);
+    }
 }

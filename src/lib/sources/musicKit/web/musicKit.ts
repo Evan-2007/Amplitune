@@ -128,6 +128,16 @@ export class musicKit implements SourceInterface {
         this.musicKitInstance.seekToTime(position);
         
     }
+
+    async setRepeat(repeat: boolean): Promise<void> {
+        await this.initializationPromise;
+        if (!this.musicKitInstance) {
+            console.error('MusicKit not initialized');
+            return;
+        }
+
+        this.musicKitInstance.repeatMode = repeat ? 1 : 0;
+    }
     setVolume(): void {
         throw new Error('Method not implemented.');
     }

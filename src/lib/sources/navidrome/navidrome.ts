@@ -83,4 +83,7 @@ export class Navidrome implements SourceInterface {
     async search(query: string): Promise<searchResult> {
         return await this.platform.search(query);
     }
+    async setRepeat(repeat: boolean): Promise<void> {
+        return await this.platform.setRepeat(repeat);
+    }
 }

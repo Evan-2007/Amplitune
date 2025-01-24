@@ -11,7 +11,7 @@ export interface queueStore {
   clearQueue: () => void;
   playNext: (track: song | string) => void;
   setCurrentSong: (index: number) => void;
-  setRepeat: (repeat: boolean) => void;
+  setRepeat: (repeat: number) => void;
   playPrevious: () => void;
   skip: () => void;
   shuffle: () => void;
@@ -20,7 +20,7 @@ export interface queueStore {
 }
 
 interface queue {
-  repeat: boolean;
+  repeat: number;
   shuffle: boolean;
   currentSong: { track: song; index: number };
   songs: song[];
@@ -32,7 +32,7 @@ export const useQueueStore = create<queueStore>()(
   persist(
     (set, get) => ({
       queue: {
-        repeat: false,
+        repeat: 0,
         shuffle: false,
         songs: [],
         shuffledSongs: [],

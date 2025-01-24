@@ -76,6 +76,18 @@ export class AudioPlayer {
         return this.audio?.play() || Promise.resolve();
     }
 
+    public setLoop(loop: boolean): void {
+        this.initialize();
+        if (this.audio) {
+            if (loop) {
+                this.audio.loop = true;
+            }
+            else {
+                this.audio.loop = false;
+            }
+        }
+    }
+
     public pause(): void {
         this.initialize();
         this.audio?.pause();

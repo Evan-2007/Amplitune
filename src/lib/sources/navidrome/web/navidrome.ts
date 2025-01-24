@@ -112,6 +112,15 @@ export class WebNavidrome implements SourceInterface {
         }
     }
 
+    async setRepeat(repeat: boolean): Promise<void> {
+        if (repeat) {
+            this.audioPlayer.setLoop(true);
+        }
+        else {
+            this.audioPlayer.setLoop(false);
+        }
+    }
+
     async search(query: string): Promise<searchResult> {
 
         const url = await subsonicBaseUrl('/rest/search3', `&query=${query}`);

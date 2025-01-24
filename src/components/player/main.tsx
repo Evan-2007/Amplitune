@@ -49,6 +49,7 @@ export function PlayerContent() {
   const setAudioRef = usePlayerStore((state) => state.setRef);
   const audioRef = useRef<HTMLAudioElement>(null);
   const currentlyPlaying = useQueueStore((state) => state.currentSong);
+  const repeat = useQueueStore((state) => state.queue.repeat);
   const songs = useQueueStore((state) => state.queue.songs);
   const router = useRouter();
 
@@ -57,16 +58,16 @@ export function PlayerContent() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
 
-  // Initialize with Navidrome source
+  
   useEffect(() => {
-    // In a real implementation, this would be determined by the source of the song
     sourceManager.playSong(songData);
+    sourceManager.setRepeat(repeat == 2 ? true : false);
+
   }, [songData]);
 
   useEffect(() => {
     if (searchParams.get('playing')) {
       console.log('Loading song:', searchParams.get('playing'));
-      // This would be handled by the source implementation
     }
   }, [searchParams]);
 

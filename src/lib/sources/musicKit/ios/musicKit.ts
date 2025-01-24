@@ -40,4 +40,7 @@ export class musicKit implements SourceInterface {
     async search(query: string): Promise<searchResult> {
         throw new Error('Method not implemented.');
     }
+    async setRepeat(repeat: boolean): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
 }
