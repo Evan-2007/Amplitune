@@ -161,7 +161,7 @@ export class SourceManager {
     // WAIT HERE for all async init to complete:
     await this.initializationPromise;
 
-    const sourcePriority = localStorage.getItem('sourcePriority') || '[]';
+    const sourcePriority = localStorage.getItem('sourcePriority') || '["navidrome", "tidal", "musicKit"]';
     
     const parsedSourcePriority: string[] = JSON.parse(sourcePriority);
 
