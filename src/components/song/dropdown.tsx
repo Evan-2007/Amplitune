@@ -24,7 +24,7 @@ export function SongDropdown({ song }: { song: song }) {
   const queue = useQueueStore((state) => state);
   const addToQueue = useQueueStore((state) => state.addToQueue);
   const playNext = useQueueStore((state) => state.playNext);
-  const [songData, setSongData] = useState<Song | null>(null);
+  const [songData, setSongData] = useState<song | null>(null);
 
   useEffect(() => {}, []);
 
@@ -35,12 +35,12 @@ export function SongDropdown({ song }: { song: song }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuItem
-          onClick={() => playNext(song)}
+          onClick={() => playNext(song.id)}
         >
           Play next
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => addToQueue(song)}
+          onClick={() => addToQueue(song.id)}
         >
           Add to queue
         </DropdownMenuItem>

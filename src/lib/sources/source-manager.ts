@@ -1,7 +1,7 @@
 import { SourceInterface } from './source-interface';
 import { Tidal } from './tidal/tidal';
 import { Navidrome } from './navidrome/navidrome';
-import { Lyrics, song, sources, artists, albums } from './types';
+import { Lyrics, song, sources, artists, albums, searchResult } from './types';
 import { getLRCLIBLyrics } from './lrc-lib/lrc-lib';
 import { MusicKit } from './musicKit/musicKit';
 
@@ -30,6 +30,7 @@ export class SourceManager {
   private trackDuration: number;
   private playing: PlaybackStatus;
   private timeUpdateInterval: NodeJS.Timeout | null;
+  private repeatState: boolean;
   
   // Event listeners
   private readonly timeUpdateListeners: Set<TimeUpdateListener>;
@@ -160,9 +161,9 @@ export class SourceManager {
     // WAIT HERE for all async init to complete:
     await this.initializationPromise;
 
-    const sourcePriority = localStorage.getItem<string[]>('sourcePriority' || [])
+    const sourcePriority = localStorage.getItem('sourcePriority') || '[]';
     
-    const parsedSourcePriority = JSON.parse(sourcePriority);
+    const parsedSourcePriority: string[] = JSON.parse(sourcePriority);
 
     console.log('sourcePriority', sourcePriority);
     
@@ -309,7 +310,7 @@ export class SourceManager {
       const backupLyrics = await getLRCLIBLyrics(
         this.currentTrack.title,
         this.currentTrack.artist,
-        this.currentTrack.album
+        this.currentTrack.album || ''
       );
       console.log('backupLyrics', backupLyrics);
       if (!backupLyrics) {

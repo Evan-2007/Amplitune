@@ -66,8 +66,8 @@ export class MusicKit implements SourceInterface {
     onPlayPause(callback: (playing: 'playing' | 'paused' | 'ended') => void): void {
         this.platform.onPlayPause(callback);
     }
-    seek(time: number): void {
-        this.platform.seek(time);
+    async seek(time: number): Promise<void> {
+        await this.platform.seek(time);
     }
     setVolume(volume: number): void {
         this.platform.setVolume(volume);

@@ -29,7 +29,7 @@ export default function Lyrics({
 }: {
   tab: number;
   setTab: React.Dispatch<React.SetStateAction<number>>;
-  setMobile: boolean;
+  isMobile: boolean;
 }) {
   interface LyricLine {
     start?: number;
@@ -318,7 +318,7 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
       <div className='top-24 flex justify-between'>
         <div></div>
         <div>
-          <button onClick={() => clearQueue([])}>
+          <button onClick={() => clearQueue()}>
             <h1>Clear</h1>
           </button>
         </div>

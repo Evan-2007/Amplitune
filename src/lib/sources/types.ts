@@ -1,13 +1,14 @@
 import { TidalAuthParams, NavidromeAuthParams } from "./authParams";
 
-export interface SyncedLyrics {
-    synced: true;
+export interface NormalLyrics {
+    synced: boolean;
     lines: {
         value: string;
-        start: number; // time in milliseconds
+        start?: number; // time in milliseconds
     }[];
     source: string;
-    type: 'synced' | 'unsynced' | 'instrumental';
+    type?: 'synced' | 'unsynced' | 'instrumental';
+    error?: string;
 }
 
 export interface ErrorLyrics {
@@ -15,15 +16,9 @@ export interface ErrorLyrics {
     source: string;
 }
 
-interface NormalLyrics {
-    synced: false;
-    lines: {
-        value: string;
-    } [];
-    source: string;
-}
 
-export type Lyrics = SyncedLyrics | ErrorLyrics | NormalLyrics;
+
+export type Lyrics =  ErrorLyrics | NormalLyrics;
 
 
 

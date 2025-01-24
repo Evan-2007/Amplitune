@@ -197,7 +197,6 @@ export default function FullScreenPlayer({}: {}) {
       {(tab !== 0 && isMobile) && (
         <TopPlayer
           imageUrl={imageUrl}
-          colors={colors}
           setTab={(value) => setTab(value)}
         />
       )}
@@ -251,22 +250,17 @@ export default function FullScreenPlayer({}: {}) {
 
 
 
-import { FinalColor } from '@/types';
-
-
-
-
 interface TopPlayerProps {
   imageUrl: string | null;
-  colors: FinalColor[];
+ // colors: FinalColor[];
   setTab: (tab: number) => void;
 }
 
-export function TopPlayer({ imageUrl, colors, setTab }: TopPlayerProps) {
+export function TopPlayer({ imageUrl, setTab }: TopPlayerProps) {
   const progressRef = useRef<HTMLDivElement>(null);
   const progressContainerRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number>();
-  const isPaused = usePlayerStore((state) => state.paused);
+  const isPaused = !usePlayerStore((state) => state.playing);
   const [time, setTime] = useState<{ position: number; duration: number }>({
     position: 0,
     duration: 0,
@@ -339,7 +333,7 @@ export function TopPlayer({ imageUrl, colors, setTab }: TopPlayerProps) {
       }
     });
 
-    if (!audio.paused) {
+    if (!isPaused) {
       animationFrameRef.current = requestAnimationFrame(updateProgress);
     }
 
@@ -379,7 +373,7 @@ export function TopPlayer({ imageUrl, colors, setTab }: TopPlayerProps) {
         className='flex h-full w-full items-center p-4'
         onClick={() => setTab(0)}
       >
-        {imageUrl && colors.length > 0 ? (
+        {imageUrl ? (
           <img
             src={imageUrl}
             className='relative z-[55] h-[6vh] rounded-lg border border-border object-cover'

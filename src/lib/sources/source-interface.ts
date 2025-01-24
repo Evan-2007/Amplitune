@@ -10,7 +10,7 @@ export interface SourceInterface {
     getLyrics(trackId: string): Promise<Lyrics>;
     onTimeUpdate(callback: (currentTime: number, duration: number) => void): void;
     onPlayPause(callback: (playing: 'playing' | 'paused' | 'ended') => void): void;
-    seek(time: number): void;
+    seek(time: number): Promise<void>;
     setVolume(volume: number): void;
     getSongData(trackId: string): Promise<song>;
     search(query: string): Promise<searchResult>;

@@ -28,7 +28,7 @@ export class musicKit implements SourceInterface {
     onPlayPause(): void {
         throw new Error('Method not implemented.');
     }
-    seek(): void {
+    async seek(): Promise<void> {
         throw new Error('Method not implemented.');
     }
     setVolume(): void {

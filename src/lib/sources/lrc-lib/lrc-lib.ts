@@ -20,7 +20,7 @@ export async function getLRCLIBLyrics(title: string, artist: string, albume: str
   
       const data = await response.json();
   
-      // If the server returns an error
+
       if (data.error) {
         return {
           error: data.error,
@@ -28,7 +28,6 @@ export async function getLRCLIBLyrics(title: string, artist: string, albume: str
         };
       }
   
-      // If everything is OK
       return {
         lines: formatLyrics(data.syncedLyrics),
         source: 'LRC-LIB',

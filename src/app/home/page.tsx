@@ -188,7 +188,7 @@ function SongDisply({
           <p className='line-clamp-1'>{song.artist}</p>
         </div>
       </div>
-      <SongDropdown song={song.id} />
+      {/* <SongDropdown song={song} /> */}
     </div>
   );
 }

@@ -79,6 +79,7 @@ export class musicKit implements SourceInterface {
     }
     getLyrics(): Promise<Lyrics> {
         return {
+            //@ts-ignore
             error: 'No lyrics found',
             source: 'musicKit'
         }
@@ -118,7 +119,7 @@ export class musicKit implements SourceInterface {
         }
         });
     }
-    async seek(position: number): void {
+    async seek(position: number): Promise<void> {
         await this.initializationPromise;
         if (!this.musicKitInstance) {
             console.error('MusicKit not initialized');
@@ -164,7 +165,7 @@ export class musicKit implements SourceInterface {
 
         const response = await result
         
-        const songs = result.data.results.songs.data.map((song) => ({
+        const songs = result.data.results.songs.data.map((song: any) => ({
             id: song.id,
             title: song.attributes.name,
             artist: song.attributes.artistName,
@@ -185,7 +186,7 @@ export class musicKit implements SourceInterface {
     
         return {
             songs,
-            videos: [],
+            //videos: [],
             albums: [],
             artists: []
         };

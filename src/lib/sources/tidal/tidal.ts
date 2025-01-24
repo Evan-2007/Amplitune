@@ -5,6 +5,7 @@ import { tidal as IosTidal } from './ios/tidal';
 import { tidal as AndroidTidal } from './android/tidal';
 import { tidal as WebTidal } from './web/tidal';
 import { Lyrics, song } from '../types';
+import { searchResult } from '../types';
 
 
 type PlatformType = "windows" | "linux" | "macos" | "android" | "ios" | "web" | string;
@@ -65,7 +66,7 @@ export class Tidal implements SourceInterface {
     onPlayPause(callback: (playing: 'playing' | 'paused' | 'ended') => void): void {
         this.platform.onPlayPause(callback);
     }
-    seek(time: number): void {
+    async seek(time: number): Promise<void> {
         this.platform.seek(time);
     }
     setVolume(volume: number): void {
@@ -74,7 +75,7 @@ export class Tidal implements SourceInterface {
     getSongData(songId: string): Promise<song> {
         return this.platform.getSongData(songId);
     }
-    async search(query: string): void {
+    async search(query: string): Promise<searchResult> {
         throw new Error('Method not implemented.');
     }
     async setRepeat(repeat: boolean): Promise<void> {

@@ -5,6 +5,7 @@ import {AudioPlayer} from './audioPlayer'
 import {Lyrics} from '../../types'
 import {getLyrics} from './getLyrics'
 import {song} from '../../types'
+import {searchResult} from '../../types'
 
 
 export class WebNavidrome implements SourceInterface {
@@ -89,7 +90,7 @@ export class WebNavidrome implements SourceInterface {
     getQueue(): void {
         throw new Error('Method not implemented.');
     }
-    seek(time: number): void {
+    async seek(time: number): Promise<void> {
         this.audioPlayer.seek(time);
     }
 
@@ -146,7 +147,7 @@ export class WebNavidrome implements SourceInterface {
 
         return {
             songs,
-            videos: [],
+            //videos: [],
             albums: [],
             artists: []
         }

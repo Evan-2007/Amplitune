@@ -64,7 +64,7 @@ export class Navidrome implements SourceInterface {
     onTimeUpdate(callback: (currentTime: number, duration: number) => void): void {
         this.platform.onTimeUpdate(callback);
     }
-    seek(time: number): void {
+    async seek(time: number): Promise<void> {
         this.platform.seek(time);
         console.log(time)
     }
