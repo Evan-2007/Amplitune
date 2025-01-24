@@ -62,11 +62,6 @@ export default function Accounts() {
     async function handleMusicKitAuth() {
         const music = await window.MusicKit.getInstance();
         await music.authorize();
-        await music.setQueue({
-            song: "1778346855"
-        })
-
-        await music.play()
         
     }
 
