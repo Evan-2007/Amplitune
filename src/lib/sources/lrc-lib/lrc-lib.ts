@@ -2,7 +2,7 @@ import {Lyrics} from '../types';
 import { formatLyrics } from '@/lib/lyrics';
 
 export async function getLRCLIBLyrics(title: string, artist: string, albume: string) {
-    const formatParams = (param: string) => param.replace(/ /g, '+');
+    const formatParams = (param: string) => encodeURIComponent(param).replace(/%20/g, '+');
   
     try {
       const response = await fetch(

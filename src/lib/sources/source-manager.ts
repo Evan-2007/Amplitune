@@ -124,6 +124,7 @@ export class SourceManager {
   }
 
   public setPlaying(playing: PlaybackStatus): void {
+    
     this.playing = playing;
     this.emitPlayPause();
   }
