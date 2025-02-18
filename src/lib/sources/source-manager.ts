@@ -92,7 +92,7 @@ export class SourceManager {
           resolve(); // Or reject() depending on your requirements
         }, timeoutDuration);
   
-        window.addEventListener('musickitconfigured', () => {
+        window.addEventListener('musickitready', () => {
           clearTimeout(timeout);
           console.log('MusicKit loaded');
           this.sources.set('musicKit', new MusicKit());

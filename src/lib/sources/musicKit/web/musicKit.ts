@@ -25,18 +25,7 @@ export class musicKit implements SourceInterface {
     private async checkMusicKit(): Promise<void> {
 
         return new Promise((resolve) => {
-
-            if ((window as any).MusicKit) {
-                setTimeout(() => {
-                    this.musicKitInstance = (window as any).MusicKit.getInstance();
-                    console.log('MusicKit already configured');
-                    resolve();
-                    return;
-                } , 500);
-            }
-
-
-            window.addEventListener('musickitconfigured', () => {
+            window.addEventListener('musickitready', () => {
                 this.musicKitInstance = (window as any).MusicKit.getInstance();
                 console.log('MusicKit configured');
                 resolve();
@@ -60,7 +49,7 @@ export class musicKit implements SourceInterface {
     }
     async playSong(trackId: string): Promise<void> {
         await this.initializationPromise;
-        console.log('Playing song', trackId);
+        console.log('Playing song using web', trackId);
         if (!this.musicKitInstance) {
             console.error('MusicKit not initialized');
             return;
@@ -175,7 +164,7 @@ export class musicKit implements SourceInterface {
             quality: "N/A",
             source: "musicKit",
             availableSources: ["musikKit"],
-            imageUrl: song.attributes.artwork.url.replace('{w}x{h}', '300x300'),
+            imageUrl: song.attributes.artwork.url.replace('{w}x{h}', '900x900'),
             releaseDate: song.attributes.releaseDate
         }));
 
