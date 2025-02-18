@@ -25,6 +25,13 @@ export class musicKit implements SourceInterface {
     private async checkMusicKit(): Promise<void> {
 
         return new Promise((resolve) => {
+            if (typeof window !== 'undefined' && (window as any).musicKitStatus === 'ready') {
+                this.musicKitInstance = (window as any).MusicKit.getInstance();
+                console.log('MusicKit already configured');
+                resolve();
+                return;
+            }
+
             window.addEventListener('musickitready', () => {
                 this.musicKitInstance = (window as any).MusicKit.getInstance();
                 console.log('MusicKit configured');
@@ -39,7 +46,9 @@ export class musicKit implements SourceInterface {
 
         await this.musicKitInstance.play();
     }
-    pause(): void {
+    async pause(): promises<void> {
+        await this.initializationPromise;
+        console.log('Pausing song using web');
         if (!this.musicKitInstance) {
             console.error('MusicKit not initialized');
             return;

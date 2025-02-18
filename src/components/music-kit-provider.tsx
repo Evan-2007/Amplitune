@@ -21,6 +21,7 @@ export function MusicKitProvider() {
         console.log('MusicKit configured !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
         const musicKitInstance = window.MusicKit.getInstance();
         window.dispatchEvent(new Event('musickitready'));
+        window.musicKitStatus = 'ready';
       } catch (error) {
         console.error('Error configuring MusicKit:', error);
       }

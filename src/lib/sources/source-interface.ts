@@ -2,8 +2,8 @@ import { Lyrics, song, searchResult } from './types';
 
 
 export interface SourceInterface {
-    play(): void;
-    pause(): void;
+    play(): promises<void>;
+    pause(): promises<void>;
     playSong(trackId: string, sourceId?: string,): void;
     getAllPlaylists(): void;
     getQueue(): void;

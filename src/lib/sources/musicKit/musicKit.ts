@@ -37,12 +37,13 @@ export class MusicKit implements SourceInterface {
         return new Implementation();
     }
 
-    play(): void {
-        this.platform.play();
+    async play(): Promise<void> {
+        await this.platform.play();
     }
 
-    pause(): void {
-        this.platform.pause();
+    async pause(): Promise<void> {
+        console.log('Pausing song');
+        await this.platform.pause();
     }
 
     playSong(songId: string): void {

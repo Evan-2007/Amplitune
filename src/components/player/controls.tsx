@@ -19,7 +19,9 @@ interface ControlsProps {
 }
 
 const Controls: React.FC<ControlsProps> = ({ className }) => {
-  const [playing, setPlaying] = useState<'playing' | 'paused' | 'ended'>('paused');
+  const playing = usePlayerStore((state) => state.playing);
+  const setPlaying = usePlayerStore((state) => state.setPlaying);
+
   const [shuffle, setShuffle] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [sliderValue, setSliderValue] = useState<number>(0);
@@ -85,8 +87,10 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
     console.log(playing)
     if (playing === 'playing') {
       await sourceManager.pause();
+      setPlaying('paused');
     } else {
       await sourceManager.play();
+      setPlaying('playing');
     }
   };
 

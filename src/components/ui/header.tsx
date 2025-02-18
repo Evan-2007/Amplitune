@@ -126,7 +126,7 @@ function Search() {
   async function getBaseUrl() {
     const url = await subsonicURL('/rest/getCoverArt');
     if (url === 'error') {
-      router.push('/servers');
+      return;
     }
     setBaseImageURL(url.toString());
   }

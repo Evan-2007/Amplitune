@@ -68,7 +68,7 @@ export class SourceManager {
   }
 
   private async initializeSources(): Promise<void> {
-    if (localStorage.getItem('activeServer')) {
+    if (localStorage.getItem('activeServer') !== 'undefined') {
       this.sources.set('navidrome', new Navidrome());
     }
     await this.checkMusicKit(); // Make sure MusicKit is loaded
@@ -232,9 +232,12 @@ export class SourceManager {
     await this.initializationPromise;
 
     const source = this.getActiveSource();
+    console.log('source', source);
     if (source) {
       await source.pause();
       this.stopTimeUpdates();
+    } else {
+      console.error('No active source to pause');
     }
   }
 

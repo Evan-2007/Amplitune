@@ -10,13 +10,6 @@ import { SongDropdown } from '@/components/song/dropdown';
 export default function HomePage() {
   const [baseUrl, setBaseUrl] = useState<string | null>(null);
 
-  useEffect(() => {
-    getSubsonicURL();
-  }, []);
-
-  const getSubsonicURL = async () => {
-    setBaseUrl(await subsonicURL('/rest/getCoverArt', ''));
-  };
 
   return (
     <ScrollArea className='flex h-full w-full flex-col overflow-auto p-10'>
