@@ -85,7 +85,12 @@ export class SourceManager {
 
   private checkMusicKit(): Promise<void> {
     return new Promise<void>((resolve) => {
-  
+      if (typeof window !== 'undefined' && (window as any).musicKitStatus === 'ready') {
+        this.musicKitInstance = (window as any).MusicKit.getInstance();
+        console.log('MusicKit already configured');
+        resolve();
+        return;
+    }
         const timeoutDuration = 10000; // 10 seconds
         const timeout = setTimeout(() => {
           console.warn('MusicKit load timed out');

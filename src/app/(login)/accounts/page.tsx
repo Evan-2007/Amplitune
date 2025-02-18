@@ -60,9 +60,10 @@ export default function Accounts() {
 
 
     async function handleMusicKitAuth() {
-        const music = await window.MusicKit.getInstance();
-        await music.authorize();
-        
+        if (typeof window !== 'undefined' && (window as any).musicKitStatus === 'ready') {
+            const musicKitInstance = (window as any).MusicKit.getInstance();
+            musicKitInstance.authorize()
+        } 
     }
 
 
