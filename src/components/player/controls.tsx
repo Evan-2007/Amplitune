@@ -35,20 +35,18 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
   const repeat = useQueueStore((state) => state.queue.repeat);
   const setRepeat = useQueueStore((state) => state.setRepeat);
 
-
   const timeLeft = length - currentTime;
   const timeLeftString = `-${sourceManager.formatTime(timeLeft)}`;
-  const sliderTimestamp = sourceManager.formatTime((length * sliderValue) / 1000);
-
-  
-
+  const sliderTimestamp = sourceManager.formatTime(
+    (length * sliderValue) / 1000
+  );
 
   useEffect(() => {
     const cleanup = sourceManager.onTimeUpdate((position, duration) => {
-//      console.log(position, duration);
+      //      console.log(position, duration);
       setCurrentTime(position);
       setLength(duration);
-      
+
       if (!sliderActive) {
         setSliderValue((position / duration) * 1000);
       }
@@ -57,7 +55,7 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
     return cleanup;
   }, []);
 
-  // Subscribe to play/pause updates 
+  // Subscribe to play/pause updates
   useEffect(() => {
     const cleanup = sourceManager.onPlayPause((playing) => {
       console.log(playing);
@@ -67,7 +65,7 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
     return cleanup;
   }, []);
 
-  const handleRepeat = async() => {
+  const handleRepeat = async () => {
     if (repeat === 0) {
       setRepeat(1);
       sourceManager.setRepeat(false);
@@ -79,12 +77,11 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
       setRepeat(0);
       sourceManager.setRepeat(false);
     }
-      
-  }
+  };
 
   // Handle play/pause
   const handlePlayPause = async () => {
-    console.log(playing)
+    console.log(playing);
     if (playing === 'playing') {
       await sourceManager.pause();
       setPlaying('paused');
@@ -98,7 +95,7 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
     if (playing === 'ended') {
       skip();
     }
-  } , [playing]);
+  }, [playing]);
 
   // Handle seek
   const handleSliderCommit = async (value: number) => {

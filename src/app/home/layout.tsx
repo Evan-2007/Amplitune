@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { Player } from '@/components/player/main';
 import { Header } from '@/components/ui/header';
@@ -14,10 +12,6 @@ export default function HomeLayout({
 }: {
   children: React.ReactNode;
 }) {
-
-
-
-  
   return (
     <div className={cn('h-screen md:w-screen', styles.fillSafeArea)}>
       <div className='absolute'>

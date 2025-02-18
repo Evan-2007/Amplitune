@@ -1,41 +1,44 @@
-import {Lyrics} from '../types';
+import { Lyrics } from '../types';
 import { formatLyrics } from '@/lib/lyrics';
 
-export async function getLRCLIBLyrics(title: string, artist: string, albume: string) {
-    const formatParams = (param: string) => encodeURIComponent(param).replace(/%20/g, '+');
-  
-    try {
-      const response = await fetch(
-        'https://lrclib.net/api/get?artist_name=' +
-          formatParams(artist) +
-          '&track_name=' +
-          formatParams(title),
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Lrclib-Client': `amplitune (https://github.com/Evan-2007/Amplitune)`,
-          },
-        },
-      );
-  
-      const data = await response.json();
-  
+export async function getLRCLIBLyrics(
+  title: string,
+  artist: string,
+  albume: string
+) {
+  const formatParams = (param: string) =>
+    encodeURIComponent(param).replace(/%20/g, '+');
 
-      if (data.error) {
-        return {
-          error: data.error,
-          source: 'LRC-LIB',
-        };
+  try {
+    const response = await fetch(
+      'https://lrclib.net/api/get?artist_name=' +
+        formatParams(artist) +
+        '&track_name=' +
+        formatParams(title),
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Lrclib-Client': `amplitune (https://github.com/Evan-2007/Amplitune)`,
+        },
       }
-  
+    );
+
+    const data = await response.json();
+
+    if (data.error) {
       return {
-        lines: formatLyrics(data.syncedLyrics),
+        error: data.error,
         source: 'LRC-LIB',
-        synced: true,
       };
-    } catch (error) {
-      console.error(error);
-      return null;
     }
+
+    return {
+      lines: formatLyrics(data.syncedLyrics),
+      source: 'LRC-LIB',
+      synced: true,
+    };
+  } catch (error) {
+    console.error(error);
+    return null;
   }
-  
+}

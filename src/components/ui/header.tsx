@@ -29,7 +29,6 @@ import {
 
 export function Header() {
   const localStorage = new CrossPlatformStorage();
-  
 
   const [isElectronApp, setIsElectronApp] = useState(false);
 
@@ -135,9 +134,6 @@ function Search() {
     console.log('rtesults: ' + results);
   }, [results]);
 
-
-  
-
   const handleUpdate = useMemo(
     () =>
       debounce(async (e: any) => {
@@ -231,17 +227,17 @@ function Search() {
                             </button>
                             <div className='col-span-5 space-y-1 pr-3'>
                               <Link
-                                className='line-clamp-1 text-sm hover:underline flex'
+                                className='line-clamp-1 flex text-sm hover:underline'
                                 href={`/home/?playing=${song.id}&play=true`}
                               >
                                 {song.title}
-                                <div className='flex space-x-1 ml-2 items-center'>
-                                  {song.availableSources.includes('musicKit') && (
-                                    <AMIcon className='h-4 w-4 ' />
-                                  )}
-                                  {song.availableSources.includes('navidrome') && (
-                                    <NavidromeIcon className='h-4 w-4  ' />
-                                  )}
+                                <div className='ml-2 flex items-center space-x-1'>
+                                  {song.availableSources.includes(
+                                    'musicKit'
+                                  ) && <AMIcon className='h-4 w-4' />}
+                                  {song.availableSources.includes(
+                                    'navidrome'
+                                  ) && <NavidromeIcon className='h-4 w-4' />}
                                 </div>
                               </Link>
                               <Link

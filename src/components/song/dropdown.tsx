@@ -34,14 +34,10 @@ export function SongDropdown({ song }: { song: song }) {
         <Ellipsis size={20} />
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem
-          onClick={() => playNext(song.id)}
-        >
+        <DropdownMenuItem onClick={() => playNext(song.id)}>
           Play next
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => addToQueue(song.id)}
-        >
+        <DropdownMenuItem onClick={() => addToQueue(song.id)}>
           Add to queue
         </DropdownMenuItem>
       </DropdownMenuContent>

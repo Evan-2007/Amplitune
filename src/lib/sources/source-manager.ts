@@ -24,14 +24,14 @@ export class SourceManager {
   private readonly sources: Map<string, SourceInterface>;
   private activeSource: string | null;
   private currentTrack: CurrentTrack | null;
-  
+
   // Playback state
   private currentPosition: number;
   private trackDuration: number;
   private playing: PlaybackStatus;
   private timeUpdateInterval: NodeJS.Timeout | null;
   private repeatState: boolean;
-  
+
   // Event listeners
   private readonly timeUpdateListeners: Set<TimeUpdateListener>;
   private readonly playPauseListeners: Set<PlayPauseListener>;
@@ -85,24 +85,27 @@ export class SourceManager {
 
   private checkMusicKit(): Promise<void> {
     return new Promise<void>((resolve) => {
-      if (typeof window !== 'undefined' && (window as any).musicKitStatus === 'ready') {
+      if (
+        typeof window !== 'undefined' &&
+        (window as any).musicKitStatus === 'ready'
+      ) {
         console.log('MusicKit already configured');
         resolve();
         return;
-    }
-        const timeoutDuration = 10000; // 10 seconds
-        const timeout = setTimeout(() => {
-          console.warn('MusicKit load timed out');
-          resolve(); // Or reject() depending on your requirements
-        }, timeoutDuration);
-  
-        window.addEventListener('musickitready', () => {
-          clearTimeout(timeout);
-          console.log('MusicKit loaded');
-          this.sources.set('musicKit', new MusicKit());
-          resolve();
-        });
-      
+      }
+      const timeoutDuration = 10000; // 10 seconds
+      const timeout = setTimeout(() => {
+        console.warn('MusicKit load timed out');
+        resolve(); // Or reject() depending on your requirements
+      }, timeoutDuration);
+
+      window.addEventListener('musickitready', () => {
+        clearTimeout(timeout);
+        console.log('MusicKit loaded');
+        this.sources.set('musicKit', new MusicKit());
+        resolve();
+      });
+
       console.log('MusicKit check initialized');
     });
   }
@@ -131,7 +134,6 @@ export class SourceManager {
   }
 
   public setPlaying(playing: PlaybackStatus): void {
-    
     this.playing = playing;
     this.emitPlayPause();
   }
@@ -143,7 +145,7 @@ export class SourceManager {
   }
 
   private emitPlayPause(): void {
-    this.playPauseListeners.forEach(callback => callback(this.playing));
+    this.playPauseListeners.forEach((callback) => callback(this.playing));
   }
 
   public onTimeUpdate(callback: TimeUpdateListener): () => void {
@@ -152,7 +154,7 @@ export class SourceManager {
   }
 
   private emitTimeUpdate(): void {
-    this.timeUpdateListeners.forEach(callback => 
+    this.timeUpdateListeners.forEach((callback) =>
       callback(this.currentPosition, this.trackDuration)
     );
   }
@@ -169,26 +171,30 @@ export class SourceManager {
     // WAIT HERE for all async init to complete:
     await this.initializationPromise;
     console.log(track.availableSources);
-    const sourcePriority = localStorage.getItem('sourcePriority') || '["navidrome", "tidal", "musicKit"]';
-    
+    const sourcePriority =
+      localStorage.getItem('sourcePriority') ||
+      '["navidrome", "tidal", "musicKit"]';
+
     const parsedSourcePriority: string[] = JSON.parse(sourcePriority);
 
     console.log('sourcePriority', sourcePriority);
-    
+
     // Find the first available source
-    const sourceId = parsedSourcePriority.find(source => track.availableSources.includes(source));
+    const sourceId = parsedSourcePriority.find((source) =>
+      track.availableSources.includes(source)
+    );
     console.log('sourceId', sourceId, track.title);
     if (!sourceId) {
-      console.error(`No available source found. Sources: ${Array.from(this.sources.keys()).join(', ')}`);
-      return
+      console.error(
+        `No available source found. Sources: ${Array.from(this.sources.keys()).join(', ')}`
+      );
+      return;
     }
-
-
 
     const source = this.sources.get(sourceId);
     if (!source) {
       console.error(`Source ${sourceId} not found`);
-      return
+      return;
     }
 
     // Handle source switching
@@ -200,7 +206,7 @@ export class SourceManager {
     }
 
     this.activeSource = sourceId;
-    
+
     // Set up event handlers
     source.onTimeUpdate((currentTime: number, duration: number) => {
       this.setPosition(currentTime);
@@ -220,7 +226,7 @@ export class SourceManager {
       duration: track.duration,
       source: sourceId,
       position: 0,
-      album: track.album
+      album: track.album,
     };
     await source.setRepeat(this.repeatState);
     this.resetPlaybackState();
@@ -272,7 +278,6 @@ export class SourceManager {
     const source = this.getActiveSource();
     if (source) {
       await source.setRepeat(repeat);
-
     }
   }
 
@@ -287,7 +292,9 @@ export class SourceManager {
   }
 
   private getActiveSource(): SourceInterface | null {
-    return this.activeSource ? this.sources.get(this.activeSource) || null : null;
+    return this.activeSource
+      ? this.sources.get(this.activeSource) || null
+      : null;
   }
 
   public formatTime(seconds: number): string {
@@ -318,7 +325,11 @@ export class SourceManager {
     }
 
     const lyrics = await source.getLyrics(trackId);
-    console.log('shouldFetchBackupLyrics', this.shouldFetchBackupLyrics(lyrics), this.currentTrack);
+    console.log(
+      'shouldFetchBackupLyrics',
+      this.shouldFetchBackupLyrics(lyrics),
+      this.currentTrack
+    );
     if (this.shouldFetchBackupLyrics(lyrics) && this.currentTrack) {
       const backupLyrics = await getLRCLIBLyrics(
         this.currentTrack.title,
@@ -345,64 +356,69 @@ export class SourceManager {
 
   public async search(query: string): Promise<searchResult> {
     await this.initializationPromise;
-  
-    const promises = Array.from(this.sources.entries()).map(async ([sourceId, source]) => {
-      try {
-        const results = await source.search(query);
-        return results.songs.map(song => ({
-          ...song,
-          source: sourceId,
-          availableSources: [sourceId]
-        }));
-      } catch (error) {
-        console.error(`Search failed for source ${sourceId}:`, error);
-        return [];
+
+    const promises = Array.from(this.sources.entries()).map(
+      async ([sourceId, source]) => {
+        try {
+          const results = await source.search(query);
+          return results.songs.map((song) => ({
+            ...song,
+            source: sourceId,
+            availableSources: [sourceId],
+          }));
+        } catch (error) {
+          console.error(`Search failed for source ${sourceId}:`, error);
+          return [];
+        }
       }
-    });
-  
+    );
+
     const results = await Promise.all(promises);
     const allSongs = results.flat();
-  
+
     const dedupedSongs = (s: song) => {
       return `${s.title?.toLowerCase() ?? ''}|${s.artist?.toLowerCase() ?? ''}`;
     };
-  
+
     interface ExtendedSong extends song {
       _firstAppearanceIndex: number;
       availableSources: string[];
     }
-  
+
     const songMap = new Map<string, ExtendedSong>();
     let overallIndex = 0;
-  
+
     for (const s of allSongs) {
       const key = dedupedSongs(s);
       if (songMap.has(key)) {
         const existing = songMap.get(key)!;
-        existing.availableSources = Array.from(new Set([...existing.availableSources, s.source]));
+        existing.availableSources = Array.from(
+          new Set([...existing.availableSources, s.source])
+        );
       } else {
         songMap.set(key, {
           ...s,
           availableSources: [s.source],
-          _firstAppearanceIndex: overallIndex
+          _firstAppearanceIndex: overallIndex,
         });
       }
       overallIndex++;
     }
-  
+
     let mergedSongs = Array.from(songMap.values());
-    mergedSongs.sort((a, b) => a._firstAppearanceIndex - b._firstAppearanceIndex);
-    mergedSongs.forEach(s => {
+    mergedSongs.sort(
+      (a, b) => a._firstAppearanceIndex - b._firstAppearanceIndex
+    );
+    mergedSongs.forEach((s) => {
       delete (s as Partial<ExtendedSong>)._firstAppearanceIndex;
     });
-  
+
     return {
       songs: mergedSongs,
       albums: [],
-      artists: []
+      artists: [],
     };
   }
-  
 
   // Cleanup
   public destroy(): void {

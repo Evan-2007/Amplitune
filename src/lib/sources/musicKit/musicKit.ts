@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import { SourceInterface } from '../source-interface';
 import { platform } from '@tauri-apps/plugin-os';
 import { musicKit as IosMusicKit } from './ios/musicKit';
@@ -6,82 +6,90 @@ import { musicKit as AndroidMusicKit } from './android/musicKit';
 import { musicKit as WebMusicKit } from './web/musicKit';
 import { Lyrics, song, searchResult } from '../types';
 
-
-type PlatformType = "windows" | "linux" | "macos" | "android" | "ios" | "web" | string;
+type PlatformType =
+  | 'windows'
+  | 'linux'
+  | 'macos'
+  | 'android'
+  | 'ios'
+  | 'web'
+  | string;
 
 const isTauri = () => {
-    return 'window' in globalThis && 'window.__TAURI__' in window;
-}
-
+  return 'window' in globalThis && 'window.__TAURI__' in window;
+};
 
 export class MusicKit implements SourceInterface {
-    private platform: SourceInterface;
+  private platform: SourceInterface;
 
-    constructor() {
-        const currentPlatform = isTauri() ? platform() : "web";
-        this.platform = this.getPlatformImplementation(currentPlatform);
-    }
+  constructor() {
+    const currentPlatform = isTauri() ? platform() : 'web';
+    this.platform = this.getPlatformImplementation(currentPlatform);
+  }
 
-    private getPlatformImplementation(platform: PlatformType): SourceInterface {
-        const implementations: Record<string, new () => SourceInterface> = {
-            android: AndroidMusicKit,
-            ios: IosMusicKit,
-            web: WebMusicKit
-        };
+  private getPlatformImplementation(platform: PlatformType): SourceInterface {
+    const implementations: Record<string, new () => SourceInterface> = {
+      android: AndroidMusicKit,
+      ios: IosMusicKit,
+      web: WebMusicKit,
+    };
 
-        const Implementation = implementations[platform];
-        if (!Implementation) {
-            throw new Error(`Platform ${platform} not supported`);
-        }
-
-        return new Implementation();
+    const Implementation = implementations[platform];
+    if (!Implementation) {
+      throw new Error(`Platform ${platform} not supported`);
     }
 
-    async play(): Promise<void> {
-        await this.platform.play();
-    }
+    return new Implementation();
+  }
 
-    async pause(): Promise<void> {
-        console.log('Pausing song');
-        await this.platform.pause();
-    }
+  async play(): Promise<void> {
+    await this.platform.play();
+  }
 
-    playSong(songId: string): void {
-        
-        this.platform.playSong(songId);
-    }
+  async pause(): Promise<void> {
+    console.log('Pausing song');
+    await this.platform.pause();
+  }
 
-    getAllPlaylists(): void {
-        this.platform.getAllPlaylists();
-    }
+  playSong(songId: string): void {
+    this.platform.playSong(songId);
+  }
 
-    getQueue(): void {
-        this.platform.getQueue();
-    }
-    async getLyrics(songId: string): Promise<Lyrics> {
-        return await this.platform.getLyrics(songId);
-    }
-    onTimeUpdate(callback: (currentTime: number, duration: number) => void): void {
-        this.platform.onTimeUpdate(callback);
-    }
-    onPlayPause(callback: (playing: 'playing' | 'paused' | 'ended') => void): void {
-        this.platform.onPlayPause(callback);
-    }
-    async seek(time: number): Promise<void> {
-        await this.platform.seek(time);
-    }
-    setVolume(volume: number): void {
-        this.platform.setVolume(volume);
-    }
-    getSongData(songId: string): Promise<song> {
-        return this.platform.getSongData(songId);
-    }
-    async search(query: string): Promise<searchResult> {
-        console.log('searching')
-        return await this.platform.search(query);
-    }
+  getAllPlaylists(): void {
+    this.platform.getAllPlaylists();
+  }
 
-    setRepeat(repeat: boolean): Promise<void> {
-        return this.platform.setRepeat(repeat);
-    }
+  getQueue(): void {
+    this.platform.getQueue();
+  }
+  async getLyrics(songId: string): Promise<Lyrics> {
+    return await this.platform.getLyrics(songId);
+  }
+  onTimeUpdate(
+    callback: (currentTime: number, duration: number) => void
+  ): void {
+    this.platform.onTimeUpdate(callback);
+  }
+  onPlayPause(
+    callback: (playing: 'playing' | 'paused' | 'ended') => void
+  ): void {
+    this.platform.onPlayPause(callback);
+  }
+  async seek(time: number): Promise<void> {
+    await this.platform.seek(time);
+  }
+  setVolume(volume: number): void {
+    this.platform.setVolume(volume);
+  }
+  getSongData(songId: string): Promise<song> {
+    return this.platform.getSongData(songId);
+  }
+  async search(query: string): Promise<searchResult> {
+    console.log('searching');
+    return await this.platform.search(query);
+  }
+
+  setRepeat(repeat: boolean): Promise<void> {
+    return this.platform.setRepeat(repeat);
+  }
 }

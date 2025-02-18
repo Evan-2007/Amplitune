@@ -10,7 +10,6 @@ import { SongDropdown } from '@/components/song/dropdown';
 export default function HomePage() {
   const [baseUrl, setBaseUrl] = useState<string | null>(null);
 
-
   return (
     <ScrollArea className='flex h-full w-full flex-col overflow-auto p-10'>
       <MostPlayed baseImageUrl={baseUrl} />
@@ -69,8 +68,7 @@ function RecentlyPlayed({ baseImageUrl }: { baseImageUrl: string | null }) {
     getRecentlyPlayed();
   }, []);
 
-  async function getRecentlyPlayed() {
-  }
+  async function getRecentlyPlayed() {}
   return (
     <>
       <div className='flex overflow-auto'>
@@ -92,9 +90,7 @@ function MostPlayed({ baseImageUrl }: { baseImageUrl: string | null }) {
     getMostPlayed();
   }, []);
 
-  async function getMostPlayed() {
-
-  }
+  async function getMostPlayed() {}
   return (
     <>
       <p className='text-3xl'>Most Played</p>

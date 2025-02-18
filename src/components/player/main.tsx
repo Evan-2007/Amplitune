@@ -58,11 +58,9 @@ export function PlayerContent() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
 
-  
   useEffect(() => {
     sourceManager.playSong(songData);
     sourceManager.setRepeat(repeat == 2 ? true : false);
-
   }, [songData]);
 
   useEffect(() => {
@@ -76,8 +74,6 @@ export function PlayerContent() {
       router.replace(`?${new URLSearchParams({ playing: songData.id })}`);
     }
   };
-
-
 
   useEffect(() => {
     updateParams();
@@ -108,10 +104,8 @@ export function PlayerContent() {
       navigator.mediaSession.setActionHandler('pause', () => {
         sourceManager.pause();
       });
-
     }
   };
-
 
   if (songData == undefined) {
     return (
@@ -209,7 +203,6 @@ export function PlayerContent() {
     </div>
   );
 }
-
 
 function RightControls({ audioRef }: { audioRef: any }) {
   const [open, setOpen] = useState<boolean>(false);
@@ -483,11 +476,7 @@ function MobilePlayer({
           </button>
 
           <button className='' onClick={handlePlayPause}>
-            {!playing ? (
-              <PlayIcon />
-            ) : (
-              <PauseIcon />
-            )}
+            {!playing ? <PlayIcon /> : <PauseIcon />}
           </button>
 
           <button onClick={() => skip()}>
@@ -498,7 +487,6 @@ function MobilePlayer({
     </div>
   );
 }
-
 
 interface ControlButtonProps {
   icon: 'previous' | 'next';

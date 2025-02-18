@@ -194,22 +194,19 @@ export default function FullScreenPlayer({}: {}) {
           : { background: 'linear-gradient(180deg, #000, #000)' }
       }
     >
-      {(tab !== 0 && isMobile) && (
-        <TopPlayer
-          imageUrl={imageUrl}
-          setTab={(value) => setTab(value)}
-        />
+      {tab !== 0 && isMobile && (
+        <TopPlayer imageUrl={imageUrl} setTab={(value) => setTab(value)} />
       )}
       <div
         className={cn(
           'absolute z-40 flex h-full w-full flex-col items-center justify-center md:flex-row'
         )}
       >
-        <Left  isMobile={isMobile} tab={tab} />
+        <Left isMobile={isMobile} tab={tab} />
         <div
           className={`h-full w-full flex-col items-center justify-center md:flex ${tab === 0 ? 'hidden md:w-1/2' : 'visible w-full'}`}
         >
-          <Lyrics  tab={tab} isMobile={isMobile} setTab={(tab) => setTab(tab)} />{' '}
+          <Lyrics tab={tab} isMobile={isMobile} setTab={(tab) => setTab(tab)} />{' '}
         </div>
       </div>
       <div
@@ -248,11 +245,9 @@ export default function FullScreenPlayer({}: {}) {
   );
 }
 
-
-
 interface TopPlayerProps {
   imageUrl: string | null;
- // colors: FinalColor[];
+  // colors: FinalColor[];
   setTab: (tab: number) => void;
 }
 
@@ -279,7 +274,7 @@ export function TopPlayer({ imageUrl, setTab }: TopPlayerProps) {
     const boundedProgress = Math.min(Math.max(progress, 0), 1);
 
     progressRef.current.style.transform = `scaleX(${boundedProgress})`;
-    progressRef.current.style.borderRadius = 
+    progressRef.current.style.borderRadius =
       Math.abs(boundedProgress - 1) < 0.001 ? '24px' : '24px 0 0 24px';
 
     if (!isPaused) {
@@ -313,7 +308,7 @@ export function TopPlayer({ imageUrl, setTab }: TopPlayerProps) {
 
     const playPause = audio.onPlayPause((playing) => {
       setIsPlaying(playing === 'playing');
-      
+
       if (playing === 'playing') {
         if (animationFrameRef.current) {
           cancelAnimationFrame(animationFrameRef.current);

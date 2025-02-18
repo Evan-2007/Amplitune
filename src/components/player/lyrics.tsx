@@ -1,5 +1,5 @@
 import { Song } from './types';
-import {song } from '@/lib/sources/types';
+import { song } from '@/lib/sources/types';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { CrossPlatformStorage } from '@/lib/storage/cross-platform-storage';
 import { debounce } from 'lodash';
@@ -19,8 +19,8 @@ import {
   DropdownItem,
 } from '@nextui-org/dropdown';
 import { subsonicURL } from '@/lib/sources/navidrome';
-import {SourceManager} from '@/lib/sources/source-manager'
-import {ErrorLyrics} from '@/lib/sources/types'
+import { SourceManager } from '@/lib/sources/source-manager';
+import { ErrorLyrics } from '@/lib/sources/types';
 
 export default function Lyrics({
   tab,
@@ -54,23 +54,23 @@ export default function Lyrics({
   const songData = useQueueStore((state) => state.queue.currentSong?.track);
 
   useEffect(() => {
-      console.log(lyrics);
-      const handleTimeUpdate = () => {
-        const currentTime = sourceManager.getPosition();
-        if (currentTime && lyrics) {
-          const milliseconds = currentTime * 1000;
-          const currentLineIndex = lyrics.findIndex(
-            //@ts-ignore
-            (line) => line.start > milliseconds
-          );
-          setCurrentLine(currentLineIndex - 1);
-        }
-      };
+    console.log(lyrics);
+    const handleTimeUpdate = () => {
+      const currentTime = sourceManager.getPosition();
+      if (currentTime && lyrics) {
+        const milliseconds = currentTime * 1000;
+        const currentLineIndex = lyrics.findIndex(
+          //@ts-ignore
+          (line) => line.start > milliseconds
+        );
+        setCurrentLine(currentLineIndex - 1);
+      }
+    };
 
-      const removeEventListner = sourceManager.onTimeUpdate(handleTimeUpdate);
-      return () => {
-        removeEventListner();
-      };
+    const removeEventListner = sourceManager.onTimeUpdate(handleTimeUpdate);
+    return () => {
+      removeEventListner();
+    };
   }, [lyrics]);
 
   useEffect(() => {
@@ -79,7 +79,6 @@ export default function Lyrics({
     setCurrentLine(0);
   }, [songData]);
 
-  
   useEffect(() => {
     if (lyricsContainerRef.current && synced) {
       const container = lyricsContainerRef.current;
@@ -150,10 +149,9 @@ export default function Lyrics({
   }, [debouncedMouseStop]);
 
   async function fetchLyrics() {
-
-
-
-    const lyrics = await sourceManager.getLyrics(currentQueue.currentSong.track.id);
+    const lyrics = await sourceManager.getLyrics(
+      currentQueue.currentSong.track.id
+    );
     if ((lyrics as ErrorLyrics).error) {
       console.error('An error occurred:', (lyrics as ErrorLyrics).error);
       setLyrics(null);
@@ -169,9 +167,8 @@ export default function Lyrics({
     }
   }
 
- 
   function handleLyricClick(index: number) {
-    if ( lyricsContainerRef) {
+    if (lyricsContainerRef) {
       const line = lyrics?.[index];
       if (line) {
         if (!synced || !line.start) {

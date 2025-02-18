@@ -36,9 +36,6 @@ export default function Left({
     []
   );
 
-
-
-
   useEffect(() => {
     getCredentials();
   }, []);

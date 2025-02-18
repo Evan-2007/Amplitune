@@ -1,146 +1,151 @@
 'use client';
 
 export class AudioPlayer {
-    private audio: HTMLAudioElement | null = null;
-    private currentTrackId: string | null = null;
-    private eventListeners: Map<string, Set<Function>>;
-    private initialized: boolean = false;
+  private audio: HTMLAudioElement | null = null;
+  private currentTrackId: string | null = null;
+  private eventListeners: Map<string, Set<Function>>;
+  private initialized: boolean = false;
 
-    constructor() {
-        this.eventListeners = new Map();
+  constructor() {
+    this.eventListeners = new Map();
+  }
+
+  private initialize() {
+    if (this.initialized) return;
+
+    if (typeof window !== 'undefined') {
+      this.audio = new Audio();
+      this.setupAudioEvents();
+      this.initialized = true;
     }
+  }
 
-    private initialize() {
-        if (this.initialized) return;
-        
-        if (typeof window !== 'undefined') {
-            this.audio = new Audio();
-            this.setupAudioEvents();
-            this.initialized = true;
-        }
-    }
+  private setupAudioEvents() {
+    if (!this.audio) return;
 
-    private setupAudioEvents() {
-        if (!this.audio) return;
+    const events = [
+      'play',
+      'pause',
+      'ended',
+      'timeupdate',
+      'error',
+      'waiting',
+      'playing',
+    ];
 
-        const events = ['play', 'pause', 'ended', 'timeupdate', 'error', 'waiting', 'playing'];
-        
-        events.forEach(event => {
-            this.audio!.addEventListener(event, () => {
-                this.emit(event, { 
-                    currentTime: this.audio?.currentTime, 
-                    duration: this.audio?.duration 
-                });
-            });
+    events.forEach((event) => {
+      this.audio!.addEventListener(event, () => {
+        this.emit(event, {
+          currentTime: this.audio?.currentTime,
+          duration: this.audio?.duration,
         });
+      });
+    });
 
-        this.audio.addEventListener('error', () => {
-            const error = this.audio?.error;
-            this.emit('error', { 
-                code: error?.code,
-                message: error?.message
-            });
-        });
+    this.audio.addEventListener('error', () => {
+      const error = this.audio?.error;
+      this.emit('error', {
+        code: error?.code,
+        message: error?.message,
+      });
+    });
 
-        this.audio.addEventListener('waiting', () => {
-            this.emit('waiting', { trackId: this.currentTrackId });
-        });
+    this.audio.addEventListener('waiting', () => {
+      this.emit('waiting', { trackId: this.currentTrackId });
+    });
 
-        this.audio.addEventListener('playing', () => {
-            this.emit('playing', { trackId: this.currentTrackId });
-        });
-        
+    this.audio.addEventListener('playing', () => {
+      this.emit('playing', { trackId: this.currentTrackId });
+    });
+  }
+
+  public async load(url: string, trackId: string): Promise<void> {
+    this.initialize();
+    if (!this.audio) return;
+
+    try {
+      this.audio.pause();
+      this.audio.currentTime = 0;
+
+      this.audio.src = url;
+      this.currentTrackId = trackId;
+
+      await this.audio.load();
+      this.emit('loaded', { trackId });
+    } catch (error) {
+      this.emit('error', { error, trackId });
     }
-    
+  }
 
-    public async load(url: string, trackId: string): Promise<void> {
-        this.initialize();
-        if (!this.audio) return;
+  public play(): Promise<void> {
+    this.initialize();
+    return this.audio?.play() || Promise.resolve();
+  }
 
-        try {
-            this.audio.pause();
-            this.audio.currentTime = 0;
-            
-            this.audio.src = url;
-            this.currentTrackId = trackId;
-            
-            await this.audio.load();
-            this.emit('loaded', { trackId });
-        } catch (error) {
-            this.emit('error', { error, trackId });
-        }
+  public setLoop(loop: boolean): void {
+    this.initialize();
+    if (this.audio) {
+      if (loop) {
+        this.audio.loop = true;
+      } else {
+        this.audio.loop = false;
+      }
     }
+  }
 
-    public play(): Promise<void> {
-        this.initialize();
-        return this.audio?.play() || Promise.resolve();
-    }
+  public pause(): void {
+    this.initialize();
+    this.audio?.pause();
+  }
 
-    public setLoop(loop: boolean): void {
-        this.initialize();
-        if (this.audio) {
-            if (loop) {
-                this.audio.loop = true;
-            }
-            else {
-                this.audio.loop = false;
-            }
-        }
+  public seek(time: number): void {
+    this.initialize();
+    if (this.audio && time >= 0 && time <= (this.audio.duration || 0)) {
+      this.audio.currentTime = time;
     }
+  }
 
-    public pause(): void {
-        this.initialize();
-        this.audio?.pause();
+  public setVolume(volume: number): void {
+    this.initialize();
+    if (this.audio) {
+      this.audio.volume = Math.max(0, Math.min(1, volume));
     }
+  }
 
-    public seek(time: number): void {
-        this.initialize();
-        if (this.audio && time >= 0 && time <= (this.audio.duration || 0)) {
-            this.audio.currentTime = time;
-        }
-    }
+  public getCurrentTime(): number {
+    return this.audio?.currentTime || 0;
+  }
 
-    public setVolume(volume: number): void {
-        this.initialize();
-        if (this.audio) {
-            this.audio.volume = Math.max(0, Math.min(1, volume));
-        }
-    }
+  public getDuration(): number {
+    return this.audio?.duration || 0;
+  }
 
-    public getCurrentTime(): number {
-        return this.audio?.currentTime || 0;
-    }
+  public isPlaying(): boolean {
+    return this.audio ? !this.audio.paused : false;
+  }
 
-    public getDuration(): number {
-        return this.audio?.duration || 0;
+  public on(event: string, callback: Function): void {
+    if (!this.eventListeners.has(event)) {
+      this.eventListeners.set(event, new Set());
     }
+    this.eventListeners.get(event)?.add(callback);
+  }
 
-    public isPlaying(): boolean {
-        return this.audio ? !this.audio.paused : false;
-    }
+  public off(event: string, callback: Function): void {
+    this.eventListeners.get(event)?.delete(callback);
+  }
 
-    public on(event: string, callback: Function): void {
-        if (!this.eventListeners.has(event)) {
-            this.eventListeners.set(event, new Set());
-        }
-        this.eventListeners.get(event)?.add(callback);
-    }
+  private emit(event: string, data: any): void {
+    this.eventListeners.get(event)?.forEach((callback) => callback(data));
+  }
 
-    public off(event: string, callback: Function): void {
-        this.eventListeners.get(event)?.delete(callback);
+  public destroy(): void {
+    if (this.audio) {
+      this.audio.pause();
+      this.audio.src = '';
+      this.initialized = false;
+      this.audio = null;
     }
-
-    private emit(event: string, data: any): void {
-        this.eventListeners.get(event)?.forEach(callback => callback(data));
-    }
-
-    public destroy(): void {
-        if (this.audio) {
-            this.audio.pause();
-            this.audio.src = '';
-            this.initialized = false;
-            this.audio = null;
-        }
-        this.eventListeners.clear();
-    }
+    this.eventListeners.clear();
+  }
 }
