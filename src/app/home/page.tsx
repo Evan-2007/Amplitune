@@ -77,19 +77,6 @@ function RecentlyPlayed({ baseImageUrl }: { baseImageUrl: string | null }) {
   }, []);
 
   async function getRecentlyPlayed() {
-    const response = await navidromeApi(
-      '/api/song?_end=15&_order=DESC&_sort=play_date&_start=0'
-    );
-    if (
-      response.error == 'not_authenticated' ||
-      response.error == 'no_server'
-    ) {
-      router.push('/servers');
-    }
-
-    if (response.response) {
-      setRecentlyPlayed(response.response);
-    }
   }
   return (
     <>
@@ -113,19 +100,7 @@ function MostPlayed({ baseImageUrl }: { baseImageUrl: string | null }) {
   }, []);
 
   async function getMostPlayed() {
-    const response = await navidromeApi(
-      '/api/song?_end=15&_order=DESC&_sort=play_count&_start=0'
-    );
-    if (
-      response.error == 'not_authenticated' ||
-      response.error == 'no_server'
-    ) {
-      router.push('/servers');
-    }
 
-    if (response.response) {
-      setMostPlayed(response.response);
-    }
   }
   return (
     <>
