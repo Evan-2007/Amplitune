@@ -75,9 +75,9 @@ export class SourceManager {
   }
 
   public addSource(source: string): void {
-    if (source === 'tidal') {
-      this.sources.set('tidal', new Tidal());
-    }
+    // if (source === 'tidal') {
+    //   this.sources.set('tidal', new Tidal());
+    // }
     if (source === 'musicKit') {
       this.sources.set('musicKit', new MusicKit());
     }
@@ -86,7 +86,6 @@ export class SourceManager {
   private checkMusicKit(): Promise<void> {
     return new Promise<void>((resolve) => {
       if (typeof window !== 'undefined' && (window as any).musicKitStatus === 'ready') {
-        this.musicKitInstance = (window as any).MusicKit.getInstance();
         console.log('MusicKit already configured');
         resolve();
         return;

@@ -19,8 +19,8 @@ interface ControlsProps {
 }
 
 const Controls: React.FC<ControlsProps> = ({ className }) => {
-  const playing = usePlayerStore((state) => state.playing);
-  const setPlaying = usePlayerStore((state) => state.setPlaying);
+  const playing = useQueueStore((state) => state.queue.playing);
+  const setPlaying = useQueueStore((state) => state.setPlaying);
 
   const [shuffle, setShuffle] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);

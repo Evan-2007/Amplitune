@@ -36,6 +36,7 @@ export const useQueueStore = create<queueStore>()(
       queue: {
         repeat: 0,
         shuffle: false,
+        playing: 'paused',
         songs: [],
         shuffledSongs: [],
         currentSong: {

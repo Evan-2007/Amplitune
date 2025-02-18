@@ -4,10 +4,10 @@ import { song, Lyrics, searchResult } from '@/lib/sources/types';
 
 export class musicKit implements SourceInterface {
 
-    play(): void {
+    async play(): Promise<void> {
         throw new Error('Method not implemented.');
     }
-    pause(): void {
+    async pause(): Promise<void> {
         throw new Error('Method not implemented.');
     }
     playSong(): void {

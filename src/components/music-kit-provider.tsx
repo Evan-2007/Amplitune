@@ -1,4 +1,12 @@
 'use client'
+declare global {
+  interface Window {
+    MusicKit: any;
+    musicKitStatus: string;
+  }
+}
+
+
 import { useEffect } from 'react';
 import Script from 'next/script';
 
@@ -10,6 +18,7 @@ export function MusicKitProvider() {
         const response = await fetch('https://qgejhylfftwlxrlqsnak.supabase.co/functions/v1/musicKitJWT');
         const { token } = await response.json();
         
+        
         await window.MusicKit.configure({
           developerToken: token,
           app: {
@@ -18,7 +27,6 @@ export function MusicKitProvider() {
           },
         });
         
-        const musicKitInstance = window.MusicKit.getInstance();
         window.dispatchEvent(new Event('musickitready'));
         window.musicKitStatus = 'ready';
       } catch (error) {

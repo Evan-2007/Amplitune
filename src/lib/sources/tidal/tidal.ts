@@ -38,11 +38,11 @@ export class Tidal implements SourceInterface {
         return new Implementation();
     }
 
-    play(): void {
+    async play(): Promise<void> {
         this.platform.play();
     }
 
-    pause(): void {
+    async pause(): Promise<void> {
         this.platform.pause();
     }
 

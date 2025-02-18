@@ -46,7 +46,7 @@ export class musicKit implements SourceInterface {
 
         await this.musicKitInstance.play();
     }
-    async pause(): promises<void> {
+    async pause(): Promise<void> {
         await this.initializationPromise;
         console.log('Pausing song using web');
         if (!this.musicKitInstance) {
