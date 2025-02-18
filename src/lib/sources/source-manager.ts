@@ -85,17 +85,20 @@ export class SourceManager {
 
   private checkMusicKit(): Promise<void> {
     return new Promise<void>((resolve) => {
-      if ((window as any).MusicKit) {
-        console.log('MusicKit already available');
-        this.sources.set('musicKit', new MusicKit());
-        resolve();
-      } else {
-        window.addEventListener('musickitloaded', () => {
+  
+        const timeoutDuration = 10000; // 10 seconds
+        const timeout = setTimeout(() => {
+          console.warn('MusicKit load timed out');
+          resolve(); // Or reject() depending on your requirements
+        }, timeoutDuration);
+  
+        window.addEventListener('musickitconfigured', () => {
+          clearTimeout(timeout);
           console.log('MusicKit loaded');
           this.sources.set('musicKit', new MusicKit());
           resolve();
         });
-      }
+      
       console.log('MusicKit check initialized');
     });
   }
@@ -161,7 +164,7 @@ export class SourceManager {
   public async playSong(track: song): Promise<void> {
     // WAIT HERE for all async init to complete:
     await this.initializationPromise;
-
+    console.log(track.availableSources);
     const sourcePriority = localStorage.getItem('sourcePriority') || '["navidrome", "tidal", "musicKit"]';
     
     const parsedSourcePriority: string[] = JSON.parse(sourcePriority);
@@ -170,16 +173,18 @@ export class SourceManager {
     
     // Find the first available source
     const sourceId = parsedSourcePriority.find(source => track.availableSources.includes(source));
-    console.log('sourceId', sourceId);
+    console.log('sourceId', sourceId, track.title);
     if (!sourceId) {
-      throw new Error('No available source');
+      console.error(`No available source found. Sources: ${Array.from(this.sources.keys()).join(', ')}`);
+      return
     }
 
 
 
     const source = this.sources.get(sourceId);
     if (!source) {
-      throw new Error(`Source ${sourceId} not found`);
+      console.error(`Source ${sourceId} not found`);
+      return
     }
 
     // Handle source switching

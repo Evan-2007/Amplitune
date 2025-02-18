@@ -59,6 +59,7 @@ export class musicKit implements SourceInterface {
         this.musicKitInstance.pause();
     }
     async playSong(trackId: string): Promise<void> {
+        await this.initializationPromise;
         console.log('Playing song', trackId);
         if (!this.musicKitInstance) {
             console.error('MusicKit not initialized');
