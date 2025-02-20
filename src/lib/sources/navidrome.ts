@@ -53,11 +53,13 @@ interface server {
 export const subsonicURL = async (path: string, params?: string) => {
   const storage = new CrossPlatformStorage();
   const activeServer = await storage.getItem('activeServer');
+  if (activeServer === 'undefined') {
+    return 'error';
+  }
   if (!activeServer) {
     return 'error';
   }
   const parsedServer = await JSON.parse(activeServer);
-  console.log(parsedServer);
   const url = `${parsedServer.url}${path}?u=${parsedServer.username}&t=${parsedServer.hash}&s=${parsedServer.salt}&v=1.13.0&c=myapp&f=json${params}`;
   return url;
 };

@@ -19,7 +19,7 @@ export function Sidebar() {
         {!location ? (
           <Link
             className='flex w-full items-center justify-center'
-            href='/servers'
+            href='/accounts'
           >
             {' '}
             Connect to Server{' '}

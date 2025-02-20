@@ -13,18 +13,18 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Song } from '@/components/player/types';
+import { song } from '@/lib/sources/types';
 
 import { Ellipsis } from 'lucide-react';
 import { useQueueStore } from '@/lib/queue';
-import { subsonicURL } from '@/lib/servers/navidrome';
+import { subsonicURL } from '@/lib/sources/navidrome';
 import { useEffect, useState } from 'react';
 
-export function SongDropdown({ song }: { song: Song | string }) {
+export function SongDropdown({ song }: { song: song }) {
   const queue = useQueueStore((state) => state);
   const addToQueue = useQueueStore((state) => state.addToQueue);
   const playNext = useQueueStore((state) => state.playNext);
-  const [songData, setSongData] = useState<Song | null>(null);
+  const [songData, setSongData] = useState<song | null>(null);
 
   useEffect(() => {}, []);
 
@@ -34,14 +34,10 @@ export function SongDropdown({ song }: { song: Song | string }) {
         <Ellipsis size={20} />
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem
-          onClick={() => playNext(typeof song == 'string' ? song : song.id)}
-        >
+        <DropdownMenuItem onClick={() => playNext(song.id)}>
           Play next
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => addToQueue(typeof song == 'string' ? song : song.id)}
-        >
+        <DropdownMenuItem onClick={() => addToQueue(song.id)}>
           Add to queue
         </DropdownMenuItem>
       </DropdownMenuContent>

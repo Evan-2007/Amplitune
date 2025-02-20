@@ -1,20 +1,42 @@
 {
-    "MicroPython.executeButton": [
-        {
-            "text": "▶",
-            "tooltip": "Run",
-            "alignment": "left",
-            "command": "extension.executeFile",
-            "priority": 3.5
-        }
-    ],
-    "MicroPython.syncButton": [
-        {
-            "text": "$(sync)",
-            "tooltip": "sync",
-            "alignment": "left",
-            "command": "extension.execute",
-            "priority": 4
-        }
-    ]
+  "MicroPython.executeButton": [
+    {
+      "alignment": "left",
+      "command": "extension.executeFile",
+      "priority": 3.5,
+      "text": "▶",
+      "tooltip": "Run"
+    }
+  ],
+  "MicroPython.syncButton": [
+    {
+      "alignment": "left",
+      "command": "extension.execute",
+      "priority": 4,
+      "text": "$(sync)",
+      "tooltip": "sync"
+    }
+  ],
+  "[typescript]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  },
+  "deno.enablePaths": [
+    "supabase/functions"
+  ],
+  "deno.lint": true,
+  "deno.unstable": [
+    "bare-node-builtins",
+    "byonm",
+    "sloppy-imports",
+    "unsafe-proto",
+    "webgpu",
+    "broadcast-channel",
+    "worker-options",
+    "cron",
+    "kv",
+    "ffi",
+    "fs",
+    "http",
+    "net"
+  ]
 }

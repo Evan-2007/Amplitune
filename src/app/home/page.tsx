@@ -1,5 +1,5 @@
 'use client';
-import { navidromeApi, subsonicURL } from '@/lib/servers/navidrome';
+import { navidromeApi, subsonicURL } from '@/lib/sources/navidrome';
 import { useEffect } from 'react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -9,14 +9,6 @@ import { SongDropdown } from '@/components/song/dropdown';
 
 export default function HomePage() {
   const [baseUrl, setBaseUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    getSubsonicURL();
-  }, []);
-
-  const getSubsonicURL = async () => {
-    setBaseUrl(await subsonicURL('/rest/getCoverArt', ''));
-  };
 
   return (
     <ScrollArea className='flex h-full w-full flex-col overflow-auto p-10'>
@@ -76,21 +68,7 @@ function RecentlyPlayed({ baseImageUrl }: { baseImageUrl: string | null }) {
     getRecentlyPlayed();
   }, []);
 
-  async function getRecentlyPlayed() {
-    const response = await navidromeApi(
-      '/api/song?_end=15&_order=DESC&_sort=play_date&_start=0'
-    );
-    if (
-      response.error == 'not_authenticated' ||
-      response.error == 'no_server'
-    ) {
-      router.push('/servers');
-    }
-
-    if (response.response) {
-      setRecentlyPlayed(response.response);
-    }
-  }
+  async function getRecentlyPlayed() {}
   return (
     <>
       <div className='flex overflow-auto'>
@@ -112,21 +90,7 @@ function MostPlayed({ baseImageUrl }: { baseImageUrl: string | null }) {
     getMostPlayed();
   }, []);
 
-  async function getMostPlayed() {
-    const response = await navidromeApi(
-      '/api/song?_end=15&_order=DESC&_sort=play_count&_start=0'
-    );
-    if (
-      response.error == 'not_authenticated' ||
-      response.error == 'no_server'
-    ) {
-      router.push('/servers');
-    }
-
-    if (response.response) {
-      setMostPlayed(response.response);
-    }
-  }
+  async function getMostPlayed() {}
   return (
     <>
       <p className='text-3xl'>Most Played</p>
@@ -188,7 +152,7 @@ function SongDisply({
           <p className='line-clamp-1'>{song.artist}</p>
         </div>
       </div>
-      <SongDropdown song={song.id} />
+      {/* <SongDropdown song={song} /> */}
     </div>
   );
 }

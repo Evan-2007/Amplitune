@@ -6,14 +6,12 @@ import { debounce } from 'lodash';
 import { useQueueStore } from '@/lib/queue';
 import { CrossPlatformStorage } from '@/lib/storage/cross-platform-storage';
 import { useRouter } from 'next/navigation';
-import { subsonicURL } from '@/lib/servers/navidrome';
+import { subsonicURL } from '@/lib/sources/navidrome';
 
 export default function Left({
-  audioRef,
   isMobile,
   tab,
 }: {
-  audioRef: React.RefObject<HTMLAudioElement>;
   isMobile: boolean;
   tab: number;
 }) {
@@ -39,25 +37,6 @@ export default function Left({
   );
 
   useEffect(() => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
-    if (songData) {
-      setImage();
-    }
-  }, [songData, credentials]);
-
-  const setImage = async () => {
-    const url = await subsonicURL(
-      '/rest/getCoverArt',
-      `&id=${songData.coverArt}`
-    );
-    if (url === 'error') {
-      router.push('/servers');
-    }
-    setImageUrl(url.toString());
-  };
-
-  useEffect(() => {
     getCredentials();
   }, []);
 
@@ -77,11 +56,11 @@ export default function Left({
   }, [debouncedMouseStop]);
   return (
     <div
-      className={`${tab === 0 ? 'group z-50 flex h-full w-full flex-col justify-center md:mt-0 md:w-1/2 md:items-center' : 'hidden'} animate-[fade-in] transition-all duration-1000 ease-in-out`}
+      className={`${tab === 0 || !isMobile ? 'group z-50 flex h-full w-full flex-col justify-center md:mt-0 md:w-1/2 md:items-center' : 'hidden'} animate-[fade-in] transition-all duration-1000 ease-in-out`}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => setIsMouseMoving(false)}
     >
-      {songData && imageUrl && songData.title ? (
+      {songData && songData.title ? (
         <>
           <div className='aspect-square rounded-2xl max-md:w-full md:h-[58.33%]'>
             <ImageSlider enabled={tab === 0 ? true : false} />
@@ -104,7 +83,7 @@ export default function Left({
         <div
           className={`pulse_3s_ease-out_infinite mr-6 mt-[3vh] transition-opacity duration-700 md:mt-0 md:opacity-0 ${isMouseMoving && 'md:opacity-100'}`}
         >
-          {tab === 0 && <Controls songData={songData} />}
+          {(tab === 0 || !isMobile) && <Controls songData={songData} />}
         </div>
       </div>
     </div>
@@ -133,12 +112,9 @@ function ImageSlider({ enabled = true }: { enabled: boolean }) {
   useEffect(() => {
     const fetchImages = async () => {
       const imagePromises = queue.map(async (song) => {
-        const url = await subsonicURL(
-          '/rest/getCoverArt',
-          `&id=${song.coverArt}`
-        );
+        console.log(song);
         return {
-          url: url.toString(),
+          url: song.imageUrl,
           id: song.id,
         };
       });

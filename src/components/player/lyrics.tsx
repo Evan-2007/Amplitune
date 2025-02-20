@@ -1,4 +1,5 @@
 import { Song } from './types';
+import { song } from '@/lib/sources/types';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { CrossPlatformStorage } from '@/lib/storage/cross-platform-storage';
 import { debounce } from 'lodash';
@@ -8,7 +9,6 @@ import { MessageSquareQuote } from 'lucide-react';
 import { useQueueStore } from '@/lib/queue';
 import { ScrollArea } from '../ui/scroll-area';
 import { useRouter } from 'next/navigation';
-import { formatLyrics } from '@/lib/lyrics';
 import { CirclePlay } from 'lucide-react';
 import { Ellipsis } from 'lucide-react';
 import {
@@ -18,23 +18,26 @@ import {
   DropdownSection,
   DropdownItem,
 } from '@nextui-org/dropdown';
-import { subsonicURL } from '@/lib/servers/navidrome';
+import { subsonicURL } from '@/lib/sources/navidrome';
+import { SourceManager } from '@/lib/sources/source-manager';
+import { ErrorLyrics } from '@/lib/sources/types';
 
 export default function Lyrics({
-  audioRef,
   tab,
   setTab,
+  isMobile,
 }: {
-  audioRef: React.RefObject<HTMLAudioElement>;
   tab: number;
   setTab: React.Dispatch<React.SetStateAction<number>>;
+  isMobile: boolean;
 }) {
   interface LyricLine {
-    start: number;
+    start?: number;
     value: string;
   }
 
   const currentQueue = useQueueStore((state) => state.queue);
+  const sourceManager = SourceManager.getInstance();
 
   const localStorage = new CrossPlatformStorage();
 
@@ -43,7 +46,6 @@ export default function Lyrics({
   const [error, setError] = useState<string | null>(null);
   const [isMouseMoving, setIsMouseMoving] = useState<boolean>(false);
   const [synced, setSynced] = useState<boolean>(false);
-  const [isMobile, setIsMobile] = useState(false);
 
   const router = useRouter();
 
@@ -52,41 +54,30 @@ export default function Lyrics({
   const songData = useQueueStore((state) => state.queue.currentSong?.track);
 
   useEffect(() => {
-    if (audioRef.current) {
-      console.log(lyrics);
-      const handleTimeUpdate = () => {
-        const currentTime = audioRef.current?.currentTime;
-        if (currentTime && lyrics) {
-          const milliseconds = currentTime * 1000;
-          const currentLineIndex = lyrics.findIndex(
-            (line) => line.start > milliseconds
-          );
-          setCurrentLine(currentLineIndex - 1);
-        }
-      };
+    console.log(lyrics);
+    const handleTimeUpdate = () => {
+      const currentTime = sourceManager.getPosition();
+      if (currentTime && lyrics) {
+        const milliseconds = currentTime * 1000;
+        const currentLineIndex = lyrics.findIndex(
+          //@ts-ignore
+          (line) => line.start > milliseconds
+        );
+        setCurrentLine(currentLineIndex - 1);
+      }
+    };
 
-      audioRef.current.addEventListener('timeupdate', handleTimeUpdate);
-      return () => {
-        audioRef.current?.removeEventListener('timeupdate', handleTimeUpdate);
-      };
-    }
-  }, [audioRef, lyrics]);
+    const removeEventListner = sourceManager.onTimeUpdate(handleTimeUpdate);
+    return () => {
+      removeEventListner();
+    };
+  }, [lyrics]);
 
   useEffect(() => {
     fetchLyrics();
     //scroll to top of lyrics
     setCurrentLine(0);
   }, [songData]);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   useEffect(() => {
     if (lyricsContainerRef.current && synced) {
@@ -109,7 +100,7 @@ export default function Lyrics({
         });
       }
     }
-  }, [tab]);
+  }, [tab, isMobile]);
 
   useEffect(() => {
     if (lyricsContainerRef.current && !isMouseMoving) {
@@ -158,82 +149,35 @@ export default function Lyrics({
   }, [debouncedMouseStop]);
 
   async function fetchLyrics() {
-    if (!songData) return;
-    try {
-      const url = await subsonicURL(
-        '/rest/getLyricsBySongId.view',
-        `&id=${songData.id}`
-      );
-      if (url === 'error') {
-        router.push('/servers');
-      }
-      const response = await fetch(url.toString());
-      const data = await response.json();
-      if (!data['subsonic-response'].lyricsList.structuredLyrics) {
-        fetchLRCLIB();
-        return null;
-      }
-      if (data['subsonic-response'].status !== 'ok') {
-        throw new Error(data['subsonic-response'].error.message);
-      }
-
-      // If lyrics are not synced, try and fetch from lrclib
-      if (
-        data['subsonic-response'].lyricsList.structuredLyrics[0].synced ===
-        false
-      ) {
-        setSynced(false);
-        fetchLRCLIB(
-          data['subsonic-response'].lyricsList.structuredLyrics[0].line
-        );
+    const lyrics = await sourceManager.getLyrics(
+      currentQueue.currentSong.track.id
+    );
+    if ((lyrics as ErrorLyrics).error) {
+      console.error('An error occurred:', (lyrics as ErrorLyrics).error);
+      setLyrics(null);
+      setError('An error occurred while fetching the lyrics');
+    } else {
+      console.log(lyrics);
+      if ('lines' in lyrics && 'synced' in lyrics) {
+        setLyrics(lyrics.lines);
+        setSynced(lyrics.synced);
       } else {
-        setSynced(true);
-        setLyrics(
-          data['subsonic-response'].lyricsList.structuredLyrics[0].line
-        );
+        setError('An error occurred while fetching the lyrics');
       }
-    } catch (error) {
-      console.error('An error occurred:', error);
-      setError('An error occurred while fetching the lyrics');
-    }
-  }
-
-  async function fetchLRCLIB(lyrics?: LyricLine[]) {
-    if (!songData) return;
-    try {
-      await fetch(
-        'https://lrclib.net/api/get?artist_name=' +
-          songData.artist +
-          '&track_name=' +
-          songData.title +
-          '&album_name=' +
-          songData.album,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Lrclib-Client': `amplitune (https://github.com/Evan-2007/Amplitune)`,
-          },
-        }
-      ).then(async (response) => {
-        const data = await response.json();
-        setLyrics(formatLyrics(data.syncedLyrics));
-        setSynced(true);
-      });
-    } catch (error) {
-      console.error('An error occurred:', error);
-      setLyrics(lyrics ? lyrics : null);
-      setError('An error occurred while fetching the lyrics');
     }
   }
 
   function handleLyricClick(index: number) {
-    if (audioRef.current && lyricsContainerRef) {
+    if (lyricsContainerRef) {
       const line = lyrics?.[index];
       if (line) {
+        if (!synced || !line.start) {
+          return;
+        }
         const seconds = line.start / 1000;
-        audioRef.current.currentTime = seconds;
+        sourceManager.seek(seconds);
         setCurrentLine(index);
-        audioRef.current.play();
+        sourceManager.play();
         setIsMouseMoving(false);
       }
     }
@@ -345,6 +289,7 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
   const localStorage = new CrossPlatformStorage();
   const setSong = useQueueStore((state) => state.setCurrentSong);
   const removeFromQueue = useQueueStore((state) => state.removeFromQueue);
+  const clearQueue = useQueueStore((state) => state.clearQueue);
 
   useEffect(() => {
     setBaseImageUrl();
@@ -370,7 +315,9 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
       <div className='top-24 flex justify-between'>
         <div></div>
         <div>
-          <h1>Clear</h1>
+          <button onClick={() => clearQueue()}>
+            <h1>Clear</h1>
+          </button>
         </div>
       </div>
       <div className='mb-2 mr-10 mt-8 text-2xl font-bold'>Previous</div>
@@ -383,7 +330,7 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
                   <div className='group/image flex space-x-4'>
                     <div className='' onClick={() => setSong(index)}>
                       <img
-                        src={`${baseUrl}&id=${song.coverArt}`}
+                        src={song.imageUrl}
                         alt='cover art'
                         className='absolute h-12 w-12 rounded-md'
                       />
@@ -419,7 +366,7 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
         <div className='flex justify-between'>
           <div className='flex space-x-4'>
             <img
-              src={`${baseUrl}&id=${currentlyPlaying.track.coverArt}`}
+              src={currentlyPlaying.track.imageUrl}
               alt='cover art'
               className='h-12 w-12 rounded-md'
             />
@@ -448,7 +395,7 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
                 <div className='group/image flex space-x-4'>
                   <div className='' onClick={() => setSong(index)}>
                     <img
-                      src={`${baseUrl}&id=${song.coverArt}`}
+                      src={currentlyPlaying.track.imageUrl}
                       alt='cover art'
                       className='absolute h-12 w-12 rounded-md'
                     />
@@ -478,7 +425,7 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
   );
 }
 
-function DropdownComponent({ index, song }: { index: number; song: Song }) {
+function DropdownComponent({ index, song }: { index: number; song: song }) {
   const removeFromQueue = useQueueStore((state) => state.removeFromQueue);
 
   const handleRemove = (index: number) => {
