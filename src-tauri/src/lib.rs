@@ -1,9 +1,11 @@
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
+
 use tauri_plugin_deep_link::DeepLinkExt;
-use tauri_plugin_single_instance::init as single_instance_init;
 use url::Url;
 use tauri::{AppHandle, Emitter};
 use serde_json::json;
+
+#[cfg(not(target_os = "ios"))]
+use tauri_plugin_single_instance::init as single_instance_init;
 
 
 fn handle_deep_link(app: AppHandle, deep_link: &str) {
@@ -33,14 +35,21 @@ fn handle_deep_link(app: AppHandle, deep_link: &str) {
 
 }
 
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
-        .plugin(single_instance_init(|_app, argv, _cwd| {
-            println!("New instance opened with deep link arguments: {:?}", &argv[1]);
-            handle_deep_link(_app.clone(), &argv[1]);
-        }))
-        .plugin(tauri_plugin_deep_link::init()) 
-        .plugin(tauri_plugin_os::init()) 
+    let builder = tauri::Builder::default();
+
+    // Only add the single instance plugin for non-iOS targets.
+    #[cfg(not(target_os = "ios"))]
+    let builder = builder.plugin(single_instance_init(|_app, argv, _cwd| {
+        println!("New instance opened with deep link arguments: {:?}", &argv[1]);
+        handle_deep_link(_app.clone(), &argv[1]);
+    }));
+
+    let builder = builder
+        .plugin(tauri_plugin_deep_link::init())
+        .plugin(tauri_plugin_os::init())
         .setup(|app| {
             #[cfg(any(windows, target_os = "linux"))]
             {
@@ -56,7 +65,9 @@ pub fn run() {
             }
 
             Ok(())
-        })
+        });
+
+    builder
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
