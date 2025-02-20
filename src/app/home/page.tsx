@@ -17,6 +17,13 @@ export default function HomePage() {
       <h1 className='text-3xl'>Recently added</h1>
       <h1 className='text-3xl'>Artists</h1>
       <h1 className='text-3xl'>Albums</h1>
+      <Link
+        className='flex w-full items-center justify-center'
+        href='/accounts'
+      >
+        {' '}
+        Connect to Server{' '}
+      </Link>
     </ScrollArea>
   );
 }
