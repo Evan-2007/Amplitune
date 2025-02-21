@@ -71,14 +71,12 @@ export function PlayerContent() {
 
   const updateParams = () => {
     if (songData) {
-      router.replace(`?${new URLSearchParams({ playing: songData.id })}`);
+//      router.replace(`?${new URLSearchParams({ playing: songData.id })}`);
     }
   };
 
   useEffect(() => {
     updateParams();
-    console.log('Fetching audio URL');
-    console.log('Getting image URL');
     updateMediaSession();
   }, [songData]);
 

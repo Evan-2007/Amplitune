@@ -25,22 +25,28 @@ export class musicKit implements SourceInterface {
   }
 
   private async checkMusicKit(): Promise<void> {
-    return new Promise((resolve) => {
-      if (
-        typeof window !== 'undefined' &&
-        (window as any).musicKitStatus === 'ready'
-      ) {
-        this.musicKitInstance = (window as any).MusicKit.getInstance();
-        console.log('MusicKit already configured');
-        resolve();
-        return;
-      }
+    return new Promise((resolve, reject) => {
+      const timeoutDuration = 10000;
+      const retryInterval = 100;
+      const startTime = Date.now();
 
-      window.addEventListener('musickitready', () => {
-        this.musicKitInstance = (window as any).MusicKit.getInstance();
-        console.log('MusicKit configured');
-        resolve();
-      });
+      const checkStatus = () => {
+        if (
+          typeof window !== 'undefined' &&
+          (window as any).musicKitStatus === 'ready'
+        ) {
+          this.musicKitInstance = (window as any).MusicKit.getInstance();
+          console.log('MusicKit configured');
+          resolve();
+        } else if (Date.now() - startTime >= timeoutDuration) {
+          console.error('MusicKit not configured');
+          reject(new Error('MusicKit not configured within timeout'));
+        } else {
+          setTimeout(checkStatus, retryInterval);
+        }
+      };
+
+      checkStatus();
     });
   }
 
