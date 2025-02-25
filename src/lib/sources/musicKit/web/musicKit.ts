@@ -77,7 +77,7 @@ export class musicKit implements SourceInterface {
       song: trackId,
     });
 
-    await this.musicKitInstance.play();
+   // await this.musicKitInstance.play();
   }
   getAllPlaylists(): void {
     throw new Error('Method not implemented.');

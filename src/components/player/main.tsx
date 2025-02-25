@@ -57,9 +57,20 @@ export function PlayerContent() {
   const [playing, setPlaying] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
+  const [InitialLoad, setInitialLoad] = useState<boolean>(true);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setInitialLoad(false);
+    }, 5000);
+  }, []);
 
   useEffect(() => {
     sourceManager.playSong(songData);
+    if (!InitialLoad) {
+      sourceManager.play();
+    }
+    setInitialLoad(false);
     sourceManager.setRepeat(repeat == 2 ? true : false);
   }, [songData]);
 
