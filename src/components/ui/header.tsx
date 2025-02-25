@@ -139,7 +139,7 @@ function Search() {
       debounce(async (e: any) => {
         const results = await sourceManager.search(e.target.value);
         setResults(results);
-      }, 500),
+      }, 100),
     []
   );
   useEffect(() => {
