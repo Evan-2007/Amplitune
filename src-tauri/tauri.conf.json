@@ -6,7 +6,7 @@
   "build": {
     "frontendDist": "../out",
     "devUrl": "http://localhost:3000",
-    "beforeDevCommand": "pnpm dev -H 0.0.0.0",
+    "beforeDevCommand": "pnpm dev -H 0.0.0.0 --turbo",
     "beforeBuildCommand": "pnpm build"
   },
   "app": {
