@@ -1,5 +1,7 @@
 import { SourceInterface } from '@/lib/sources/source-interface';
 import { song, Lyrics, searchResult } from '@/lib/sources/types';
+import jwtDecode from 'jwt-decode';
+
 
 export class musicKit implements SourceInterface {
   private musicKitInstance: any = null;
@@ -10,6 +12,8 @@ export class musicKit implements SourceInterface {
   private playPauseCallback:
     | ((playing: 'playing' | 'paused' | 'ended') => void)
     | null = null;
+
+  private privilagedDeveloperToken: null | string = null 
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -49,6 +53,11 @@ export class musicKit implements SourceInterface {
       checkStatus();
     });
   }
+  
+
+
+
+    
 
   async play(): Promise<void> {
     await this.initializationPromise;
@@ -76,6 +85,7 @@ export class musicKit implements SourceInterface {
     await this.musicKitInstance.setQueue({
       song: trackId,
     });
+
 
    // await this.musicKitInstance.play();
   }

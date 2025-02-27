@@ -51,8 +51,8 @@ export class MusicKit implements SourceInterface {
     await this.platform.pause();
   }
 
-  playSong(songId: string): void {
-    this.platform.playSong(songId);
+  async playSong(songId: string): Promise<void> {
+    await this.platform.playSong(songId);
   }
 
   getAllPlaylists(): void {

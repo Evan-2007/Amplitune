@@ -54,10 +54,11 @@ export function PlayerContent() {
   const router = useRouter();
 
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
-  const [playing, setPlaying] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
-  const [InitialLoad, setInitialLoad] = useState<boolean>(true);
+  const [initialLoad, setInitialLoad] = useState<boolean>(true);
+  const setPlaying = useQueueStore((state) => state.setPlaying);
+  const playing = useQueueStore((state) => state.queue.playing);
 
   useEffect(() => {
     setTimeout(() => {
@@ -65,13 +66,18 @@ export function PlayerContent() {
     }, 5000);
   }, []);
 
-  useEffect(() => {
-    sourceManager.playSong(songData);
-    if (!InitialLoad) {
+  const updateSong = async () => {
+    setPlaying(false)
+    await sourceManager.playSong(songData);
+    if (!initialLoad) {
       sourceManager.play();
     }
     setInitialLoad(false);
     sourceManager.setRepeat(repeat == 2 ? true : false);
+  }
+
+  useEffect(() => {
+    updateSong()
   }, [songData]);
 
   useEffect(() => {
