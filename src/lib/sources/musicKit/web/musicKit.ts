@@ -1,7 +1,6 @@
 import { SourceInterface } from '@/lib/sources/source-interface';
 import { song, Lyrics, searchResult } from '@/lib/sources/types';
-import jwtDecode from 'jwt-decode';
-
+import { jwtDecode } from 'jwt-decode';
 
 export class musicKit implements SourceInterface {
   private musicKitInstance: any = null;
@@ -13,7 +12,7 @@ export class musicKit implements SourceInterface {
     | ((playing: 'playing' | 'paused' | 'ended') => void)
     | null = null;
 
-  private privilagedDeveloperToken: null | string = null 
+  private privilagedDeveloperToken: null | string = null;
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -53,11 +52,6 @@ export class musicKit implements SourceInterface {
       checkStatus();
     });
   }
-  
-
-
-
-    
 
   async play(): Promise<void> {
     await this.initializationPromise;
@@ -86,8 +80,7 @@ export class musicKit implements SourceInterface {
       song: trackId,
     });
 
-
-   // await this.musicKitInstance.play();
+    // await this.musicKitInstance.play();
   }
   getAllPlaylists(): void {
     throw new Error('Method not implemented.');

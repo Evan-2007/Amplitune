@@ -47,7 +47,7 @@ export function Header() {
 
 function LeftMenu() {
   return (
-    <ul className='flex space-x-4'>
+    <ul className='flex space-x-4 sm:hidden'>
       <li>Home</li>
       <li>Library</li>
       <li>Search</li>
@@ -57,7 +57,7 @@ function LeftMenu() {
 
 function RightMenu() {
   return (
-    <ul className='flex space-x-4'>
+    <ul className='sm:hiddem flex space-x-4'>
       <li>Profile</li>
       <li>Settings</li>
     </ul>
@@ -133,6 +133,17 @@ function Search() {
   useEffect(() => {
     console.log('rtesults: ' + results);
   }, [results]);
+
+  useEffect(() => {
+    if (activeInput && resultsContainerRef.current) {
+      document.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          router.push(`/home/search?query=${inputRef.current?.value}`);
+          setActiveInput(false);
+        }
+      });
+    }
+  }, [activeInput]);
 
   const handleUpdate = useMemo(
     () =>

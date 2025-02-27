@@ -67,17 +67,16 @@ export function PlayerContent() {
   }, []);
 
   const updateSong = async () => {
-    setPlaying(false)
     await sourceManager.playSong(songData);
     if (!initialLoad) {
       sourceManager.play();
     }
     setInitialLoad(false);
     sourceManager.setRepeat(repeat == 2 ? true : false);
-  }
+  };
 
   useEffect(() => {
-    updateSong()
+    updateSong();
   }, [songData]);
 
   useEffect(() => {
@@ -88,7 +87,7 @@ export function PlayerContent() {
 
   const updateParams = () => {
     if (songData) {
-//      router.replace(`?${new URLSearchParams({ playing: songData.id })}`);
+      //      router.replace(`?${new URLSearchParams({ playing: songData.id })}`);
     }
   };
 
@@ -144,7 +143,7 @@ export function PlayerContent() {
           currentlyPlaying={currentlyPlaying}
           setFullScreen={setFullScreen}
           imageUrl={songData.imageUrl}
-          playing={playing}
+          playing={playing === 'playing' ? true : false}
         />
       )}
       <div className='sticky flex h-[75px] w-screen flex-shrink-0 flex-grow-0 justify-between max-md:hidden'>

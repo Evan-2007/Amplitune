@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { SongDropdown } from '@/components/song/dropdown';
-import Link from 'next/link'
+import Link from 'next/link';
 
 export default function HomePage() {
   const [baseUrl, setBaseUrl] = useState<string | null>(null);

@@ -82,7 +82,7 @@ const config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate"), require('@tailwindcss/line-clamp'), require('tailwindcss-safe-area')],
+  plugins: [require("tailwindcss-animate"), require('@tailwindcss/line-clamp'), require('tailwindcss-safe-area'), require('tailwind-scrollbar')],
 } satisfies Config
 
 export default config
