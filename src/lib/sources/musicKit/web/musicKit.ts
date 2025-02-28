@@ -166,7 +166,7 @@ export class musicKit implements SourceInterface {
 
     this.musicKitInstance.repeatMode = repeat ? 1 : 0;
   }
-  async setVolume(volume: number): void {
+  async setVolume(volume: number): Promise<void> {
     await this.initializationPromise;
     if (!this.musicKitInstance) {
       console.error('MusicKit not initialized');
