@@ -40,7 +40,6 @@ export interface albums {
   source: string;
   availableSources: string[];
   totalTracks: number;
-
 }
 
 export interface artists {

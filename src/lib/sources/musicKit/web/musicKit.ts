@@ -1,5 +1,10 @@
 import { SourceInterface } from '@/lib/sources/source-interface';
-import { song, Lyrics, searchResult as SearchResult, albums as Album } from '@/lib/sources/types';
+import {
+  song,
+  Lyrics,
+  searchResult as SearchResult,
+  albums as Album,
+} from '@/lib/sources/types';
 import { jwtDecode } from 'jwt-decode';
 
 export class musicKit implements SourceInterface {
@@ -179,7 +184,6 @@ export class musicKit implements SourceInterface {
     throw new Error('Method not implemented.');
   }
 
-
   async search(query: string): Promise<SearchResult> {
     await this.initializationPromise;
     if (!this.musicKitInstance) {
@@ -190,7 +194,11 @@ export class musicKit implements SourceInterface {
         artists: [],
       };
     }
-    const params = { term: query, limit: 25, types: ['songs', 'albums', 'artists',] };
+    const params = {
+      term: query,
+      limit: 25,
+      types: ['songs', 'albums', 'artists'],
+    };
     const result = await this.musicKitInstance.api.music(
       '/v1/catalog/{{storefrontId}}/search',
       params
@@ -205,7 +213,6 @@ export class musicKit implements SourceInterface {
     console.log(me);
 
     const response = await result;
-
 
     let songs = [];
 
@@ -222,8 +229,7 @@ export class musicKit implements SourceInterface {
         imageUrl: song.attributes.artwork.url.replace('{w}x{h}', '900x900'),
         releaseDate: song.attributes.releaseDate,
       }));
-    } 
-
+    }
 
     let albums = [];
 
@@ -238,8 +244,7 @@ export class musicKit implements SourceInterface {
         releaseDate: album.attributes.releaseDate,
         totalTracks: album.attributes.trackCount,
       }));
-    } 
-
+    }
 
     let artists = [];
 
@@ -251,11 +256,7 @@ export class musicKit implements SourceInterface {
         source: 'musicKit',
         availableSources: ['musikKit'],
       }));
-    } 
-
-
-
-
+    }
 
     console.log(songs);
 
@@ -264,8 +265,9 @@ export class musicKit implements SourceInterface {
       params
     );
 
-
-    const filteredAlbums = albums.filter((album: Album) => album.totalTracks > 1);
+    const filteredAlbums = albums.filter(
+      (album: Album) => album.totalTracks > 1
+    );
     return {
       songs,
       //videos: [],

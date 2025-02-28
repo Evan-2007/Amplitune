@@ -47,7 +47,7 @@ export function Header() {
 
 function LeftMenu() {
   return (
-    <ul className='flex space-x-4 '>
+    <ul className='flex space-x-4'>
       <li>Home</li>
       <li>Library</li>
       <li>Search</li>
@@ -57,7 +57,7 @@ function LeftMenu() {
 
 function RightMenu() {
   return (
-    <ul className=' flex space-x-4'>
+    <ul className='flex space-x-4'>
       <li>Profile</li>
       <li>Settings</li>
     </ul>
@@ -116,8 +116,6 @@ function Search() {
       document.removeEventListener('blur', handleBlur, true);
     };
   }, []);
-
-
 
   useEffect(() => {
     if (activeInput && resultsContainerRef.current) {

@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
 import { Suspense } from 'react';
 import { searchResult } from '@/lib/sources/types';
-import {SongItem} from '@/components/song/song-item';
-
+import { SongItem } from '@/components/song/song-item';
 
 export default function Search() {
   const [tab, setTab] = useState('Top Results');
@@ -55,7 +54,7 @@ export default function Search() {
         </div>
         <Separator />
       </div>
-      <div className='flex w-full flex-col items-center h-full'>
+      <div className='flex h-full w-full flex-col items-center'>
         <Suspense fallback={<div>Loading...</div>}>
           <Results tab={tab} />
         </Suspense>
@@ -80,11 +79,8 @@ function Results({ tab }: { tab: string }) {
   };
 
   useEffect(() => {
-    getResults()
-  }, [search])
-  
-
-  
+    getResults();
+  }, [search]);
 
   return (
     <div className='flex w-full flex-col items-center'>
@@ -94,22 +90,34 @@ function Results({ tab }: { tab: string }) {
         <div className='flex w-full flex-col items-center'>
           {results ? (
             <div className='flex w-full flex-col items-center'>
-              {results.songs.length > 0 && results.songs.map((song, index) => (
-                <div key={index} className={`w-full flex flex-col items-center ${tab === 'Tracks' ? 'block' : 'hidden'}`}>
-                  <SongItem data={song} type='song'/>
-                </div>
-              ))}
-              {results.albums.length > 0 && results.albums.map((album, index) => (
-                <div key={index} className={`w-full flex flex-col items-center ${tab === 'Albums' ? 'block' : 'hidden'}`}>
-                  <SongItem data={album} type='album'/>
-                </div>
-              ))}
-              {results.artists.length > 0 && results.artists.map((artist, index) => (
-                <div key={index} className={`w-full flex flex-col items-center ${tab === 'Artists' ? 'block' : 'hidden'}`}>
-                  <SongItem data={artist} type='artist'/>
-                </div>
-              ))}
-        </div>
+              {results.songs.length > 0 &&
+                results.songs.map((song, index) => (
+                  <div
+                    key={index}
+                    className={`flex w-full flex-col items-center ${tab === 'Tracks' ? 'block' : 'hidden'}`}
+                  >
+                    <SongItem data={song} type='song' />
+                  </div>
+                ))}
+              {results.albums.length > 0 &&
+                results.albums.map((album, index) => (
+                  <div
+                    key={index}
+                    className={`flex w-full flex-col items-center ${tab === 'Albums' ? 'block' : 'hidden'}`}
+                  >
+                    <SongItem data={album} type='album' />
+                  </div>
+                ))}
+              {results.artists.length > 0 &&
+                results.artists.map((artist, index) => (
+                  <div
+                    key={index}
+                    className={`flex w-full flex-col items-center ${tab === 'Artists' ? 'block' : 'hidden'}`}
+                  >
+                    <SongItem data={artist} type='artist' />
+                  </div>
+                ))}
+            </div>
           ) : (
             <div>No results found.</div>
           )}

@@ -1,7 +1,14 @@
 import { SourceInterface } from './source-interface';
 import { Tidal } from './tidal/tidal';
 import { Navidrome } from './navidrome/navidrome';
-import { Lyrics, song as Song, sources, artists as Artist, albums as Album, searchResult as SearchResult } from './types';
+import {
+  Lyrics,
+  song as Song,
+  sources,
+  artists as Artist,
+  albums as Album,
+  searchResult as SearchResult,
+} from './types';
 import { getLRCLIBLyrics } from './lrc-lib/lrc-lib';
 import { MusicKit } from './musicKit/musicKit';
 
@@ -364,60 +371,67 @@ export class SourceManager {
     );
   }
 
-
-  
   public async search(query: string): Promise<SearchResult> {
     await this.initializationPromise;
-  
-    const sourcePromises = Array.from(this.sources.entries()).map(async ([sourceId, source]) => {
-      try {
-        const results = await source.search(query);
-        const songs = results.songs.map((s: Song) => ({
-          ...s,
-          source: sourceId,
-          availableSources: [sourceId],
-        }));
-        const albums = results.albums.map((a: Album) => ({
-          ...a,
-          source: sourceId,
-          availableSources: [sourceId],
-        }));
-        const artists = results.artists.map((a: Artist) => ({
-          ...a,
-          source: sourceId,
-          availableSources: [sourceId],
-        }));
-        return { songs, albums, artists };
-      } catch (error) {
-        console.error(`Search failed for source ${sourceId}:`, error);
-        return { songs: [], albums: [], artists: [] };
+
+    const sourcePromises = Array.from(this.sources.entries()).map(
+      async ([sourceId, source]) => {
+        try {
+          const results = await source.search(query);
+          const songs = results.songs.map((s: Song) => ({
+            ...s,
+            source: sourceId,
+            availableSources: [sourceId],
+          }));
+          const albums = results.albums.map((a: Album) => ({
+            ...a,
+            source: sourceId,
+            availableSources: [sourceId],
+          }));
+          const artists = results.artists.map((a: Artist) => ({
+            ...a,
+            source: sourceId,
+            availableSources: [sourceId],
+          }));
+          return { songs, albums, artists };
+        } catch (error) {
+          console.error(`Search failed for source ${sourceId}:`, error);
+          return { songs: [], albums: [], artists: [] };
+        }
       }
-    });
-  
+    );
+
     const sourceResults = await Promise.all(sourcePromises);
-    const allSongs = sourceResults.flatMap(result => result.songs);
-    const allAlbums = sourceResults.flatMap(result => result.albums);
-    const allArtists = sourceResults.flatMap(result => result.artists);
-  
+    const allSongs = sourceResults.flatMap((result) => result.songs);
+    const allAlbums = sourceResults.flatMap((result) => result.albums);
+    const allArtists = sourceResults.flatMap((result) => result.artists);
+
     // Deduplicate Songs
     const songMap = new Map<string, ExtendedSong>();
     let songIndex = 0;
-    const getSongKey = (s: Song) => `${s.title.toLowerCase()}|${s.artist.toLowerCase()}`;
+    const getSongKey = (s: Song) =>
+      `${s.title.toLowerCase()}|${s.artist.toLowerCase()}`;
     for (const s of allSongs) {
       const key = getSongKey(s);
       if (songMap.has(key)) {
         const existing = songMap.get(key)!;
         // Merge availableSources by creating a unique set
-        existing.availableSources = Array.from(new Set([...existing.availableSources, s.source]));
+        existing.availableSources = Array.from(
+          new Set([...existing.availableSources, s.source])
+        );
       } else {
-        songMap.set(key, { ...s, availableSources: [s.source], _firstAppearanceIndex: songIndex });
+        songMap.set(key, {
+          ...s,
+          availableSources: [s.source],
+          _firstAppearanceIndex: songIndex,
+        });
       }
       songIndex++;
     }
     const mergedSongs = Array.from(songMap.values())
       .sort((a, b) => a._firstAppearanceIndex - b._firstAppearanceIndex)
       .map(({ _firstAppearanceIndex, ...rest }) => rest);
-  
+
     // Deduplicate Albums
     const albumMap = new Map<string, ExtendedAlbum>();
     let albumIndex = 0;
@@ -426,16 +440,22 @@ export class SourceManager {
       const key = getAlbumKey(a);
       if (albumMap.has(key)) {
         const existing = albumMap.get(key)!;
-        existing.availableSources = Array.from(new Set([...existing.availableSources, a.source]));
+        existing.availableSources = Array.from(
+          new Set([...existing.availableSources, a.source])
+        );
       } else {
-        albumMap.set(key, { ...a, availableSources: [a.source], _firstAppearanceIndex: albumIndex });
+        albumMap.set(key, {
+          ...a,
+          availableSources: [a.source],
+          _firstAppearanceIndex: albumIndex,
+        });
       }
       albumIndex++;
     }
     const mergedAlbums = Array.from(albumMap.values())
       .sort((a, b) => a._firstAppearanceIndex - b._firstAppearanceIndex)
       .map(({ _firstAppearanceIndex, ...rest }) => rest);
-  
+
     // Deduplicate Artists
     const artistMap = new Map<string, ExtendedArtist>();
     let artistIndex = 0;
@@ -444,23 +464,28 @@ export class SourceManager {
       const key = getArtistKey(a);
       if (artistMap.has(key)) {
         const existing = artistMap.get(key)!;
-        existing.availableSources = Array.from(new Set([...existing.availableSources, a.source]));
+        existing.availableSources = Array.from(
+          new Set([...existing.availableSources, a.source])
+        );
       } else {
-        artistMap.set(key, { ...a, availableSources: [a.source], _firstAppearanceIndex: artistIndex });
+        artistMap.set(key, {
+          ...a,
+          availableSources: [a.source],
+          _firstAppearanceIndex: artistIndex,
+        });
       }
       artistIndex++;
     }
     const mergedArtists = Array.from(artistMap.values())
       .sort((a, b) => a._firstAppearanceIndex - b._firstAppearanceIndex)
       .map(({ _firstAppearanceIndex, ...rest }) => rest);
-  
+
     return {
       songs: mergedSongs,
       albums: mergedAlbums,
       artists: mergedArtists,
     };
   }
-
 
   // Cleanup
   public destroy(): void {
