@@ -138,10 +138,10 @@ export class musicKit implements SourceInterface {
             this.playPauseCallback('playing');
           } else if (data.state === 3) {
             this.playPauseCallback('paused');
-          } else if (data.state === -1) {
+          } else if (data.state === 10) {
             this.playPauseCallback('ended');
           } else {
-            console.log('No callback set');
+            //console.log('No callback set');
           }
         }
       }
