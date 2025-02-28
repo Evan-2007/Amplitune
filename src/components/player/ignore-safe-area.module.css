@@ -15,5 +15,5 @@
 }
 
 .fillSafeArea {
-  height: calc(100vh - env(safe-area-inset-top));
+  min-height: calc(100vh - env(safe-area-inset-top));
 }
