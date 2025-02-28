@@ -37,7 +37,7 @@ export function Header() {
   }, []);
 
   return (
-    <div className='z-10 flex items-center justify-between bg-card p-4'>
+    <div className='z-10 flex items-center justify-between bg-card p-4 max-md:hidden'>
       <LeftMenu />
       <Search />
       <RightMenu />
@@ -47,7 +47,7 @@ export function Header() {
 
 function LeftMenu() {
   return (
-    <ul className='flex space-x-4 sm:hidden'>
+    <ul className='flex space-x-4 '>
       <li>Home</li>
       <li>Library</li>
       <li>Search</li>
@@ -57,7 +57,7 @@ function LeftMenu() {
 
 function RightMenu() {
   return (
-    <ul className='sm:hiddem flex space-x-4'>
+    <ul className=' flex space-x-4'>
       <li>Profile</li>
       <li>Settings</li>
     </ul>
@@ -77,7 +77,6 @@ function Search() {
   }>({ username: null, password: null, salt: null });
   const [activeInput, setActiveInput] = useState(false);
   const [search, setSearch] = useState('');
-  const [baseImageURL, setBaseImageURL] = useState('');
 
   const play = useQueueStore((state) => state.play);
 
@@ -118,21 +117,7 @@ function Search() {
     };
   }, []);
 
-  useEffect(() => {
-    getBaseUrl();
-  }, []);
 
-  async function getBaseUrl() {
-    const url = await subsonicURL('/rest/getCoverArt');
-    if (url === 'error') {
-      return;
-    }
-    setBaseImageURL(url.toString());
-  }
-
-  useEffect(() => {
-    console.log('rtesults: ' + results);
-  }, [results]);
 
   useEffect(() => {
     if (activeInput && resultsContainerRef.current) {
