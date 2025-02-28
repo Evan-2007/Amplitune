@@ -3,11 +3,13 @@ import { SourceManager } from '@/lib/sources/source-manager';
 import { useSearchParams } from 'next/navigation';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Suspense } from 'react';
+import { searchResult } from '@/lib/sources/types';
+import {SongItem} from '@/components/song/song-item';
+
 
 export default function Search() {
-  const sourceManager = SourceManager.getInstance();
   const [tab, setTab] = useState('Top Results');
 
   return (
@@ -53,7 +55,7 @@ export default function Search() {
         </div>
         <Separator />
       </div>
-      <div>
+      <div className='flex w-full flex-col items-center h-full'>
         <Suspense fallback={<div>Loading...</div>}>
           <Results tab={tab} />
         </Suspense>
@@ -64,7 +66,55 @@ export default function Search() {
 
 function Results({ tab }: { tab: string }) {
   const searchParams = useSearchParams();
-  const search = searchParams.get('query');
+  const sourceManager = SourceManager.getInstance();
 
-  return null;
+  const search = searchParams.get('query');
+  const [loading, setLoading] = useState(true);
+  const [results, setResults] = useState<null | searchResult>(null);
+
+  const getResults = async () => {
+    setLoading(true);
+    const result = await sourceManager.search(search ?? '');
+    setResults(result);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    getResults()
+  }, [search])
+  
+
+  
+
+  return (
+    <div className='flex w-full flex-col items-center'>
+      {loading ? (
+        <div>Loading...</div>
+      ) : (
+        <div className='flex w-full flex-col items-center'>
+          {results ? (
+            <div className='flex w-full flex-col items-center'>
+              {results.songs.length > 0 && results.songs.map((song, index) => (
+                <div key={index} className={`w-full flex flex-col items-center ${tab === 'Tracks' ? 'block' : 'hidden'}`}>
+                  <SongItem data={song} type='song'/>
+                </div>
+              ))}
+              {results.albums.length > 0 && results.albums.map((album, index) => (
+                <div key={index} className={`w-full flex flex-col items-center ${tab === 'Albums' ? 'block' : 'hidden'}`}>
+                  <SongItem data={album} type='album'/>
+                </div>
+              ))}
+              {results.artists.length > 0 && results.artists.map((artist, index) => (
+                <div key={index} className={`w-full flex flex-col items-center ${tab === 'Artists' ? 'block' : 'hidden'}`}>
+                  <SongItem data={artist} type='artist'/>
+                </div>
+              ))}
+        </div>
+          ) : (
+            <div>No results found.</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
