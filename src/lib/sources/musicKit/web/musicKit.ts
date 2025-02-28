@@ -1,5 +1,5 @@
 import { SourceInterface } from '@/lib/sources/source-interface';
-import { song, Lyrics, searchResult } from '@/lib/sources/types';
+import { song, Lyrics, searchResult as SearchResult, albums as Album } from '@/lib/sources/types';
 import { jwtDecode } from 'jwt-decode';
 
 export class musicKit implements SourceInterface {
@@ -178,7 +178,9 @@ export class musicKit implements SourceInterface {
   getSongData(): Promise<song> {
     throw new Error('Method not implemented.');
   }
-  async search(query: string): Promise<searchResult> {
+
+
+  async search(query: string): Promise<SearchResult> {
     await this.initializationPromise;
     if (!this.musicKitInstance) {
       console.error('MusicKit not initialized');
@@ -205,8 +207,10 @@ export class musicKit implements SourceInterface {
     const response = await result;
 
 
+    let songs = [];
+
     if (result.data.meta.results.order.includes('songs')) {
-      var songs = result.data.results.songs.data.map((song: any) => ({
+      songs = result.data.results.songs.data.map((song: any) => ({
         id: song.id,
         title: song.attributes.name,
         artist: song.attributes.artistName,
@@ -218,12 +222,13 @@ export class musicKit implements SourceInterface {
         imageUrl: song.attributes.artwork.url.replace('{w}x{h}', '900x900'),
         releaseDate: song.attributes.releaseDate,
       }));
-    } else {
-      var songs = [];
-    }
+    } 
+
+
+    let albums = [];
 
     if (result.data.meta.results.order.includes('albums')) {
-      var albums = result.data.results.albums.data.map((album: any) => ({
+      albums = result.data.results.albums.data.map((album: any) => ({
         id: album.id,
         title: album.attributes.name,
         artist: album.attributes.artistName,
@@ -233,21 +238,20 @@ export class musicKit implements SourceInterface {
         releaseDate: album.attributes.releaseDate,
         totalTracks: album.attributes.trackCount,
       }));
-    } else {
-      var albums = [];
-    }
+    } 
+
+
+    let artists = [];
 
     if (result.data.meta.results.order.includes('artists')) {
-      var artists = result.data.results.artists.data.map((artist: any) => ({
+      artists = result.data.results.artists.data.map((artist: any) => ({
         id: artist.id,
         name: artist.attributes.name,
         imageUrl: artist.attributes.artwork.url.replace('{w}x{h}', '900x900'),
         source: 'musicKit',
         availableSources: ['musikKit'],
       }));
-    } else {
-      var artists = [];
-    }
+    } 
 
 
 
@@ -260,10 +264,12 @@ export class musicKit implements SourceInterface {
       params
     );
 
+
+    const filteredAlbums = albums.filter((album: Album) => album.totalTracks > 1);
     return {
       songs,
       //videos: [],
-      albums: albums.filter((album) => album.totalTracks === 1).map((album) => album.id),
+      albums: filteredAlbums,
       artists,
     };
   }

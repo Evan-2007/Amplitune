@@ -1,7 +1,7 @@
 import { SourceInterface } from './source-interface';
 import { Tidal } from './tidal/tidal';
 import { Navidrome } from './navidrome/navidrome';
-import { Lyrics, song, sources, artists, albums, searchResult } from './types';
+import { Lyrics, song as Song, sources, artists as Artist, albums as Album, searchResult as SearchResult } from './types';
 import { getLRCLIBLyrics } from './lrc-lib/lrc-lib';
 import { MusicKit } from './musicKit/musicKit';
 
@@ -17,6 +17,16 @@ interface CurrentTrack {
   source: string;
   position: number;
   album?: string;
+}
+
+interface ExtendedSong extends Song {
+  _firstAppearanceIndex: number;
+}
+interface ExtendedAlbum extends Album {
+  _firstAppearanceIndex: number;
+}
+interface ExtendedArtist extends Artist {
+  _firstAppearanceIndex: number;
 }
 
 export class SourceManager {
@@ -167,7 +177,7 @@ export class SourceManager {
   }
 
   // Playback control
-  public async playSong(track: song): Promise<void> {
+  public async playSong(track: Song): Promise<void> {
     // WAIT HERE for all async init to complete:
     await this.initializationPromise;
     console.log(track.availableSources);
@@ -305,7 +315,7 @@ export class SourceManager {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   }
 
-  public async getSongData(trackId: string, source: string): Promise<song> {
+  public async getSongData(trackId: string, source: string): Promise<Song> {
     await this.initializationPromise; // Just to be safe, if needed
 
     const sourceInstance = this.sources.get(source);
@@ -354,26 +364,26 @@ export class SourceManager {
     );
   }
 
+
+  
   public async search(query: string): Promise<SearchResult> {
     await this.initializationPromise;
   
-    // Query each source concurrently
     const sourcePromises = Array.from(this.sources.entries()).map(async ([sourceId, source]) => {
       try {
         const results = await source.search(query);
-        // Append source information to each result
-        const songs = results.songs.map((song: Song) => ({
-          ...song,
+        const songs = results.songs.map((s: Song) => ({
+          ...s,
           source: sourceId,
           availableSources: [sourceId],
         }));
-        const albums = results.albums.map((album: Album) => ({
-          ...album,
+        const albums = results.albums.map((a: Album) => ({
+          ...a,
           source: sourceId,
           availableSources: [sourceId],
         }));
-        const artists = results.artists.map((artist: Artist) => ({
-          ...artist,
+        const artists = results.artists.map((a: Artist) => ({
+          ...a,
           source: sourceId,
           availableSources: [sourceId],
         }));
@@ -385,25 +395,19 @@ export class SourceManager {
     });
   
     const sourceResults = await Promise.all(sourcePromises);
-  
-    // Aggregate results across sources
     const allSongs = sourceResults.flatMap(result => result.songs);
     const allAlbums = sourceResults.flatMap(result => result.albums);
     const allArtists = sourceResults.flatMap(result => result.artists);
   
-    // Generic extended type to store first appearance index
-    interface Extended<T> extends T {
-      _firstAppearanceIndex: number;
-    }
-  
     // Deduplicate Songs
-    const songMap = new Map<string, Extended<Song>>();
+    const songMap = new Map<string, ExtendedSong>();
     let songIndex = 0;
-    const getSongKey = (s: Song) => `${s.title?.toLowerCase() ?? ''}|${s.artist?.toLowerCase() ?? ''}`;
+    const getSongKey = (s: Song) => `${s.title.toLowerCase()}|${s.artist.toLowerCase()}`;
     for (const s of allSongs) {
       const key = getSongKey(s);
       if (songMap.has(key)) {
         const existing = songMap.get(key)!;
+        // Merge availableSources by creating a unique set
         existing.availableSources = Array.from(new Set([...existing.availableSources, s.source]));
       } else {
         songMap.set(key, { ...s, availableSources: [s.source], _firstAppearanceIndex: songIndex });
@@ -415,9 +419,9 @@ export class SourceManager {
       .map(({ _firstAppearanceIndex, ...rest }) => rest);
   
     // Deduplicate Albums
-    const albumMap = new Map<string, Extended<Album>>();
+    const albumMap = new Map<string, ExtendedAlbum>();
     let albumIndex = 0;
-    const getAlbumKey = (a: Album) => a.title?.toLowerCase() ?? '';
+    const getAlbumKey = (a: Album) => a.title.toLowerCase();
     for (const a of allAlbums) {
       const key = getAlbumKey(a);
       if (albumMap.has(key)) {
@@ -433,9 +437,9 @@ export class SourceManager {
       .map(({ _firstAppearanceIndex, ...rest }) => rest);
   
     // Deduplicate Artists
-    const artistMap = new Map<string, Extended<Artist>>();
+    const artistMap = new Map<string, ExtendedArtist>();
     let artistIndex = 0;
-    const getArtistKey = (a: Artist) => a.name?.toLowerCase() ?? '';
+    const getArtistKey = (a: Artist) => a.name.toLowerCase();
     for (const a of allArtists) {
       const key = getArtistKey(a);
       if (artistMap.has(key)) {

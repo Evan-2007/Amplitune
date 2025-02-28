@@ -38,6 +38,9 @@ export interface albums {
   imageUrl: string;
   releaseDate: string;
   source: string;
+  availableSources: string[];
+  totalTracks: number;
+
 }
 
 export interface artists {
@@ -45,6 +48,7 @@ export interface artists {
   name: string;
   imageUrl: string;
   source: string;
+  availableSources: string[];
 }
 
 export interface searchResult {
