@@ -188,7 +188,7 @@ export class musicKit implements SourceInterface {
         artists: [],
       };
     }
-    const params = { term: query, limit: 10, types: ['songs'] };
+    const params = { term: query, limit: 25, types: ['songs', 'albums', 'artists',] };
     const result = await this.musicKitInstance.api.music(
       '/v1/catalog/{{storefrontId}}/search',
       params
@@ -204,18 +204,54 @@ export class musicKit implements SourceInterface {
 
     const response = await result;
 
-    const songs = result.data.results.songs.data.map((song: any) => ({
-      id: song.id,
-      title: song.attributes.name,
-      artist: song.attributes.artistName,
-      album: song.attributes.albumName,
-      duration: song.attributes.durationInMillis,
-      quality: 'N/A',
-      source: 'musicKit',
-      availableSources: ['musikKit'],
-      imageUrl: song.attributes.artwork.url.replace('{w}x{h}', '900x900'),
-      releaseDate: song.attributes.releaseDate,
-    }));
+
+    if (result.data.meta.results.order.includes('songs')) {
+      var songs = result.data.results.songs.data.map((song: any) => ({
+        id: song.id,
+        title: song.attributes.name,
+        artist: song.attributes.artistName,
+        album: song.attributes.albumName,
+        duration: song.attributes.durationInMillis,
+        quality: 'lossless',
+        source: 'musicKit',
+        availableSources: ['musicKit'],
+        imageUrl: song.attributes.artwork.url.replace('{w}x{h}', '900x900'),
+        releaseDate: song.attributes.releaseDate,
+      }));
+    } else {
+      var songs = [];
+    }
+
+    if (result.data.meta.results.order.includes('albums')) {
+      var albums = result.data.results.albums.data.map((album: any) => ({
+        id: album.id,
+        title: album.attributes.name,
+        artist: album.attributes.artistName,
+        imageUrl: album.attributes.artwork.url.replace('{w}x{h}', '900x900'),
+        source: 'musicKit',
+        availableSources: ['musikKit'],
+        releaseDate: album.attributes.releaseDate,
+        totalTracks: album.attributes.trackCount,
+      }));
+    } else {
+      var albums = [];
+    }
+
+    if (result.data.meta.results.order.includes('artists')) {
+      var artists = result.data.results.artists.data.map((artist: any) => ({
+        id: artist.id,
+        name: artist.attributes.name,
+        imageUrl: artist.attributes.artwork.url.replace('{w}x{h}', '900x900'),
+        source: 'musicKit',
+        availableSources: ['musikKit'],
+      }));
+    } else {
+      var artists = [];
+    }
+
+
+
+
 
     console.log(songs);
 
@@ -227,8 +263,8 @@ export class musicKit implements SourceInterface {
     return {
       songs,
       //videos: [],
-      albums: [],
-      artists: [],
+      albums: albums.filter((album) => album.totalTracks === 1).map((album) => album.id),
+      artists,
     };
   }
 }
