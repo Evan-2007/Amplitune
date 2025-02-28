@@ -61,6 +61,22 @@ export default function FullScreenPlayer({}: {}) {
     }
   }, [container]);
 
+  useEffect (() => {
+    if (!fullScreen) return;
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        handleClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }
+  , [fullScreen]);
+
   const [colors, setColors] = useState<FinalColor[]>([]);
 
   useEffect(() => {
