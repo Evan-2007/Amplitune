@@ -39,7 +39,7 @@ interface ExtendedArtist extends Artist {
 export class SourceManager {
   private static instance: SourceManager;
   private readonly sources: Map<string, SourceInterface>;
-  private activeSource: string | null;
+  public activeSource: string | null;
   private currentTrack: CurrentTrack | null;
 
   // Playback state

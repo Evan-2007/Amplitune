@@ -9,7 +9,7 @@ import Controls from './controls';
 import Background from './background';
 import { debounce } from 'lodash';
 import { useCallback } from 'react';
-import Lyrics from './lyrics';
+import Lyrics from './lyrics/lyrics';
 import Left from './full-left';
 import { useQueueStore } from '@/lib/queue';
 import { usePlayerStore, useUiStore } from '@/lib/state';
