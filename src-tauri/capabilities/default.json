@@ -8,6 +8,13 @@
   "permissions": [
     "core:default",
     "os:default",
-    "deep-link:default"
+    "deep-link:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        "https://amp-api.music.apple.com",
+        "https://*.apple.com"
+      ]
+    }
   ]
 }

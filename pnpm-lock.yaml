@@ -65,6 +65,9 @@ dependencies:
   '@tauri-apps/plugin-deep-link':
     specifier: ~2
     version: 2.0.1
+  '@tauri-apps/plugin-http':
+    specifier: ~2
+    version: 2.4.2
   '@tauri-apps/plugin-os':
     specifier: ~2
     version: 2.0.0
@@ -140,6 +143,9 @@ dependencies:
   use-async-resource:
     specifier: ^2.2.2
     version: 2.2.2(react@18.3.1)
+  xml-js:
+    specifier: ^1.6.11
+    version: 1.6.11
   zip:
     specifier: ^1.2.0
     version: 1.2.0
@@ -3787,6 +3793,12 @@ packages:
       '@tauri-apps/api': 2.1.1
     dev: false
 
+  /@tauri-apps/plugin-http@2.4.2:
+    resolution: {integrity: sha512-deoafidYelei/fmd4AQoHa2aCA9N2DvnnQrF/91QNjE0xCCTuVpPhIQdVRgdHDhFehEal9uI14OTvERBpcfHrg==}
+    dependencies:
+      '@tauri-apps/api': 2.1.1
+    dev: false
+
   /@tauri-apps/plugin-os@2.0.0:
     resolution: {integrity: sha512-M7hG/nNyQYTJxVG/UhTKhp9mpXriwWzrs9mqDreB8mIgqA3ek5nHLdwRZJWhkKjZrnDT4v9CpA9BhYeplTlAiA==}
     dependencies:
@@ -7015,7 +7027,6 @@ packages:
 
   /sax@1.4.1:
     resolution: {integrity: sha512-+aWOz7yVScEGoKNd4PA10LZ8sk0A/z5+nXQG5giUO5rprX9jgYsTdov9qCchZiPIZezbZH+jRut8nPodFAX4Jg==}
-    dev: true
 
   /scheduler@0.23.2:
     resolution: {integrity: sha512-UOShsPwz7NrMUqhR6t0hWjFduvOzbtv7toDH1/hIrfRNIDBnnBWd0CwJTGvTpngVlmwGCdP9/Zl/tVrDqcuYzQ==}
@@ -7753,6 +7764,13 @@ packages:
     dependencies:
       imurmurhash: 0.1.4
       signal-exit: 4.1.0
+    dev: false
+
+  /xml-js@1.6.11:
+    resolution: {integrity: sha512-7rVi2KMfwfWFl+GpPg6m80IVMWXLRjO+PxTq7V2CDhoGak0wzYzFgUY2m4XJ47OGdXd8eLE8EmwfAmdjw7lC1g==}
+    hasBin: true
+    dependencies:
+      sax: 1.4.1
     dev: false
 
   /xml2js@0.5.0:

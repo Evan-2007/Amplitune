@@ -1,1 +1,1 @@
-{"default":{"identifier":"default","description":"enables the default permissions","local":true,"windows":["main"],"permissions":["core:default","os:default","deep-link:default"]}}
+{"default":{"identifier":"default","description":"enables the default permissions","local":true,"windows":["main"],"permissions":["core:default","os:default","deep-link:default",{"identifier":"http:default","allow":["https://amp-api.music.apple.com","https://*.apple.com"]}]}}
