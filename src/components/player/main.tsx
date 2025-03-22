@@ -67,7 +67,6 @@ export function PlayerContent() {
     }, 5000);
   }, []);
 
-
   useEffect(() => {
     if (playing === 'ended') {
       skip();
@@ -422,7 +421,6 @@ function MobilePlayer({
   const songData = useQueueStore((state) => state.queue.currentSong?.track);
   const skip = useQueueStore((state) => state.skip);
   const playPrevious = useQueueStore((state) => state.playPrevious);
-
 
   const handlePlayPause = () => {
     if (audioRef.current) {

@@ -91,8 +91,6 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
     }
   };
 
-
-
   // Handle seek
   const handleSliderCommit = async (value: number) => {
     const time = (length * value) / 1000;

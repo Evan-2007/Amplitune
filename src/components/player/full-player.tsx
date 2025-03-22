@@ -219,7 +219,7 @@ export default function FullScreenPlayer({}: {}) {
       >
         <Left isMobile={isMobile} tab={tab} />
         <div
-          className={`h-full  flex-col items-center justify-center md:flex ${tab === 0 ? 'hidden md:w-1/2' : 'visible '} ${isMobile ? 'w-full' : 'w-4/6 mr-14'} `}
+          className={`h-full flex-col items-center justify-center md:flex ${tab === 0 ? 'hidden md:w-1/2' : 'visible'} ${isMobile ? 'w-full' : 'mr-14 w-4/6'} `}
         >
           <Lyrics tab={tab} isMobile={isMobile} setTab={(tab) => setTab(tab)} />{' '}
         </div>
