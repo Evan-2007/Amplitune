@@ -2,7 +2,7 @@ import { Song } from '../types';
 import { song } from '@/lib/sources/types';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { CrossPlatformStorage } from '@/lib/storage/cross-platform-storage';
-import { debounce } from 'lodash';
+import { debounce, set } from 'lodash';
 import Queue from '@/assets/queue.svg';
 import LyricsSVG from '@/assets/lyrics.svg';
 import { Check, MessageSquareQuote } from 'lucide-react';
@@ -22,7 +22,11 @@ import { subsonicURL } from '@/lib/sources/navidrome';
 import { SourceManager } from '@/lib/sources/source-manager';
 import { ErrorLyrics } from '@/lib/sources/types';
 import { SyncedLyrics } from './synced';
-import { SyllableLyrics, getSyllableLyrics } from './syllable';
+import {
+  SyllableLyricsType,
+  getSyllableLyrics,
+  SyllableLyrics,
+} from './syllable';
 
 interface NormalLyricsProps {
   tab: number;
@@ -34,17 +38,24 @@ export default function Lyrics({ tab, setTab, isMobile }: NormalLyricsProps) {
   const [isMouseMoving, setIsMouseMoving] = useState<boolean>(false);
   const lyricsContainerRef = useRef<HTMLDivElement>(null);
   const [synced, setSynced] = useState<boolean>(true);
-  const [syllableLyrics, setSyllableLyrics] = useState<SyllableLyrics | null>(
-    null
-  );
+  const [syllable, setSyllable] = useState<boolean>(false);
+  const [syllableLyricsData, setSyllableLyricsData] =
+    useState<SyllableLyricsType | null>(null);
 
-  // useEffect(() => {
-  //   check();
-  // }, []);
+  const songData = useQueueStore((state) => state.queue.currentSong?.track);
 
-  // const check = async () => {
-  //   await getSyllableLyrics(setSyllableLyrics);
-  // };
+  useEffect(() => {
+    checkSyllableLyrics();
+  }, [songData]);
+
+  const checkSyllableLyrics = async () => {
+    setSyllable(false);
+    setSyllableLyricsData(null);
+    const syllableLyrics = await getSyllableLyrics(setSyllableLyricsData);
+    if (syllableLyrics) {
+      setSyllable(true);
+    }
+  };
 
   const debouncedMouseStop = useCallback(
     debounce(() => {
@@ -78,11 +89,22 @@ export default function Lyrics({ tab, setTab, isMobile }: NormalLyricsProps) {
         onTouchEnd={handleMouseMove}
       >
         {tab === 1 ? (
-          <SyncedLyrics
-            isMobile={isMobile}
-            containerRef={lyricsContainerRef}
-            isMouseMoving={isMouseMoving}
-          />
+          <>
+            {syllable && syllableLyricsData ? (
+              <SyllableLyrics
+                isMobile={isMobile}
+                containerRef={lyricsContainerRef}
+                isMouseMoving={isMouseMoving}
+                lyrics={syllableLyricsData}
+              />
+            ) : (
+              <SyncedLyrics
+                isMobile={isMobile}
+                containerRef={lyricsContainerRef}
+                isMouseMoving={isMouseMoving}
+              />
+            )}
+          </>
         ) : (
           <QueueList isMouseMoving={isMouseMoving} />
         )}
