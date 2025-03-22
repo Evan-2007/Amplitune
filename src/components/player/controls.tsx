@@ -91,11 +91,7 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
     }
   };
 
-  useEffect(() => {
-    if (playing === 'ended') {
-      skip();
-    }
-  }, [playing]);
+
 
   // Handle seek
   const handleSliderCommit = async (value: number) => {

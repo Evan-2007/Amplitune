@@ -59,12 +59,20 @@ export function PlayerContent() {
   const [initialLoad, setInitialLoad] = useState<boolean>(true);
   const setPlaying = useQueueStore((state) => state.setPlaying);
   const playing = useQueueStore((state) => state.queue.playing);
+  const skip = useQueueStore((state) => state.skip);
 
   useEffect(() => {
     setTimeout(() => {
       setInitialLoad(false);
     }, 5000);
   }, []);
+
+
+  useEffect(() => {
+    if (playing === 'ended') {
+      skip();
+    }
+  }, [playing]);
 
   const updateSong = async () => {
     await sourceManager.playSong(songData);
@@ -414,6 +422,7 @@ function MobilePlayer({
   const songData = useQueueStore((state) => state.queue.currentSong?.track);
   const skip = useQueueStore((state) => state.skip);
   const playPrevious = useQueueStore((state) => state.playPrevious);
+
 
   const handlePlayPause = () => {
     if (audioRef.current) {
