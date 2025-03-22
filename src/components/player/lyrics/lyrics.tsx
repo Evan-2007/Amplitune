@@ -45,17 +45,24 @@ export default function Lyrics({ tab, setTab, isMobile }: NormalLyricsProps) {
   const songData = useQueueStore((state) => state.queue.currentSong?.track);
 
   useEffect(() => {
-    checkSyllableLyrics();
-  }, [songData]);
+    let cancelled = false;
 
-  const checkSyllableLyrics = async () => {
-    setSyllable(false);
-    setSyllableLyricsData(null);
-    const syllableLyrics = await getSyllableLyrics(setSyllableLyricsData);
-    if (syllableLyrics) {
-      setSyllable(true);
-    }
-  };
+    const checkSyllableLyrics = async () => {
+      setSyllable(false);
+      setSyllableLyricsData(null);
+      const syllableLyrics = await getSyllableLyrics(setSyllableLyricsData);
+      if (cancelled) return;
+      if (syllableLyrics) {
+        setSyllable(true);
+      }
+    };
+
+    checkSyllableLyrics();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [songData]);
 
   const debouncedMouseStop = useCallback(
     debounce(() => {
