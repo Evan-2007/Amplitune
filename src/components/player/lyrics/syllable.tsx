@@ -266,13 +266,13 @@ interface GradientTextLineProps {
   progress: number;
   whitespace?: boolean;
   active?: boolean;
-  agent: string
+  agent: string;
 }
 
- const myFont = localFont({
-   src: 'SF-Pro-Display-Bold.woff',
-   display: 'swap',
- });
+const myFont = localFont({
+  src: 'SF-Pro-Display-Bold.woff',
+  display: 'swap',
+});
 
 const GradientWord: React.FC<{
   word: string;
@@ -280,7 +280,7 @@ const GradientWord: React.FC<{
   wordEnd: number;
   progress: number;
   whitespace?: boolean;
-  agent: number
+  agent: number;
 }> = ({ word, wordStart, wordEnd, progress, whitespace, agent }) => {
   let percent = 0;
   if (progress >= wordEnd) {
@@ -295,7 +295,7 @@ const GradientWord: React.FC<{
         position: 'relative',
         display: 'inline-block',
       }}
-      className={` ${percent > 0 ? '-translate-y-1' : ''} transition-all duration-700 ${myFont.className} ${agent > 1 && "text-left"} `}
+      className={` ${percent > 0 ? '-translate-y-1' : ''} transition-all duration-700 ${myFont.className} ${agent > 1 && 'text-left'} `}
     >
       <span style={{ color: '#8c8da2' }}>
         {whitespace ? `${word}\u00A0` : word}
@@ -327,16 +327,17 @@ const GradientTextLine: React.FC<GradientTextLineProps> = ({
   active,
   agent,
 }) => {
-
   const agentNumber = () => {
-    if (typeof agent === "string" && agent.includes('v')) {
+    if (typeof agent === 'string' && agent.includes('v')) {
       return parseInt(agent.replace('v', ''));
     }
     return 1;
-  }
+  };
 
   return (
-    <div className={`mb-4 flex flex-wrap  drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] md:text-6xl  ${active ? '' : 'text-3xl'} ${agent == 'v2' ? "justify-end pr-4 w-4/6" : "w-full"} `}>
+    <div
+      className={`mb-4 flex flex-wrap drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] md:text-6xl ${active ? '' : 'text-3xl'} ${agent == 'v2' ? 'w-4/6 justify-end pr-4' : 'w-full'} `}
+    >
       {words.map((w, index) => (
         <>
           <GradientWord
@@ -483,9 +484,12 @@ export function SyllableLyrics({
     }
   }, [currentLine, isMouseMoving]);
 
-
   useEffect(() => {
-    if (lyrics.sections.some((section) => section.lines.length > 1)) {
+    if (
+      lyrics.sections.some((section) =>
+        section.lines.some((line) => line.agent !== 'v1')
+      )
+    ) {
       setMultipleSinger(true);
       console.log('Multiple singers detected');
     }
@@ -504,7 +508,7 @@ export function SyllableLyrics({
             key={index}
             onClick={() => handleLyricClick(line.start)}
             data-line={index}
-            className={` text-left ${index < currentLine && !isMouseMoving ? 'opacity-0' : ''} transition-all duration-700 flex mb-16 ${(index > currentLine || index < currentLine) && !isMouseMoving ? 'blur-sm' : ''} pl-2 ${multipleSinger && line.agent !== "v2" ? 'w-4/6' : 'w-full'} ${line.agent === "v2" && "items-end justify-end"}`}
+            className={`text-left ${index < currentLine && !isMouseMoving ? 'opacity-0' : ''} mb-16 flex transition-all duration-700 ${(index > currentLine || index < currentLine) && !isMouseMoving ? 'blur-sm' : ''} pl-2 ${multipleSinger && line.agent !== 'v2' ? 'w-4/6' : 'w-full'} ${line.agent === 'v2' && 'items-end justify-end'}`}
           >
             <GradientTextLine
               words={line.words}
