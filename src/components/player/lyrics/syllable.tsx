@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useMemo, useLayoutEffect, useRef } from 'react';
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useLayoutEffect,
+  useRef,
+} from 'react';
 import XmlJS from 'xml-js';
 import { SourceManager } from '@/lib/sources/source-manager';
 import localFont from 'next/font/local';
@@ -299,7 +305,7 @@ const GradientLetter: React.FC<GradientLetterProps> = ({
   return (
     <span style={{ position: 'relative', display: 'inline-block' }}>
       {/* Base letter */}
-      <span style={{ color: '#8c8da2' }}  className={`${myFont.className} `}>
+      <span style={{ color: '#8c8da2' }} className={`${myFont.className} `}>
         {whitespace ? `${letter}` : letter}
       </span>
       {/* Overlay fill */}
@@ -341,13 +347,11 @@ const GradientWord: React.FC<{
   whitespace?: boolean;
   agent: number;
 }> = ({ word, wordStart, wordEnd, progress, whitespace, agent }) => {
-
   const letters = word.split('');
 
   const letterRefs = useRef<(HTMLSpanElement | null)[]>([]);
 
   const [letterWidths, setLetterWidths] = useState<number[]>([]);
-
 
   useEffect(() => {
     const widths = letterRefs.current.map((ref) => (ref ? ref.offsetWidth : 0));
@@ -366,7 +370,8 @@ const GradientWord: React.FC<{
     letterWidths.slice(0, index + 1).reduce((acc, w) => acc + w, 0)
   );
 
-  const shouldGlow = (wordEnd - wordStart) / word.length > .3 && word.length > 1;
+  const shouldGlow =
+    (wordEnd - wordStart) / word.length > 0.3 && word.length > 1;
 
   return (
     <span
@@ -374,30 +379,40 @@ const GradientWord: React.FC<{
         position: 'relative',
         display: 'inline-block',
       }}
-      className={` ${
-        myFont.className
-      } ${agent > 1 ? 'text-left' : ''}`}
+      className={` ${myFont.className} ${agent > 1 ? 'text-left' : ''}`}
     >
       {letters.map((letter, index) => {
-
         const letterStartPercent =
-          totalWidth && index > 0 ? (cumulativeOffsets[index - 1] / totalWidth) * 100 : 0;
-        const letterEndPercent = totalWidth ? (cumulativeOffsets[index] / totalWidth) * 100 : 0;
+          totalWidth && index > 0
+            ? (cumulativeOffsets[index - 1] / totalWidth) * 100
+            : 0;
+        const letterEndPercent = totalWidth
+          ? (cumulativeOffsets[index] / totalWidth) * 100
+          : 0;
 
         let letterFillPercent = 0;
         if (overallPercent >= letterEndPercent) {
           letterFillPercent = 100;
         } else if (overallPercent > letterStartPercent) {
           letterFillPercent =
-            ((overallPercent - letterStartPercent) / (letterEndPercent - letterStartPercent)) * 100;
+            ((overallPercent - letterStartPercent) /
+              (letterEndPercent - letterStartPercent)) *
+            100;
         }
 
-
-
         return (
-          <span key={index} style={{ position: 'relative', display: 'inline-block' }} className={`${letterFillPercent  > 0 && !shouldGlow  ? '-translate-y-1 duration-500' : ''} transition-all ${shouldGlow && letterFillPercent > 1 && 'animate-[letter-glow_1.4s_ease-out] -translate-y-1'} `}>
+          <span
+            key={index}
+            style={{ position: 'relative', display: 'inline-block' }}
+            className={`${letterFillPercent > 0 && !shouldGlow ? '-translate-y-1 duration-500' : ''} transition-all ${shouldGlow && letterFillPercent > 1 && '-translate-y-1 animate-[letter-glow_1.4s_ease-out]'} `}
+          >
             {/* Base letter*/}
-            <span style={{ color: '#8c8da2' }} ref={(el) => { letterRefs.current[index] = el; }}>
+            <span
+              style={{ color: '#8c8da2' }}
+              ref={(el) => {
+                letterRefs.current[index] = el;
+              }}
+            >
               {letter}
             </span>
             {/* Overlay fill effect */}
@@ -413,17 +428,19 @@ const GradientWord: React.FC<{
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 height: '120%',
-                filter: shouldGlow && letterFillPercent > 0 && overallPercent < 100 ? 'drop-shadow(0 0 2px white)' : 'drop-shadow(0 0 0px white)',
+                filter:
+                  shouldGlow && letterFillPercent > 0 && overallPercent < 100
+                    ? 'drop-shadow(0 0 2px white)'
+                    : 'drop-shadow(0 0 0px white)',
                 transition: 'filter 0.5s ease-in-out',
               }}
             >
               {letter}
             </span>
-            
           </span>
         );
       })}
-      {whitespace && "\u00A0"}
+      {whitespace && '\u00A0'}
     </span>
   );
 };
