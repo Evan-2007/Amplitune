@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useLayoutEffect, useRef } from 'react';
 import XmlJS from 'xml-js';
 import { SourceManager } from '@/lib/sources/source-manager';
 import localFont from 'next/font/local';
@@ -269,38 +269,40 @@ interface GradientTextLineProps {
   agent: string;
 }
 
+type GradientLetterProps = {
+  letter: string;
+  letterStart: number;
+  letterEnd: number;
+  progress: number;
+  whitespace?: boolean;
+};
+
 const myFont = localFont({
   src: 'SF-Pro-Display-Bold.woff',
   display: 'swap',
 });
 
-const GradientWord: React.FC<{
-  word: string;
-  wordStart: number;
-  wordEnd: number;
-  progress: number;
-  whitespace?: boolean;
-  agent: number;
-}> = ({ word, wordStart, wordEnd, progress, whitespace, agent }) => {
+const GradientLetter: React.FC<GradientLetterProps> = ({
+  letter,
+  letterStart,
+  letterEnd,
+  progress,
+  whitespace,
+}) => {
   let percent = 0;
-  if (progress >= wordEnd) {
+  if (progress >= letterEnd) {
     percent = 100;
-  } else if (progress > wordStart) {
-    percent = ((progress - wordStart) / (wordEnd - wordStart)) * 100;
+  } else if (progress > letterStart) {
+    percent = ((progress - letterStart) / (letterEnd - letterStart)) * 100;
   }
 
   return (
-    <span
-      style={{
-        position: 'relative',
-        display: 'inline-block',
-      }}
-      className={` ${percent > 0 ? '-translate-y-1' : ''} transition-all duration-700 ${myFont.className} ${agent > 1 && 'text-left'} `}
-    >
-      <span style={{ color: '#8c8da2' }}>
-        {whitespace ? `${word}\u00A0` : word}
+    <span style={{ position: 'relative', display: 'inline-block' }}>
+      {/* Base letter */}
+      <span style={{ color: '#8c8da2' }}  className={`${myFont.className} `}>
+        {whitespace ? `${letter}` : letter}
       </span>
-      {/*  overlay */}
+      {/* Overlay fill */}
       <span
         style={{
           position: 'absolute',
@@ -312,11 +314,116 @@ const GradientWord: React.FC<{
           background: 'white',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
-          height: '120%',
+          height: '100%',
         }}
+        className={`${myFont.className} `}
       >
-        {whitespace ? `${word}\u00A0` : word}
+        {whitespace ? `${letter}` : letter}
       </span>
+    </span>
+  );
+};
+
+type GradientWordProps = {
+  word: string;
+  wordStart: number;
+  wordEnd: number;
+  progress: number;
+  whitespace?: boolean;
+  agent: number;
+};
+
+const GradientWord: React.FC<{
+  word: string;
+  wordStart: number;
+  wordEnd: number;
+  progress: number;
+  whitespace?: boolean;
+  agent: number;
+}> = ({ word, wordStart, wordEnd, progress, whitespace, agent }) => {
+
+  const letters = word.split('');
+
+  const letterRefs = useRef<(HTMLSpanElement | null)[]>([]);
+
+  const [letterWidths, setLetterWidths] = useState<number[]>([]);
+
+
+  useEffect(() => {
+    const widths = letterRefs.current.map((ref) => (ref ? ref.offsetWidth : 0));
+    setLetterWidths(widths);
+  }, [word]);
+
+  let overallPercent = 0;
+  if (progress >= wordEnd) {
+    overallPercent = 100;
+  } else if (progress > wordStart) {
+    overallPercent = ((progress - wordStart) / (wordEnd - wordStart)) * 100;
+  }
+
+  const totalWidth = letterWidths.reduce((acc, width) => acc + width, 0);
+  const cumulativeOffsets = letterWidths.map((width, index) =>
+    letterWidths.slice(0, index + 1).reduce((acc, w) => acc + w, 0)
+  );
+
+  const shouldGlow = (wordEnd - wordStart) / word.length > .3 && word.length > 1;
+
+  return (
+    <span
+      style={{
+        position: 'relative',
+        display: 'inline-block',
+      }}
+      className={` ${
+        myFont.className
+      } ${agent > 1 ? 'text-left' : ''}`}
+    >
+      {letters.map((letter, index) => {
+
+        const letterStartPercent =
+          totalWidth && index > 0 ? (cumulativeOffsets[index - 1] / totalWidth) * 100 : 0;
+        const letterEndPercent = totalWidth ? (cumulativeOffsets[index] / totalWidth) * 100 : 0;
+
+        let letterFillPercent = 0;
+        if (overallPercent >= letterEndPercent) {
+          letterFillPercent = 100;
+        } else if (overallPercent > letterStartPercent) {
+          letterFillPercent =
+            ((overallPercent - letterStartPercent) / (letterEndPercent - letterStartPercent)) * 100;
+        }
+
+
+
+        return (
+          <span key={index} style={{ position: 'relative', display: 'inline-block' }} className={`${letterFillPercent  > 0 && !shouldGlow  ? '-translate-y-1 duration-500' : ''} transition-all ${shouldGlow && letterFillPercent > 1 && 'animate-[letter-glow_1.4s_ease-out] -translate-y-1'} `}>
+            {/* Base letter*/}
+            <span style={{ color: '#8c8da2' }} ref={(el) => { letterRefs.current[index] = el; }}>
+              {letter}
+            </span>
+            {/* Overlay fill effect */}
+            <span
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: `${letterFillPercent}%`,
+                overflow: 'hidden',
+                whiteSpace: 'nowrap',
+                background: 'white',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                height: '120%',
+                filter: shouldGlow && letterFillPercent > 0 && overallPercent < 100 ? 'drop-shadow(0 0 2px white)' : 'drop-shadow(0 0 0px white)',
+                transition: 'filter 0.5s ease-in-out',
+              }}
+            >
+              {letter}
+            </span>
+            
+          </span>
+        );
+      })}
+      {whitespace && "\u00A0"}
     </span>
   );
 };
@@ -508,7 +615,7 @@ export function SyllableLyrics({
             key={index}
             onClick={() => handleLyricClick(line.start)}
             data-line={index}
-            className={`text-left ${index < currentLine && !isMouseMoving ? 'opacity-0' : ''} mb-16 flex transition-all duration-700 ${(index > currentLine || index < currentLine) && !isMouseMoving ? 'blur-sm' : ''} pl-2 ${multipleSinger && line.agent !== 'v2' ? 'w-4/6' : 'w-full'} ${line.agent === 'v2' && 'items-end justify-end'}`}
+            className={`text-left ${index < currentLine && !isMouseMoving ? 'opacity-0' : ''} mb-16 flex transition-all duration-700 ${(index > currentLine || index < currentLine) && !isMouseMoving ? 'blur-sm' : ''} pl-2 ${multipleSinger && line.agent !== 'v2' ? 'w-4/6' : 'w-full'} ${line.agent === 'v2' && 'items-end justify-end'} `}
           >
             <GradientTextLine
               words={line.words}
