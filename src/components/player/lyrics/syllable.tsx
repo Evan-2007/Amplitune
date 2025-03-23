@@ -284,60 +284,9 @@ type GradientLetterProps = {
 };
 
 const myFont = localFont({
-  src: 'SF-Pro-Display-Bold.woff',
+  src: '../../../../public/fonts/SF-Pro-Display-Bold.woff',
   display: 'swap',
 });
-
-const GradientLetter: React.FC<GradientLetterProps> = ({
-  letter,
-  letterStart,
-  letterEnd,
-  progress,
-  whitespace,
-}) => {
-  let percent = 0;
-  if (progress >= letterEnd) {
-    percent = 100;
-  } else if (progress > letterStart) {
-    percent = ((progress - letterStart) / (letterEnd - letterStart)) * 100;
-  }
-
-  return (
-    <span style={{ position: 'relative', display: 'inline-block' }}>
-      {/* Base letter */}
-      <span style={{ color: '#8c8da2' }} className={`${myFont.className} `}>
-        {whitespace ? `${letter}` : letter}
-      </span>
-      {/* Overlay fill */}
-      <span
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: `${percent}%`,
-          overflow: 'hidden',
-          whiteSpace: 'nowrap',
-          background: 'white',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          height: '100%',
-        }}
-        className={`${myFont.className} `}
-      >
-        {whitespace ? `${letter}` : letter}
-      </span>
-    </span>
-  );
-};
-
-type GradientWordProps = {
-  word: string;
-  wordStart: number;
-  wordEnd: number;
-  progress: number;
-  whitespace?: boolean;
-  agent: number;
-};
 
 const GradientWord: React.FC<{
   word: string;
@@ -465,7 +414,7 @@ const GradientTextLine: React.FC<GradientTextLineProps> = ({
       {words.map((w, index) => (
         <>
           <GradientWord
-            key={`${w.value} + ${index}`} // Use a unique parentId or unique word id if available.
+            key={`${w.value} + ${index}`}
             word={w.value}
             wordStart={w.start}
             wordEnd={w.end}
