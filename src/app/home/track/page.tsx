@@ -7,19 +7,16 @@ import { useQueueStore } from '@/lib/queue';
 import { SourceManager } from '@/lib/sources/source-manager';
 import { song as Song } from '@/lib/sources/types';
 import NavidromeIcon from '@/assets/navidrome_dark.svg';
-import {GetListByKeyword, VideoItem} from '@/lib/youtubeSearch';
+import { GetListByKeyword, VideoItem } from '@/lib/youtubeSearch';
 
 export default function YourComponent() {
   const searchParams = useSearchParams();
-
-
 
   localStorage.getItem('sourcePriority') ||
     '["navidrome", "tidal", "musicKit"]';
   const sourceManager = SourceManager.getInstance();
   const play = useQueueStore((state) => state.play);
   const addToQueue = useQueueStore((state) => state.addToQueue);
-
 
   return (
     <div className='flex h-full w-full flex-col items-center'>
@@ -33,18 +30,15 @@ export default function YourComponent() {
 
 function Top() {
   const searchParams = useSearchParams();
-  const paramsObject = Object.fromEntries(
-    searchParams.entries()
-  )  as any;
+  const paramsObject = Object.fromEntries(searchParams.entries()) as any;
   const play = useQueueStore((state) => state.play);
   const addToQueue = useQueueStore((state) => state.addToQueue);
 
   const fromattedParams = {
     ...paramsObject,
     duration: parseInt(paramsObject.duration, 10),
-    availableSources: paramsObject.availableSources.split(',')
+    availableSources: paramsObject.availableSources.split(','),
   } as Song;
-
 
   return (
     <div className='flex h-full w-full flex-col items-center pt-16 max-lg:items-center lg:flex-row lg:pl-24'>
@@ -91,19 +85,16 @@ function Top() {
   );
 }
 
-
 function Videos() {
   const searchParams = useSearchParams();
-  const paramsObject = Object.fromEntries(
-    searchParams.entries()
-  )  as any;
+  const paramsObject = Object.fromEntries(searchParams.entries()) as any;
   const play = useQueueStore((state) => state.play);
   const addToQueue = useQueueStore((state) => state.addToQueue);
 
   const fromattedParams = {
     ...paramsObject,
     duration: parseInt(paramsObject.duration, 10),
-    availableSources: paramsObject.availableSources.split(',')
+    availableSources: paramsObject.availableSources.split(','),
   } as Song;
   const [videos, setVideos] = useState<VideoItem[]>([]);
 
@@ -116,7 +107,12 @@ function Videos() {
       );
       console.log(results);
       const filteredVideos = results.items.filter((result: any) => {
-        return result.title.toLowerCase().includes(paramsObject.title.toLowerCase()) && result.title.toLowerCase().includes(paramsObject.artist.toLowerCase());
+        return (
+          result.title
+            .toLowerCase()
+            .includes(paramsObject.title.toLowerCase()) &&
+          result.title.toLowerCase().includes(paramsObject.artist.toLowerCase())
+        );
       });
       setVideos(filteredVideos);
       console.log(filteredVideos);
@@ -124,15 +120,17 @@ function Videos() {
     fetchVideos();
   }, [paramsObject.title]);
 
-
   return (
     <div className='flex w-full flex-col items-center pt-10'>
       <h1 className='text-2xl font-bold'>Videos</h1>
       <Separator className='my-2 w-1/2' />
-      <div className='flex w-full flex-row items-center flex-wrap justify-center space-x-6 mt-4'>
+      <div className='mt-4 flex w-full flex-row flex-wrap items-center justify-center space-x-6'>
         {videos.map((video) => (
           <div key={video.id}>
-            <iframe src={`https://www.youtube.com/embed/${video.id}` } allow="fullscreen;"></iframe>
+            <iframe
+              src={`https://www.youtube.com/embed/${video.id}`}
+              allow='fullscreen;'
+            ></iframe>
           </div>
         ))}
       </div>
