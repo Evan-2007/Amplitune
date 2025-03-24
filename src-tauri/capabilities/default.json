@@ -13,7 +13,8 @@
       "identifier": "http:default",
       "allow": [
         "https://amp-api.music.apple.com",
-        "https://*.apple.com"
+        "https://*.apple.com",
+        "https://www.youtube.com"
       ]
     }
   ]

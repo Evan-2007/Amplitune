@@ -19,7 +19,10 @@ export function SongItem({ data, type }: SongItemProps) {
   const play = useQueueStore((state) => state.play);
   const handleClick = () => {
     if (type === 'song') {
-      play(data);
+      const queryParams = new URLSearchParams(
+        Object.entries(data as unknown as Record<string, string>)
+      ).toString();
+      router.push(`/home/track?${queryParams}`);
     } else if (type === 'playlist') {
       router.push(`/playlist/${data.source}/${data.id}`);
     } else if (type === 'album') {
