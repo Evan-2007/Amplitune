@@ -10,10 +10,7 @@ import NavidromeIcon from '@/assets/navidrome_dark.svg';
 import { GetListByKeyword, VideoItem } from '@/lib/youtubeSearch';
 
 export default function YourComponent() {
-  const searchParams = useSearchParams();
 
-  localStorage.getItem('sourcePriority') ||
-    '["navidrome", "tidal", "musicKit"]';
   const sourceManager = SourceManager.getInstance();
   const play = useQueueStore((state) => state.play);
   const addToQueue = useQueueStore((state) => state.addToQueue);
@@ -23,7 +20,9 @@ export default function YourComponent() {
       <Suspense fallback={<div>Loading...</div>}>
         <Top />
       </Suspense>
-      {window.isTauri && <Videos />}
+      <Suspense fallback={<div>Loading...</div>}>
+        {typeof window !== 'undefined' && window.isTauri && <Videos />}
+      </Suspense>
     </div>
   );
 }
