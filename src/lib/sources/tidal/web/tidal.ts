@@ -35,6 +35,32 @@ export class tidal implements SourceInterface {
   getSongData(): Promise<song> {
     throw new Error('Method not implemented.');
   }
+  async getAlbumData(
+    albumId: string,
+    source: string
+  ): Promise<import('../../types').AlbumData> {
+    // Placeholder implementation
+    return {
+      id: albumId,
+      source: source,
+      releaseDate: '',
+      artWork: {
+        url: '',
+        width: 0,
+        height: 0,
+        textColor1: '',
+        textColor2: '',
+        textColor3: '',
+        textColor4: '',
+        bgColor: '',
+        hasP3: false,
+      },
+      name: 'Album Name',
+      artist: 'Album Artist',
+      isSingle: false,
+    };
+  }
+
   async search(query: string): Promise<searchResult> {
     throw new Error('Method not implemented.');
   }

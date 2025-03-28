@@ -8,6 +8,7 @@ import {
   artists as Artist,
   albums as Album,
   searchResult as SearchResult,
+  AlbumData,
 } from './types';
 import { getLRCLIBLyrics } from './lrc-lib/lrc-lib';
 import { MusicKit } from './musicKit/musicKit';
@@ -330,6 +331,20 @@ export class SourceManager {
       return Promise.reject('Source not found');
     }
     return sourceInstance.getSongData(trackId);
+  }
+
+  // Get album data
+  public async getAlbumData(
+    albumId: string,
+    source: string
+  ): Promise<AlbumData> {
+    await this.initializationPromise;
+
+    const sourceInstance = this.sources.get(source);
+    if (!sourceInstance) {
+      return Promise.reject('Source not found');
+    }
+    return sourceInstance.getAlbumData(albumId, source);
   }
 
   // Lyrics handling

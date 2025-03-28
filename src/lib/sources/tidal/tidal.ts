@@ -4,7 +4,7 @@ import { platform } from '@tauri-apps/plugin-os';
 import { tidal as IosTidal } from './ios/tidal';
 import { tidal as AndroidTidal } from './android/tidal';
 import { tidal as WebTidal } from './web/tidal';
-import { Lyrics, song } from '../types';
+import { Lyrics, song, AlbumData } from '../types';
 import { searchResult } from '../types';
 
 type PlatformType =
@@ -84,6 +84,11 @@ export class Tidal implements SourceInterface {
   getSongData(songId: string): Promise<song> {
     return this.platform.getSongData(songId);
   }
+
+  async getAlbumData(albumId: string, source: string): Promise<AlbumData> {
+    return this.platform.getAlbumData(albumId, source);
+  }
+
   async search(query: string): Promise<searchResult> {
     throw new Error('Method not implemented.');
   }

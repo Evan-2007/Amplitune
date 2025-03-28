@@ -1,4 +1,4 @@
-import { Lyrics, song, searchResult } from './types';
+import { Lyrics, song, searchResult, AlbumData } from './types';
 
 export interface SourceInterface {
   play(): Promise<void>;
@@ -16,4 +16,5 @@ export interface SourceInterface {
   getSongData(trackId: string): Promise<song>;
   search(query: string): Promise<searchResult>;
   setRepeat(repeat: boolean): Promise<void>;
+  getAlbumData(albumId: string, source: string): Promise<AlbumData>;
 }

@@ -4,6 +4,7 @@ import {
   Lyrics,
   searchResult as SearchResult,
   albums as Album,
+  AlbumData,
 } from '@/lib/sources/types';
 import { jwtDecode } from 'jwt-decode';
 
@@ -182,6 +183,86 @@ export class musicKit implements SourceInterface {
   }
   getSongData(): Promise<song> {
     throw new Error('Method not implemented.');
+  }
+
+  async getAlbumData(albumId: string, source: string): Promise<AlbumData> {
+    await this.initializationPromise;
+
+    const result = await this.musicKitInstance.api.music(
+      `/v1/catalog/{{storefrontId}}/albums/${albumId}`
+    );
+    if (!result || !result.data) {
+      console.error('Failed to fetch album data');
+      return {
+        id: albumId,
+        source: source,
+        releaseDate: '',
+        artWork: {
+          url: '',
+          width: 0,
+          height: 0,
+          textColor1: '',
+          textColor2: '',
+          textColor3: '',
+          textColor4: '',
+          bgColor: '',
+          hasP3: false,
+        },
+        name: 'Album Name',
+        artist: 'Album Artist',
+        isSingle: false,
+      };
+    }
+    const albumData = await result.data.data[0];
+    console.log('Album data fetched from MusicKit:', albumData);
+
+    let formatedTracks: song[] = [];
+
+    if (albumData.relationships && albumData.relationships.tracks) {
+      formatedTracks = albumData.relationships.tracks.data.map(
+        (track: any) => ({
+          id: track.id,
+          title: track.attributes.name,
+          artist: track.attributes.artistName,
+          album: track.attributes.albumName || albumData.attributes.name,
+          duration: track.attributes.durationInMillis || 0,
+          //       quality: track.attributes.audioTraits[0],
+          source: 'musicKit',
+          availableSources: ['musicKit'],
+          imageUrl: (albumData.attributes.artwork.url ?? '').replace(
+            '{w}x{h}',
+            '900x900'
+          ),
+          releaseDate: albumData.attributes.releaseDate ?? '',
+        })
+      );
+    }
+
+    return {
+      id: albumData.id,
+      source: 'musicKit',
+      releaseDate: albumData.attributes.releaseDate || '',
+      artWork: {
+        type: 'apple',
+        url:
+          albumData.attributes.artwork.url.replace('{w}x{h}', '900x900') || '',
+        width: albumData.attributes.artwork.width || 0,
+        height: albumData.attributes.artwork.height || 0,
+        textColor1: albumData.attributes.artwork.textColor1 || '',
+        textColor2: albumData.attributes.artwork.textColor2 || '',
+        textColor3: albumData.attributes.artwork.textColor3 || '',
+        textColor4: albumData.attributes.artwork.textColor4 || '',
+        bgColor: albumData.attributes.artwork.bgColor || '',
+        hasP3: albumData.attributes.artwork.hasP3 || false,
+      },
+      name: albumData.attributes.name || 'Album Name',
+      artist: albumData.attributes.artistName || 'Album Artist',
+      isSingle: albumData.attributes.isSingle || false,
+      editorialNotes: albumData.attributes.editorialNotes,
+      attributes: [],
+      gnres: albumData.attributes.genreNames || [],
+      tracks: formatedTracks,
+    };
   }
 
   async search(query: string): Promise<SearchResult> {

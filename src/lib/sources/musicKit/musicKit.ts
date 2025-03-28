@@ -4,7 +4,7 @@ import { platform } from '@tauri-apps/plugin-os';
 import { musicKit as IosMusicKit } from './ios/musicKit';
 import { musicKit as AndroidMusicKit } from './android/musicKit';
 import { musicKit as WebMusicKit } from './web/musicKit';
-import { Lyrics, song, searchResult } from '../types';
+import { Lyrics, song, searchResult, AlbumData } from '../types';
 
 type PlatformType =
   | 'windows'
@@ -83,6 +83,9 @@ export class MusicKit implements SourceInterface {
   }
   getSongData(songId: string): Promise<song> {
     return this.platform.getSongData(songId);
+  }
+  async getAlbumData(albumId: string, source: string): Promise<AlbumData> {
+    return await this.platform.getAlbumData(albumId, source);
   }
   async search(query: string): Promise<searchResult> {
     console.log('searching');

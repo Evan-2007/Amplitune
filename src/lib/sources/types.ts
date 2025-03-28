@@ -31,6 +31,46 @@ export interface song {
   releaseDate: string;
 }
 
+export type ArtWork =
+  | {
+      type: 'apple';
+      url: string;
+      width: number;
+      height: number;
+      textColor1: string; // Hex color code
+      textColor2: string;
+      textColor3: string;
+      textColor4: string;
+      bgColor: string;
+      hasP3: boolean; // maybe P3 color space support
+    }
+  | {
+      url: string;
+      width?: number;
+      height?: number;
+    };
+
+export interface AlbumData {
+  id: string;
+  source: string;
+  attributes?: string[];
+  gnres?: string[];
+  artWork: ArtWork;
+  isSingle?: boolean;
+  name: string;
+  artist: string;
+  artistId?: string;
+  releaseDate: string;
+  contentRating?: string;
+  isCompleat?: boolean;
+  editorialNotes?: {
+    tagLine?: string;
+    short?: string;
+    standard?: string;
+  };
+  tracks?: song[];
+}
+
 export interface albums {
   id: string;
   title: string;
