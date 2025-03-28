@@ -14,9 +14,10 @@ export interface queueStore {
   setRepeat: (repeat: number) => void;
   playPrevious: () => void;
   skip: () => void;
-  shuffle: () => void;
+  toggleShuffle: () => void;
   setQueue: (songs: song[], shuffle: boolean, clearQueue: boolean) => void;
   play: (song: song | string) => void;
+  playAlbum: (album: song[], action: 'clear' | 'preserve') => void;
   setPlaying: (playing: 'playing' | 'paused' | 'ended') => void;
 }
 
@@ -26,7 +27,7 @@ interface queue {
   playing: 'playing' | 'paused' | 'ended';
   currentSong: { track: song; index: number };
   songs: song[];
-  shuffledSongs: song[];
+  unShuffledSongs: song[];
 }
 
 export const useQueueStore = create<queueStore>()(
@@ -37,7 +38,7 @@ export const useQueueStore = create<queueStore>()(
         shuffle: false,
         playing: 'paused',
         songs: [],
-        shuffledSongs: [],
+        unShuffledSongs: [],
         currentSong: {
           //set to -1 to avoid adding first song at index of 1
           index: -1,
@@ -97,6 +98,42 @@ export const useQueueStore = create<queueStore>()(
                 track,
                 ...state.queue.songs.slice(state.queue.currentSong.index + 1),
               ],
+            },
+          }));
+        }
+      },
+
+      playAlbum: (album, action) => {
+        if (action === 'clear') {
+          set(() => ({
+            queue: {
+              songs: album,
+              currentSong: {
+                track: album[0],
+                index: 0,
+              },
+              repeat: 0,
+              shuffle: false,
+              playing: 'paused',
+              unShuffledSongs: [],
+            },
+          }));
+        } else if (action === 'preserve') {
+          set((state) => ({
+            queue: {
+              ...state.queue,
+              songs: [
+                ...state.queue.songs.slice(
+                  0,
+                  state.queue.currentSong.index + 1
+                ),
+                ...album,
+                ...state.queue.songs.slice(state.queue.currentSong.index + 1),
+              ],
+              currentSong: {
+                track: album[0],
+                index: state.queue.currentSong.index + 1,
+              },
             },
           }));
         }
@@ -279,21 +316,37 @@ export const useQueueStore = create<queueStore>()(
           },
         })),
 
-      shuffle: () =>
+      toggleShuffle: () => {
         set((state) => {
-          console.log('shuffle');
-          if (state.queue.shuffle) {
+          if (state.queue.shuffle)
             return {
               queue: {
                 ...state.queue,
-                shuffledSongs: state.queue.songs.sort(
-                  () => Math.random() - 0.5
-                ),
+                shuffle: false,
+                songs: [...state.queue.unShuffledSongs],
+              },
+            };
+          else {
+            const unShuffledSongs = [...state.queue.songs];
+            const shuffledSongs = [
+              ...state.queue.songs.slice(0, state.queue.currentSong.index),
+              ...state.queue.songs.slice(state.queue.currentSong.index + 1),
+            ].sort(() => Math.random() - 0.5);
+            return {
+              queue: {
+                ...state.queue,
+                shuffle: true,
+                unShuffledSongs: unShuffledSongs,
+                songs: [
+                  ...shuffledSongs.slice(0, state.queue.currentSong.index),
+                  state.queue.currentSong.track,
+                  ...shuffledSongs.slice(state.queue.currentSong.index),
+                ],
               },
             };
           }
-          return {};
-        }),
+        });
+      },
 
       setQueue: (songs, shuffle, clearQueue) =>
         set((state) => {
