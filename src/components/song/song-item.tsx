@@ -22,15 +22,15 @@ export function SongItem({ data, type }: SongItemProps) {
       const queryParams = new URLSearchParams(
         Object.entries(data as unknown as Record<string, string>)
       ).toString();
-      router.push(`/home/track?${queryParams}`);
+      router.push(`track?${queryParams}`);
     } else if (type === 'playlist') {
-      router.push(`/playlist/${data.source}/${data.id}`);
+      router.push(`playlist/${data.source}/${data.id}`);
     } else if (type === 'album') {
-      router.push(`/album/${data.source}/${data.id}`);
+      router.push(`album?source=${data.source}&id=${data.id}`);
     } else if (type === 'artist') {
-      router.push(`/artist/${data.source}/${data.id}`);
+      router.push(`artist/${data.source}/${data.id}`);
     } else if (type === 'video') {
-      router.push(`/video/${data.source}/${data.id}`);
+      router.push(`video/${data.source}/${data.id}`);
     }
   };
 
