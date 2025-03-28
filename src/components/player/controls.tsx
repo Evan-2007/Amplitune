@@ -22,7 +22,6 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
   const playing = useQueueStore((state) => state.queue.playing);
   const setPlaying = useQueueStore((state) => state.setPlaying);
 
-  const [shuffle, setShuffle] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [sliderValue, setSliderValue] = useState<number>(0);
   const [sliderActive, setSliderActive] = useState<boolean>(false);
@@ -34,6 +33,8 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
   const songData = useQueueStore((state) => state.currentSong?.track);
   const repeat = useQueueStore((state) => state.queue.repeat);
   const setRepeat = useQueueStore((state) => state.setRepeat);
+  const toggleShuffle = useQueueStore((state) => state.toggleShuffle);
+  const shuffle = useQueueStore((state) => state.queue.shuffle);
 
   const timeLeft = length - currentTime;
   const timeLeftString = `-${sourceManager.formatTime(timeLeft)}`;
@@ -107,8 +108,6 @@ const Controls: React.FC<ControlsProps> = ({ className }) => {
       previous();
     }
   };
-
-  const toggleShuffle = () => setShuffle(!shuffle);
 
   return (
     <div className={cn('flex h-full flex-shrink-0 flex-col', className)}>
