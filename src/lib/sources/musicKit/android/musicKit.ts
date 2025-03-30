@@ -1,5 +1,11 @@
 import { SourceInterface } from '@/lib/sources/source-interface';
-import { song, Lyrics, searchResult } from '@/lib/sources/types';
+import {
+  song,
+  Lyrics,
+  searchResult,
+  Playlist,
+  Playlists,
+} from '@/lib/sources/types';
 
 export class musicKit implements SourceInterface {
   async play(): Promise<void> {
@@ -59,6 +65,12 @@ export class musicKit implements SourceInterface {
       artist: 'Album Artist',
       isSingle: false,
     };
+  }
+  async getPlaylists(): Promise<Playlists[]> {
+    throw new Error('Method not implemented.');
+  }
+  async getPlaylistById(playlistId: string): Promise<Playlist> {
+    throw new Error('Method not implemented.');
   }
   async search(query: string): Promise<searchResult> {
     throw new Error('Method not implemented.');

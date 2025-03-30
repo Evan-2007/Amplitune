@@ -6,6 +6,7 @@ import { tidal as AndroidTidal } from './android/tidal';
 import { tidal as WebTidal } from './web/tidal';
 import { Lyrics, song, AlbumData } from '../types';
 import { searchResult } from '../types';
+import { Playlist, Playlists } from '../types';
 
 type PlatformType =
   | 'windows'
@@ -87,6 +88,12 @@ export class Tidal implements SourceInterface {
 
   async getAlbumData(albumId: string, source: string): Promise<AlbumData> {
     return this.platform.getAlbumData(albumId, source);
+  }
+  async getPlaylists(): Promise<Playlists[]> {
+    throw new Error('Method not implemented.');
+  }
+  async getPlaylistById(playlistId: string): Promise<Playlist> {
+    throw new Error('Method not implemented.');
   }
 
   async search(query: string): Promise<searchResult> {

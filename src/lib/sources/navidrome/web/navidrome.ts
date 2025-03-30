@@ -2,7 +2,7 @@ import { SourceInterface } from '@/lib/sources/source-interface';
 //import {getSongData} from './getSong'
 import { subsonicBaseUrl } from './subsonic';
 import { AudioPlayer } from './audioPlayer';
-import { Lyrics } from '../../types';
+import { Lyrics, Playlist, Playlists } from '../../types';
 import { getLyrics } from './getLyrics';
 import { song } from '../../types';
 import { searchResult } from '../../types';
@@ -141,6 +141,13 @@ export class WebNavidrome implements SourceInterface {
       artist: 'Album Artist',
       isSingle: false,
     };
+  }
+
+  async getPlaylists(): Promise<Playlists[]> {
+    return [];
+  }
+  async getPlaylistById(playlistId: string): Promise<Playlist> {
+    throw new Error('Method not implemented.');
   }
 
   async setRepeat(repeat: boolean): Promise<void> {

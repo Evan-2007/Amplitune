@@ -5,8 +5,11 @@ import {
   searchResult as SearchResult,
   albums as Album,
   AlbumData,
+  Playlist,
+  Playlists,
 } from '@/lib/sources/types';
 import { jwtDecode } from 'jwt-decode';
+import { last } from 'lodash';
 
 export class musicKit implements SourceInterface {
   private musicKitInstance: any = null;
@@ -262,6 +265,82 @@ export class musicKit implements SourceInterface {
       attributes: [],
       gnres: albumData.attributes.genreNames || [],
       tracks: formatedTracks,
+    };
+  }
+
+  async getPlaylists(): Promise<Playlists[]> {
+    await this.initializationPromise;
+    if (!this.musicKitInstance) {
+      console.error('MusicKit not initialized');
+      return Promise.reject('MusicKit not initialized');
+    }
+    const result = await this.musicKitInstance.api.music(
+      '/v1/me/library/playlists'
+    );
+    if (!result || !result.data) {
+      return Promise.reject('Failed to fetch playlists');
+    }
+    console.log(result.data);
+    const playlists = result.data.data.map((playlist: any) => ({
+      id: playlist.id,
+      name: playlist.attributes.name,
+      imageUrl: playlist.attributes.artwork
+        ? playlist.attributes.artwork.url.replace('{w}x{h}', '900x900')
+        : undefined,
+      source: 'musicKit',
+      lastUpdated: playlist.attributes.lastModifiedDate,
+      canEdit: playlist.attributes.canEdit,
+      isPublic: playlist.attributes.isPublic,
+      isLibrary: playlist.attributes.playParams.isLibrary,
+      dateAdded: playlist.attributes.dateAdded,
+      type: playlist.type,
+    }));
+    return playlists;
+  }
+
+  async getPlaylistById(playlistId: string): Promise<Playlist> {
+    await this.initializationPromise;
+    if (!this.musicKitInstance) {
+      console.error('MusicKit not initialized');
+      return Promise.reject('MusicKit not initialized');
+    }
+    const params = {
+      include: 'tracks',
+    };
+    const result = await this.musicKitInstance.api.music(
+      `/v1/me/library/playlists/${playlistId}`,
+      params
+    );
+    if (!result || !result.data) {
+      return Promise.reject('Failed to fetch playlist');
+    }
+
+    const playlist = result.data.data[0];
+    const tracks = playlist.relationships.tracks.data.map((track: any) => ({
+      id: track.id,
+      title: track.attributes.name,
+      artist: track.attributes.artistName,
+      album: track.attributes.albumName,
+      duration: track.attributes.durationInMillis,
+      quality: 'lossless',
+      source: 'musicKit',
+      availableSources: ['musicKit'],
+      imageUrl: track.attributes.artwork.url.replace('{w}x{h}', '900x900'),
+      releaseDate: track.attributes.releaseDate,
+    }));
+
+    return {
+      id: playlist.id,
+      name: playlist.attributes.name,
+      imageUrl: playlist.attributes.artwork.url.replace('{w}x{h}', '900x900'),
+      source: 'musicKit',
+      lastModified: playlist.attributes.lastModifiedDate,
+      canEdit: playlist.attributes.canEdit,
+      isPublic: playlist.attributes.isPublic,
+      type: playlist.type,
+      isLibrary: playlist.attributes.playParams.isLibrary,
+      dateAdded: playlist.attributes.dateAdded,
+      tracks: playlist.relationships.tracks ? tracks : undefined,
     };
   }
 

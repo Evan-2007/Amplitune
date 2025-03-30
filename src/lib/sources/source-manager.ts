@@ -9,6 +9,8 @@ import {
   albums as Album,
   searchResult as SearchResult,
   AlbumData,
+  Playlists,
+  Playlist,
 } from './types';
 import { getLRCLIBLyrics } from './lrc-lib/lrc-lib';
 import { MusicKit } from './musicKit/musicKit';
@@ -345,6 +347,39 @@ export class SourceManager {
       return Promise.reject('Source not found');
     }
     return sourceInstance.getAlbumData(albumId, source);
+  }
+
+  public async getPlaylists(): Promise<Playlists[]> {
+    await this.initializationPromise;
+    let playlists: Playlists[] = [];
+    for (const [sourceId, source] of this.sources) {
+      try {
+        const sourcePlaylists = await source.getPlaylists();
+        playlists = playlists.concat(
+          sourcePlaylists.map((p) => ({ ...p, source: sourceId }))
+        );
+      } catch (error) {
+        console.error(`Failed to get playlists for source ${sourceId}`, error);
+      }
+    }
+    if (playlists.length === 0) {
+      console.error('No playlists found');
+      return Promise.reject('No playlists found');
+    }
+    return playlists;
+  }
+
+  public async getPlaylistById(
+    playlistId: string,
+    source: string
+  ): Promise<Playlist> {
+    await this.initializationPromise;
+
+    const sourceInstance = this.sources.get(source);
+    if (!sourceInstance) {
+      return Promise.reject('Source not found');
+    }
+    return sourceInstance.getPlaylistById(playlistId);
   }
 
   // Lyrics handling

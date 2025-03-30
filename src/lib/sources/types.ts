@@ -111,3 +111,24 @@ export interface sources {
     type: 'navidrome';
   };
 }
+
+export interface Playlists {
+  id: string;
+  source: string;
+  lastModified: string;
+  name: string;
+  isPublic: boolean;
+  isLibrary: boolean;
+  canEdit: boolean;
+  dateAdded: string;
+  type?: string;
+  imageUrl?: string;
+}
+
+export interface PlaylistSong extends song {
+  trackNumber: number;
+}
+
+export interface Playlist extends Playlists {
+  tracks: song[];
+}

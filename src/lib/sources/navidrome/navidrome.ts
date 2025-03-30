@@ -3,7 +3,7 @@ import { SourceInterface } from '../source-interface';
 import { platform } from '@tauri-apps/plugin-os';
 import { WebNavidrome } from './web/navidrome';
 import { Lyrics } from '../types';
-import { song, searchResult, AlbumData } from '../types';
+import { song, searchResult, AlbumData, Playlist, Playlists } from '../types';
 
 type PlatformType =
   | 'windows'
@@ -90,6 +90,12 @@ export class Navidrome implements SourceInterface {
   }
   async getAlbumData(albumId: string, source: string): Promise<AlbumData> {
     return await this.platform.getAlbumData(albumId, source);
+  }
+  async getPlaylists(): Promise<Playlists[]> {
+    return await this.platform.getPlaylists();
+  }
+  async getPlaylistById(playlistId: string): Promise<Playlist> {
+    return await this.platform.getPlaylistById(playlistId);
   }
   async search(query: string): Promise<searchResult> {
     return await this.platform.search(query);
