@@ -283,7 +283,7 @@ function QueueList({ isMouseMoving }: { isMouseMoving: boolean }) {
                 <div className='group/image flex space-x-4'>
                   <div className='' onClick={() => setSong(index)}>
                     <img
-                      src={currentlyPlaying.track.imageUrl}
+                      src={song.imageUrl}
                       alt='cover art'
                       className='absolute h-12 w-12 rounded-md'
                     />
