@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { useQueueStore } from '@/lib/queue';
-import { song as Song, AlbumData } from '@/lib/sources/types';
+import { song as Song, AlbumData, Playlist } from '@/lib/sources/types';
 
 import {
   Dialog,
@@ -17,7 +17,8 @@ import { Separator } from '@/components/ui/separator';
 
 type HeaderProps =
   | { type: 'track'; data: Song }
-  | { type: 'album'; data: AlbumData };
+  | { type: 'album'; data: AlbumData }
+  | { type: 'playlist'; data: Playlist };
 
 export function Header({ type, data }: HeaderProps) {
   const play = useQueueStore((state) => state.play);
@@ -43,7 +44,9 @@ export function Header({ type, data }: HeaderProps) {
           <h1 className='text-2xl font-bold'>
             {type === 'track' ? data.title : data.name}
           </h1>
-          <h2 className='text-xl text-gray-400'>{data.artist}</h2>
+          {type !== 'playlist' && (
+            <h2 className='text-xl text-gray-400'>{data.artist}</h2>
+          )}
           {type === 'track' && (
             <>
               <h3 className='text-md text-gray-500'>{data.album}</h3>
@@ -70,7 +73,7 @@ export function Header({ type, data }: HeaderProps) {
               </div>
             </button>
           )}
-          {type == 'album' && queue.songs.length > 0 ? (
+          {(type == 'album' || type == 'playlist') && queue.songs.length > 0 ? (
             <Dialog>
               <DialogTrigger asChild>
                 <button className='flex items-center justify-center rounded-xl bg-red-700 p-2 text-white hover:bg-red-600'>
