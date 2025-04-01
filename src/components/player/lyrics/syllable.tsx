@@ -284,7 +284,7 @@ type GradientLetterProps = {
 };
 
 const myFont = localFont({
-  src: '../../../../public/fonts/SF-Pro-Display-Bold.woff',
+  src: '../../../../public/fonts/SF-Pro-Display-bold.woff',
   display: 'swap',
 });
 
