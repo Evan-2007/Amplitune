@@ -60,6 +60,7 @@ export function PlayerContent() {
   const setPlaying = useQueueStore((state) => state.setPlaying);
   const playing = useQueueStore((state) => state.queue.playing);
   const skip = useQueueStore((state) => state.skip);
+  const playPrevious = useQueueStore((state) => state.playPrevious);
 
   useEffect(() => {
     setTimeout(() => {
@@ -124,6 +125,18 @@ export function PlayerContent() {
 
       navigator.mediaSession.setActionHandler('pause', () => {
         sourceManager.pause();
+      });
+
+      navigator.mediaSession.setActionHandler('previoustrack', () => {
+        if (sourceManager.getPosition() > 5) {
+          sourceManager.seek(0);
+          sourceManager.play();
+        } else {
+          playPrevious();
+        }
+      });
+      navigator.mediaSession.setActionHandler('nexttrack', () => {
+        skip();
       });
     }
   };
