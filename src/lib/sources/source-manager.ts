@@ -237,8 +237,6 @@ export class SourceManager {
       this.setPlaying(playing);
     });
 
-    // Play the song
-    await source.playSong(track.id);
     this.currentTrack = {
       id: track.id,
       title: track.title,
@@ -248,6 +246,10 @@ export class SourceManager {
       position: 0,
       album: track.album,
     };
+
+    // Play the song
+    await source.playSong(track.id);
+
     await source.setRepeat(this.repeatState);
     this.resetPlaybackState();
   }
