@@ -121,14 +121,13 @@ export function SyncedLyrics({
     if ((lyricsResponse as any).error) {
       console.error('An error occurred:', (lyricsResponse as any).error);
       setLyrics(null);
-      setError('An error occurred while fetching the lyrics');
+      setError(`An error occurred: ${(lyricsResponse as any).error}`);
     } else {
       if ('lines' in lyricsResponse && 'synced' in lyricsResponse) {
         setLyrics(lyricsResponse.lines);
         setSynced(lyricsResponse.synced);
         setError(null);
       } else {
-        setError('An error occurred while fetching the lyrics');
       }
     }
   }
@@ -148,11 +147,11 @@ export function SyncedLyrics({
 
   return (
     <>
-      {/* {error && (
+      {error && (
         <p className='mt-6 text-center text-4xl font-bold text-gray-400 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]'>
           {error}
         </p>
-      )} */}
+      )}
       {lyrics ? (
         synced ? (
           lyrics.map((line, index) => (
