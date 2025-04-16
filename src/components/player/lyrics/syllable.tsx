@@ -42,8 +42,11 @@ export interface SyllableLyricsType {
 }
 
 async function accessToken() {
+
+  const fetch = window.isTauri ? tauriFetch : window.fetch;
+
   console.info('Fetching access token from webUI');
-  const response = await tauriFetch('https://music.apple.com/us/browse', {
+  const response = await fetch('https://music.apple.com/us/browse', {
     method: 'GET',
     mode: 'no-cors',
   });
@@ -61,7 +64,7 @@ async function accessToken() {
 
   const indexJs = indexJsMatch[1];
   console.log(indexJs);
-  const jsResponse = await tauriFetch(
+  const jsResponse = await fetch(
     `https://music.apple.com/assets/index${indexJs}.js`
   );
 
@@ -112,6 +115,8 @@ function formatTime(time: string) {
 export async function getSyllableLyrics(
   setSyllableLyrics: (lyrics: SyllableLyricsType) => void
 ) {
+
+  const fetch = window.isTauri ? tauriFetch : window.fetch;
   const sourceManager = SourceManager.getInstance();
   const songId = useQueueStore.getState().queue.currentSong?.track.id;
   if (!window.isTauri && sourceManager.activeSource !== 'musicKit') {
@@ -124,7 +129,7 @@ export async function getSyllableLyrics(
   );
 
   try {
-    const response = await tauriFetch(
+    const response = await fetch(
       'https://amp-api.music.apple.com/v1/catalog/us/songs/' +
         songId +
         '/syllable-lyrics',
