@@ -16,7 +16,7 @@
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
     "electron-dev": "concurrently -n \"NEXT,ELECTRON\" -c \"yellow,blue\" --kill-others \"next dev\" \"electron .\"",
-    "electron-build": "cross-env ELECTRON_MIRROR=https://github.com/castlabs/electron-releases/releases/download/v && electron-builder"
+    "electron-build": "next build && cross-env ELECTRON_MIRROR=https://github.com/castlabs/electron-releases/releases/download/v && electron-builder"
   },
   "build": {
     "files": [
