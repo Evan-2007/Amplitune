@@ -40,7 +40,7 @@ jobs:
               run: pnpm electron-build --linux --publish always --x64 --arm64
 
             - name: upload artifacts
-              uses: actions/upload-artifact@v3
+              uses: actions/upload-artifact@v4
               with:
                 name: linux-electron-build ${{ github.sha }}
                 path: |
@@ -52,5 +52,7 @@ jobs:
                   dist/*.deb.zip
                   dist/*.tar.gz.zip
                   dist/*.snap.zip
+                if-no-files-found: error
+                overwrite: true
 
                 
