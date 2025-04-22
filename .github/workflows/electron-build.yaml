@@ -16,6 +16,8 @@ on:
 jobs:
     build: 
         runs-on: ubuntu-latest
+        env:
+            ELECTRON_MIRROR: https://github.com/castlabs/electron-releases/releases/download/v
 
         steps:
             - name: Checkout
