@@ -39,19 +39,19 @@ pub fn run() {
 
     // Only add the single instance plugin for non-iOS targets.
     #[cfg(not(target_os = "ios"))]
-    let builder = builder.plugin(single_instance_init(|_app, argv, _cwd| {
-        println!(
-            "New instance opened with deep link arguments: {:?}",
-            &argv[1]
-        );
-        handle_deep_link(_app.clone(), &argv[1]);
-    }));
+    // let builder = builder.plugin(single_instance_init(|_app, argv, _cwd| {
+    //     println!(
+    //         "New instance opened with deep link arguments: {:?}",
+    //         &argv[1]
+    //     );
+    //     handle_deep_link(_app.clone(), &argv[1]);
+    // }));
 
     let builder = builder
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_os::init())
         .setup(|app| {
-            #[cfg(any(windows, target_os = "linux"))]
+            #[cfg(any())]
             {
                 app.deep_link().register_all()?;
             }
