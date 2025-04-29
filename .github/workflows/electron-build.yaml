@@ -1,0 +1,60 @@
+name: linux-electron-build
+
+on:
+    push:
+      branches:
+        - main
+        - dev
+        - tauri
+    pull_request:
+      branches:
+        - main
+        - dev
+        - tauri
+
+
+jobs:
+    build: 
+        runs-on: ubuntu-latest
+        env:
+            ELECTRON_MIRROR: https://github.com/castlabs/electron-releases/releases/download/v
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+    
+            - uses: pnpm/action-setup@v4
+              name: Install pnpm  
+              with:
+                version: 9
+                run_install: false
+
+            - name: Install Node.js
+              uses: actions/setup-node@v4
+              with:
+                node-version: 20
+                cache: 'pnpm'
+
+            - name: install pnpm dependencies
+              run: pnpm install
+
+            - name: build electron app
+              run: pnpm electron-build --linux --publish always --x64 --arm64
+
+            - name: upload artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                name: linux-electron-build ${{ github.sha }}
+                path: |
+                  dist/*.AppImage
+                  dist/*.deb
+                  dist/*.tar.gz
+                  dist/*.snap
+                  dist/*.AppImage.zip
+                  dist/*.deb.zip
+                  dist/*.tar.gz.zip
+                  dist/*.snap.zip
+                if-no-files-found: error
+                overwrite: true
+
+                

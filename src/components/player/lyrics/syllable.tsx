@@ -17,6 +17,7 @@ declare global {
 import { useQueueStore } from '@/lib/queue';
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import { format } from 'path';
+import { json } from 'stream/consumers';
 
 export interface SyllableLyricsType {
   sections: {
@@ -41,46 +42,6 @@ export interface SyllableLyricsType {
   timing: string;
 }
 
-async function accessToken() {
-  console.info('Fetching access token from webUI');
-  const response = await tauriFetch('https://music.apple.com/us/browse', {
-    method: 'GET',
-    mode: 'no-cors',
-  });
-
-  if (response.status !== 200) {
-    console.error('Failed to get music.apple.com! Please re-try...');
-    throw new Error('Failed to get music.apple.com');
-  }
-
-  const htmlText = await response.text();
-  const indexJsMatch = htmlText.match(/(?<=index)(.*?)(?=\.js")/);
-  if (!indexJsMatch) {
-    throw new Error('Could not find index JS file reference');
-  }
-
-  const indexJs = indexJsMatch[1];
-  console.log(indexJs);
-  const jsResponse = await tauriFetch(
-    `https://music.apple.com/assets/index${indexJs}.js`
-  );
-
-  if (jsResponse.status !== 200) {
-    console.error('Failed to get js library! Please re-try...');
-    throw new Error('Failed to get js library');
-  }
-
-  const jsText = await jsResponse.text();
-  const tokenMatch = jsText.match(/(?=eyJh)(.*?)(?=")/);
-
-  if (!tokenMatch) {
-    throw new Error('Could not find access token in JS file');
-  }
-
-  const accessToken = tokenMatch[1];
-  console.log('Access token:', accessToken);
-  return accessToken;
-}
 
 function convertToMilliseconds(timeString: string) {
   const [minutes, seconds] = timeString.split(':');
@@ -112,19 +73,21 @@ function formatTime(time: string) {
 export async function getSyllableLyrics(
   setSyllableLyrics: (lyrics: SyllableLyricsType) => void
 ) {
+
+  const fetch = window.isTauri ? tauriFetch : window.fetch;
   const sourceManager = SourceManager.getInstance();
   const songId = useQueueStore.getState().queue.currentSong?.track.id;
   if (!window.isTauri && sourceManager.activeSource !== 'musicKit') {
     console.log('Not running in Tauri, cannot fetch syllable lyrics');
     return false;
   }
-  const token = await accessToken();
+  const token = localStorage.getItem('music.apple.com:music-token');
   const MediaUserToken = localStorage.getItem(
     'music.q222xnn59b.media-user-token'
   );
 
   try {
-    const response = await tauriFetch(
+    const response = await fetch(
       'https://amp-api.music.apple.com/v1/catalog/us/songs/' +
         songId +
         '/syllable-lyrics',
