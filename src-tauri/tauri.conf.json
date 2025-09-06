@@ -1,6 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "amplitune",
+  "mainBinaryName": "Amplitune",
   "version": "0.1.0",
   "identifier": "dev.evanc.amplitune",
   "build": {
