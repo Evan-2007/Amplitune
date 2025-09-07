@@ -42,7 +42,6 @@ export interface SyllableLyricsType {
   timing: string;
 }
 
-
 function convertToMilliseconds(timeString: string) {
   const [minutes, seconds] = timeString.split(':');
   const [wholeSecs, fractionalSecs] = seconds.split('.');
@@ -73,7 +72,6 @@ function formatTime(time: string) {
 export async function getSyllableLyrics(
   setSyllableLyrics: (lyrics: SyllableLyricsType) => void
 ) {
-
   const fetch = window.isTauri ? tauriFetch : window.fetch;
   const sourceManager = SourceManager.getInstance();
   const songId = useQueueStore.getState().queue.currentSong?.track.id;

@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { CrossPlatformStorage } from '@/lib/storage/cross-platform-storage';
 import { isElectron } from '@/lib/utils';
 import { SongDropdown } from '@/components/song/dropdown';
-import {useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 const localStorage = new CrossPlatformStorage();
 

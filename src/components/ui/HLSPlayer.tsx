@@ -10,7 +10,7 @@ export function HLSPlayer({ src }: { src: string }) {
 
     const video = videoRef.current;
 
-    if (video.canPlayType("application/vnd.apple.mpegurl")) {
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = src;
     } else if (Hls.isSupported()) {
       const hls = new Hls({
@@ -25,27 +25,21 @@ export function HLSPlayer({ src }: { src: string }) {
       hls.loadSource(src);
       hls.attachMedia(video);
 
-
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-
         if (hls.levels.length > 0) {
           const highestLevel = hls.levels.length - 1;
           hls.currentLevel = highestLevel;
         }
       });
 
-
       const handleTimeUpdate = () => {
         const currentTime = video.currentTime;
         const duration = video.duration;
-        
 
         if (duration - currentTime < 0.1 && currentTime > 0) {
-
           const currentLevel = hls.currentLevel;
-          
+
           hls.loadSource(src);
-          
 
           hls.on(Hls.Events.MANIFEST_PARSED, function restoreQuality() {
             if (currentLevel >= 0 && currentLevel < hls.levels.length) {
@@ -59,11 +53,10 @@ export function HLSPlayer({ src }: { src: string }) {
 
       video.addEventListener('timeupdate', handleTimeUpdate);
 
-
       const handleEnded = () => {
         const currentLevel = hls.currentLevel;
         hls.loadSource(src);
-        
+
         hls.on(Hls.Events.MANIFEST_PARSED, function restoreQualityOnEnd() {
           if (currentLevel >= 0 && currentLevel < hls.levels.length) {
             hls.currentLevel = currentLevel;
@@ -73,7 +66,6 @@ export function HLSPlayer({ src }: { src: string }) {
       };
 
       video.addEventListener('ended', handleEnded);
-
 
       return () => {
         video.removeEventListener('timeupdate', handleTimeUpdate);
@@ -86,7 +78,6 @@ export function HLSPlayer({ src }: { src: string }) {
     }
   }, [src]);
 
-
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -97,20 +88,20 @@ export function HLSPlayer({ src }: { src: string }) {
     };
 
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
-    
+
     return () => {
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
     };
   }, []);
 
   return (
-    <div className='w-full h-full relative'>
-      <video 
-        ref={videoRef} 
-        autoPlay 
-        muted 
-        loop 
-        className="h-full w-full object-contain inset-0"
+    <div className='relative h-full w-full'>
+      <video
+        ref={videoRef}
+        autoPlay
+        muted
+        loop
+        className='inset-0 h-full w-full object-contain'
         playsInline
       />
     </div>

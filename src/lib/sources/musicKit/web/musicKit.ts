@@ -359,8 +359,8 @@ export class musicKit implements SourceInterface {
 
       return {
         data: artist.data.data[0],
-        type: 'appleMusic1'
-      }
+        type: 'appleMusic1',
+      };
     } else {
       const MediaUserToken = localStorage.getItem(
         'music.q222xnn59b.media-user-token'
@@ -368,7 +368,7 @@ export class musicKit implements SourceInterface {
       const token = localStorage.getItem('music.apple.com:music-token');
       if (!token) {
         throw new Error('No developer token found');
-      }      
+      }
       const url = `https://amp-api.music.apple.com/v1/catalog/us/artists/${artistId}?art%5Burl%5D=c%2Cf&extend=artistBio%2CbornOrFormed%2CeditorialArtwork%2CeditorialVideo%2CextendedAssetUrls%2Chero%2CisGroup%2Corigin%2CplainEditorialNotes%2CseoDescription%2CseoTitle&extend%5Bplaylists%5D=trackCount&format%5Bresources%5D=map&include=record-labels%2Cartists%2Cpersons%2Cbands&include%5Bmusic-videos%5D=artists&include%5Bsongs%5D=artists%2Calbums&l=en-US&limit%5Bartists%3Atop-songs%5D=20&meta%5Balbums%3Atracks%5D=popularity&omit%5Bresource%5D=autos&platform=web&views=appears-on-albums%2Ccompilation-albums%2Cfeatured-albums%2Cfeatured-on-albums%2Cfeatured-release%2Cfull-albums%2Clatest-release%2Clive-albums%2Cmore-to-hear%2Cmore-to-see%2Cmusic-videos%2Cplaylists%2Cradio-shows%2Csimilar-artists%2Csingles%2Ctop-songs`;
       const response = await tauriFetch(url, {
         method: 'GET',
@@ -384,8 +384,8 @@ export class musicKit implements SourceInterface {
       console.log(data);
       return {
         data: data,
-        type: 'appleMusic2'
-    }
+        type: 'appleMusic2',
+      };
     }
   }
 

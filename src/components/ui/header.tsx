@@ -168,7 +168,9 @@ function Search() {
                               key={index}
                               className='group relative flex w-full items-center pb-2 pt-2 filter-none'
                               onClick={() =>
-                                router.push(`/home/artist?id=${artist.id}&source=${artist.source}`)
+                                router.push(
+                                  `/home/artist?id=${artist.id}&source=${artist.source}`
+                                )
                               }
                             >
                               <img

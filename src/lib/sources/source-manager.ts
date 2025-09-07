@@ -540,7 +540,6 @@ export class SourceManager {
     };
   }
 
-
   /**
    * Retrieves artist information by their unique ID from a specified source.
    *
@@ -549,7 +548,10 @@ export class SourceManager {
    * @returns A promise that resolves to an {@link ArtistResponse} containing the artist's information.
    * @throws Will reject the promise if the specified source is not found.
    */
-  public async getArtistById(artistId: string, source: string): Promise<ArtistResponse> {
+  public async getArtistById(
+    artistId: string,
+    source: string
+  ): Promise<ArtistResponse> {
     await this.initializationPromise;
     const sourceInstance = this.sources.get(source);
     if (!sourceInstance) {

@@ -10,9 +10,7 @@ import { useEffect } from 'react';
 import Script from 'next/script';
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 
-
 async function accessToken() {
-
   const fetch = window.isTauri ? tauriFetch : window.fetch;
 
   console.info('Fetching access token from webUI');
@@ -55,10 +53,7 @@ async function accessToken() {
   return accessToken;
 }
 
-
-
 export function MusicKitProvider() {
-
   async function getAccsessToken() {
     try {
       const token = await accessToken();
@@ -69,7 +64,7 @@ export function MusicKitProvider() {
   }
 
   useEffect(() => {
-    getAccsessToken()
+    getAccsessToken();
     // Set up the event listener immediately
     document.addEventListener('musickitloaded', async () => {
       try {
