@@ -3,7 +3,7 @@
 export type ArtistResponse = {
     // appleMusic1 is the standard Apple Music API
     // appleMusic2 is music.apple.com internal API. Internal API is not avalilable in the borwser due to CORS policy
-    type: 'appleMsuic1'
+    type: 'appleMusic1';
     data: AppleArtistResponse1;
 } | {
     type: 'appleMusic2';

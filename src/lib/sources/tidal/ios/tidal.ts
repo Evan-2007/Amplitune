@@ -6,6 +6,7 @@ import {
   Playlist,
   Playlists,
 } from '@/lib/sources/types';
+import { ArtistResponse } from '@/types/artistResponse';
 
 export class tidal implements SourceInterface {
   async play(): Promise<void> {
@@ -71,6 +72,9 @@ export class tidal implements SourceInterface {
     throw new Error('Method not implemented.');
   }
   async getPlaylistById(playlistId: string): Promise<Playlist> {
+    throw new Error('Method not implemented.');
+  }
+  async getArtistById(artistId: string): Promise<ArtistResponse> {
     throw new Error('Method not implemented.');
   }
 

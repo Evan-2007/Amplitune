@@ -14,6 +14,7 @@ import {
 } from './types';
 import { getLRCLIBLyrics } from './lrc-lib/lrc-lib';
 import { MusicKit } from './musicKit/musicKit';
+import { ArtistResponse } from '@/types/artistResponse';
 
 type PlaybackStatus = 'playing' | 'paused' | 'ended';
 type TimeUpdateListener = (position: number, duration: number) => void;
@@ -537,6 +538,24 @@ export class SourceManager {
       albums: mergedAlbums,
       artists: mergedArtists,
     };
+  }
+
+
+  /**
+   * Retrieves artist information by their unique ID from a specified source.
+   *
+   * @param artistId - The unique identifier of the artist to retrieve.
+   * @param source - The name of the source from which to fetch the artist data.
+   * @returns A promise that resolves to an {@link ArtistResponse} containing the artist's information.
+   * @throws Will reject the promise if the specified source is not found.
+   */
+  public async getArtistById(artistId: string, source: string): Promise<ArtistResponse> {
+    await this.initializationPromise;
+    const sourceInstance = this.sources.get(source);
+    if (!sourceInstance) {
+      return Promise.reject('Source not found');
+    }
+    return sourceInstance.getArtistById(artistId);
   }
 
   // Cleanup

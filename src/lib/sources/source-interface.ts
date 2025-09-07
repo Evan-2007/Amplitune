@@ -6,6 +6,7 @@ import {
   Playlists,
   Playlist,
 } from './types';
+import { ArtistResponse } from '@/types/artistResponse';
 
 export interface SourceInterface {
   play(): Promise<void>;
@@ -26,4 +27,5 @@ export interface SourceInterface {
   getAlbumData(albumId: string, source: string): Promise<AlbumData>;
   getPlaylists(): Promise<Playlists[]>;
   getPlaylistById(playlistId: string): Promise<Playlist>;
+  getArtistById(artistId: string): Promise<ArtistResponse>;
 }

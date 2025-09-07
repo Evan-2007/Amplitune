@@ -12,6 +12,7 @@ import {
   Playlist,
   Playlists,
 } from '../types';
+import { ArtistResponse } from '@/types/artistResponse';
 
 type PlatformType =
   | 'windows'
@@ -99,6 +100,9 @@ export class MusicKit implements SourceInterface {
   }
   async getPlaylistById(playlistId: string): Promise<Playlist> {
     return await this.platform.getPlaylistById(playlistId);
+  }
+  async getArtistById(artistId: string): Promise<ArtistResponse> {
+    return await this.platform.getArtistById(artistId);
   }
   async search(query: string): Promise<searchResult> {
     console.log('searching');

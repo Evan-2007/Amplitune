@@ -4,6 +4,7 @@ import { platform } from '@tauri-apps/plugin-os';
 import { WebNavidrome } from './web/navidrome';
 import { Lyrics } from '../types';
 import { song, searchResult, AlbumData, Playlist, Playlists } from '../types';
+import { Artist, ArtistResponse } from '@/types/artistResponse';
 
 type PlatformType =
   | 'windows'
@@ -96,6 +97,9 @@ export class Navidrome implements SourceInterface {
   }
   async getPlaylistById(playlistId: string): Promise<Playlist> {
     return await this.platform.getPlaylistById(playlistId);
+  }
+  async getArtistById(artistId: string): Promise<ArtistResponse> {
+    throw new Error('Method not implemented.');
   }
   async search(query: string): Promise<searchResult> {
     return await this.platform.search(query);

@@ -7,6 +7,7 @@ import { tidal as WebTidal } from './web/tidal';
 import { Lyrics, song, AlbumData } from '../types';
 import { searchResult } from '../types';
 import { Playlist, Playlists } from '../types';
+import { ArtistResponse } from '@/types/artistResponse';
 
 type PlatformType =
   | 'windows'
@@ -93,6 +94,10 @@ export class Tidal implements SourceInterface {
     throw new Error('Method not implemented.');
   }
   async getPlaylistById(playlistId: string): Promise<Playlist> {
+    throw new Error('Method not implemented.');
+  }
+
+  async getArtistById(artistId: string): Promise<ArtistResponse> {
     throw new Error('Method not implemented.');
   }
 

@@ -6,6 +6,7 @@ import { Lyrics, Playlist, Playlists } from '../../types';
 import { getLyrics } from './getLyrics';
 import { song } from '../../types';
 import { searchResult } from '../../types';
+import { ArtistResponse } from '@/types/artistResponse';
 
 export class WebNavidrome implements SourceInterface {
   private audioPlayer: AudioPlayer;
@@ -141,6 +142,10 @@ export class WebNavidrome implements SourceInterface {
       artist: 'Album Artist',
       isSingle: false,
     };
+  }
+
+  async getArtistById(artistId: string): Promise<ArtistResponse> {
+    throw new Error('Method not implemented.');
   }
 
   async getPlaylists(): Promise<Playlists[]> {
