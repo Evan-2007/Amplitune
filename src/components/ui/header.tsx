@@ -168,7 +168,7 @@ function Search() {
                               key={index}
                               className='group relative flex w-full items-center pb-2 pt-2 filter-none'
                               onClick={() =>
-                                router.push(`/home/artists/${artist.id}`)
+                                router.push(`/home/artist?id=${artist.id}&source=${artist.source}`)
                               }
                             >
                               <img
@@ -180,13 +180,13 @@ function Search() {
                             <div className='col-span-5 space-y-1 pr-3'>
                               <Link
                                 className='line-clamp-1 text-sm hover:underline'
-                                href={`/home/artists/${artist.id}`}
+                                href={`/home/artist?id=${artist.id}&source=${artist.source}`}
                               >
                                 {artist.name}
                               </Link>
                               <Link
                                 className='line-clamp-1 text-[11px] text-gray-500 hover:underline'
-                                href={`/home/artists/${artist.id}`}
+                                href={`/home/artist?id=${artist.id}&source=${artist.source}`}
                               >
                                 Artist
                               </Link>
