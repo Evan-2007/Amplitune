@@ -253,6 +253,7 @@ function Search() {
                               <DropdownMenu className='text-sm'>
                                 <DropdownItem
                                   onClick={() => queue.addToQueue(song)}
+                                  key={index}
                                 >
                                   Add To Queue
                                 </DropdownItem>

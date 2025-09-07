@@ -332,7 +332,7 @@ function DropdownComponent({ index, song }: { index: number; song: song }) {
         <Ellipsis size={24} />
       </DropdownTrigger>
       <DropdownMenu className='text-sm'>
-        <DropdownItem onClick={() => handleRemove(index)}>
+        <DropdownItem onClick={() => handleRemove(index)} key={index}>
           Remove from Queue
         </DropdownItem>
       </DropdownMenu>
