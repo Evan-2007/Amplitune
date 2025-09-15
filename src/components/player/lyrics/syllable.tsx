@@ -490,13 +490,26 @@ export function SyllableLyrics({
     console.log(lines);
   }, [lines]);
 
+  const [twoActive, setTwoActive] = useState<number>();
+
   useEffect(() => {
     const currentLineIndex = lines.findIndex((line) => line.start > progress);
     setCurrentLine(currentLineIndex - 1);
+
+    if (lines[currentLineIndex - 1]?.end > lines[currentLineIndex ]?.start + 2) {
+
+        setTwoActive(currentLineIndex - 1);
+    }
+
+     if ((twoActive !== undefined && currentLineIndex - 2 > twoActive) || (twoActive !== undefined && currentLineIndex < twoActive)) {
+       setTwoActive(undefined);
+     }
+
+    console.log(currentLineIndex - 1, twoActive);
   }, [progress]);
 
   useEffect(() => {
-    if (containerRef.current && !isMouseMoving) {
+    if (containerRef.current && !isMouseMoving && twoActive !== currentLine -1) {
       const container = containerRef.current;
       const currentLineElement = container.querySelector(
         `[data-line="${currentLine}"]`
@@ -542,7 +555,7 @@ export function SyllableLyrics({
             key={index}
             onClick={() => handleLyricClick(line.start)}
             data-line={index}
-            className={`text-left ${index < currentLine && !isMouseMoving ? 'opacity-0' : ''} mb-16 flex transition-all duration-700 ${(index > currentLine || index < currentLine) && !isMouseMoving ? 'blur-sm' : ''} pl-2 ${multipleSinger && line.agent !== 'v2' ? 'w-4/6' : 'w-full'} ${line.agent === 'v2' && 'items-end justify-end'} `}
+            className={`text-left ${index < currentLine && !isMouseMoving ? 'opacity-0' : ''}  mb-16 flex transition-all duration-700 ${((index > currentLine || index < currentLine) && index !== twoActive) && !isMouseMoving ? 'blur-sm' : ''} pl-2 ${multipleSinger && line.agent !== 'v2' ? 'w-4/6' : 'w-full'} ${line.agent === 'v2' && 'items-end justify-end'} ${index == twoActive ? "opacity-100 blur-0" : ''}`}
           >
             <GradientTextLine
               words={line.words}
