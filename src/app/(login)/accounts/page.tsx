@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import * as tidal from '@tidal-music/auth';
 import { listen } from '@tauri-apps/api/event';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Webview } from '@tauri-apps/api/webview';
 
 interface TidalResponse {
   event: string;
@@ -16,6 +17,7 @@ interface TidalResponse {
 
 export default function Accounts() {
   const [error, setError] = useState<string | null>(null);
+  const [authenticated, setAuthenticated] = useState<string[]>([]);
 
   const clientId = 'MFzBCbOcFf8ObmHD';
 
@@ -27,6 +29,40 @@ export default function Accounts() {
       setError('Failed to authenticate with Tidal');
     }
   }
+
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      setTimeout(() => {}, 1000);
+      if (
+        typeof window !== 'undefined' &&
+        (window as any).musicKitStatus === 'ready'
+      ) {
+        const musicKitInstance = (window as any).MusicKit.getInstance();
+        const isAuthorized = musicKitInstance.isAuthorized;
+        console.log('isAuthorized', isAuthorized);
+        if (isAuthorized) {
+          setAuthenticated((prev) => [...prev, 'apple-music']);
+        } else {
+          setAuthenticated((prev) =>
+            prev.filter((item) => item !== 'apple-music')
+          );
+        }
+      }
+    };
+
+    checkAuth();
+
+    function handleStatusChange() {
+      checkAuth();
+    }
+
+    window.addEventListener('musickitloaded', handleStatusChange);
+
+    return () => {
+      window.removeEventListener('musickitloaded', handleStatusChange);
+    };
+  }, []);
 
   const handleTidalAuth = async () => {
     await tidal.init({
@@ -55,15 +91,76 @@ export default function Accounts() {
     });
   };
 
+  function isIOS() {
+    return (
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    );
+  }
+
   async function handleMusicKitAuth() {
-    if (
-      typeof window !== 'undefined' &&
-      (window as any).musicKitStatus === 'ready'
-    ) {
-      const musicKitInstance = (window as any).MusicKit.getInstance();
-      musicKitInstance.authorize();
+    if (authenticated.includes('apple-music')) {
+      if (
+        typeof window !== 'undefined' &&
+        (window as any).musicKitStatus === 'ready'
+      ) {
+        const musicKitInstance = (window as any).MusicKit.getInstance();
+        musicKitInstance.unauthorize();
+        setAuthenticated((prev) =>
+          prev.filter((item) => item !== 'apple-music')
+        );
+      }
+      return;
+    }
+  if (
+    typeof window !== 'undefined' &&
+    (window as any).musicKitStatus === 'ready'
+  ) {
+    const MusicKit = (window as any).MusicKit;
+    const musicKitInstance = MusicKit.getInstance();
+    
+    try {
+      if (isIOS()) {
+        const userToken = await musicKitInstance.authorize().catch(async (err: any) => {
+          console.log('Popup blocked, trying alternative auth method');
+          return await handleIOSAuth(musicKitInstance);
+        });
+        
+        if (userToken) {
+          setAuthenticated((prev) => [...prev, 'apple-music']);
+        }
+      } else {
+        await musicKitInstance.authorize();
+        setAuthenticated((prev) => [...prev, 'apple-music']);
+      }
+    } catch (error) {
+      setError('Authentication failed. Please try again.');
+      console.error(error);
     }
   }
+}
+
+async function handleIOSAuth(musicKitInstance: any) {
+  return new Promise((resolve, reject) => {
+    const checkAuth = setInterval(() => {
+      if (musicKitInstance.isAuthorized) {
+        clearInterval(checkAuth);
+        resolve(musicKitInstance.musicUserToken);
+      }
+    }, 1000);
+    
+    setTimeout(() => {
+      clearInterval(checkAuth);
+      reject(new Error('Authentication timeout'));
+    }, 120000);
+    
+    alert('You will be redirected to Apple Music for authentication. Please return to the app after signing in.');
+    
+    if (musicKitInstance.storekit?.authorizationURL) {
+      window.location.href = musicKitInstance.storekit.authorizationURL;
+    }
+  });
+}
 
   return (
     <div className='flex h-full w-full items-center justify-center'>
@@ -94,7 +191,7 @@ export default function Accounts() {
           <Button onClick={() => handleMusicKitAuth()} className='bg-red-700'>
             <div className='flex'>
               {' '}
-              <AMusicLogo /> Apple Music{' '}
+              <AMusicLogo /> {authenticated.includes('apple-music') ? 'Log out' : "Apple Music"}{' '}
             </div>
           </Button>
         </div>
