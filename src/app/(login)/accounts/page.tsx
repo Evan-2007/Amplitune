@@ -30,8 +30,35 @@ export default function Accounts() {
     }
   }
 
+  useEffect(() => {
+  // Check if returning from Apple Music auth
+  if (sessionStorage.getItem('musickit_auth_pending') === 'true') {
+    sessionStorage.removeItem('musickit_auth_pending');
+    
+    // Wait for MusicKit to be ready
+    const checkAuth = setInterval(() => {
+      if (
+        typeof window !== 'undefined' &&
+        (window as any).musicKitStatus === 'ready'
+      ) {
+        const musicKitInstance = (window as any).MusicKit.getInstance();
+        
+        if (musicKitInstance.isAuthorized && musicKitInstance.musicUserToken) {
+          setAuthenticated((prev) => [...prev, 'apple-music']);
+          clearInterval(checkAuth);
+        }
+      }
+    }, 500);
+    
+    // Stop checking after 10 seconds
+    setTimeout(() => clearInterval(checkAuth), 10000);
+  }
+}, []);
+
 
   useEffect(() => {
+
+
     const checkAuth = async () => {
       setTimeout(() => {}, 1000);
       if (
@@ -98,68 +125,91 @@ export default function Accounts() {
     );
   }
 
-  async function handleMusicKitAuth() {
-    if (authenticated.includes('apple-music')) {
-      if (
-        typeof window !== 'undefined' &&
-        (window as any).musicKitStatus === 'ready'
-      ) {
-        const musicKitInstance = (window as any).MusicKit.getInstance();
-        musicKitInstance.unauthorize();
-        setAuthenticated((prev) =>
-          prev.filter((item) => item !== 'apple-music')
-        );
-      }
-      return;
+async function handleMusicKitAuth() {
+  if (authenticated.includes('apple-music')) {
+    if (
+      typeof window !== 'undefined' &&
+      (window as any).musicKitStatus === 'ready'
+    ) {
+      const musicKitInstance = (window as any).MusicKit.getInstance();
+      musicKitInstance.unauthorize();
+      setAuthenticated((prev) =>
+        prev.filter((item) => item !== 'apple-music')
+      );
     }
+    return;
+  }
+  
   if (
     typeof window !== 'undefined' &&
     (window as any).musicKitStatus === 'ready'
   ) {
-    const MusicKit = (window as any).MusicKit;
-    const musicKitInstance = MusicKit.getInstance();
+    const musicKitInstance = (window as any).MusicKit.getInstance();
     
     try {
-      if (isIOS()) {
-        const userToken = await musicKitInstance.authorize().catch(async (err: any) => {
-          console.log('Popup blocked, trying alternative auth method');
-          return await handleIOSAuth(musicKitInstance);
-        });
-        
-        if (userToken) {
-          setAuthenticated((prev) => [...prev, 'apple-music']);
-        }
-      } else {
-        await musicKitInstance.authorize();
+      //throw new Error('Simulated failure');
+      const userToken = await musicKitInstance.authorize();
+      
+      
+      if (musicKitInstance.musicUserToken) {
         setAuthenticated((prev) => [...prev, 'apple-music']);
+        return;
       }
+    
+      throw new Error('No token received');
+      
     } catch (error) {
-      setError('Authentication failed. Please try again.');
-      console.error(error);
+      console.error('Standard auth failed:', error);
+      
+      // Fallback for iOS - construct the URL manually
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        constructManualAuthURL(musicKitInstance);
+      } else {
+        setError('Authentication failed. Please try again.');
+      }
     }
   }
 }
 
-async function handleIOSAuth(musicKitInstance: any) {
-  return new Promise((resolve, reject) => {
-    const checkAuth = setInterval(() => {
-      if (musicKitInstance.isAuthorized) {
-        clearInterval(checkAuth);
-        resolve(musicKitInstance.musicUserToken);
-      }
-    }, 1000);
+function constructManualAuthURL(musicKitInstance: any) {
+  try {
+    const developerToken = musicKitInstance.developerToken;
     
-    setTimeout(() => {
-      clearInterval(checkAuth);
-      reject(new Error('Authentication timeout'));
-    }, 120000);
-    
-    alert('You will be redirected to Apple Music for authentication. Please return to the app after signing in.');
-    
-    if (musicKitInstance.storekit?.authorizationURL) {
-      window.location.href = musicKitInstance.storekit.authorizationURL;
+    if (!developerToken) {
+      throw new Error('No developer token available');
     }
-  });
+    
+
+    const authObject = {
+      thirdPartyName: window.location.host, 
+      thirdPartyToken: developerToken
+    };
+    
+    const authParam = btoa(JSON.stringify(authObject));
+    
+    const referrer = window.location.href;
+    
+    const params = new URLSearchParams({
+      a: authParam,
+      referrer: referrer,
+      app: 'music',
+      p: 'subscribe'
+    });
+    
+    const authUrl = `https://authorize.music.apple.com/woa?${params.toString()}`;
+    
+    console.log('Redirecting to:', authUrl);
+  
+    sessionStorage.setItem('musickit_auth_pending', 'true');
+    
+    window.location.href = authUrl;
+    
+  } catch (error) {
+    console.error('Failed to construct auth URL:', error);
+    setError('Unable to authenticate on this device.');
+  }
 }
 
   return (
@@ -194,6 +244,9 @@ async function handleIOSAuth(musicKitInstance: any) {
               <AMusicLogo /> {authenticated.includes('apple-music') ? 'Log out' : "Apple Music"}{' '}
             </div>
           </Button>
+          <Link href={'/home'}>
+            <Button className='bg-muted px-12 hover:bg-gray-400'>Back</Button>
+          </Link>
         </div>
       </Card>
     </div>
