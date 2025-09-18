@@ -245,6 +245,11 @@ function constructManualAuthURL(musicKitInstance: any) {
               <AMusicLogo /> {authenticated.includes('apple-music') ? 'Log out' : "Apple Music"}{' '}
             </div>
           </Button>
+          <Button className='bg-green-700 px-12 hover:bg-green-600'>
+            <Link href='/accounts/musickit-manual'>Temp Manual Apple Music Auth</Link>
+          </Button>
+        </div>
+        <div className='flex w-full justify-center pb-6'>
           <Link href={'/home'}>
             <Button className='bg-muted px-12 hover:bg-gray-400'>Back</Button>
           </Link>
