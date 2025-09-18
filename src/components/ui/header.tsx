@@ -37,10 +37,16 @@ export function Header() {
   }, []);
 
   return (
-    <div className='z-10 flex items-center justify-between bg-card p-4 max-md:hidden'>
-      <LeftMenu />
-      <Search />
-      <RightMenu />
+    <div className='z-10 flex items-center md:justify-between bg-card md:p-4 p-2 justify-center'>
+      <div className="max-md:hidden">
+        <LeftMenu />
+      </div>
+      <div>
+        <Search />
+      </div>
+      <div className="max-md:hidden">
+        <RightMenu />
+      </div>
     </div>
   );
 }
