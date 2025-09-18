@@ -147,7 +147,7 @@ async function handleMusicKitAuth() {
     const musicKitInstance = (window as any).MusicKit.getInstance();
     
     try {
-      //throw new Error('Simulated failure');
+      throw new Error('Simulated failure');
       const userToken = await musicKitInstance.authorize();
       
       
@@ -164,7 +164,8 @@ async function handleMusicKitAuth() {
       // Fallback for iOS - construct the URL manually
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       
-      if (isMobile) {
+      //change to isMobile later
+      if (true) {
         constructManualAuthURL(musicKitInstance);
       } else {
         setError('Authentication failed. Please try again.');
