@@ -19,6 +19,7 @@ import { useQueueStore } from '@/lib/queue';
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import { format } from 'path';
 import { json } from 'stream/consumers';
+import { useSpringLyricScroll } from '@/lib/hooks/useSpringLyricsScroll';
 
 export interface SyllableLyricsType {
   sections: {
@@ -397,6 +398,9 @@ interface LyricsDisplayProps {
   lyrics: SyllableLyricsType;
 }
 
+
+
+
 export function SyllableLyrics({
   isMobile,
   containerRef,
@@ -409,7 +413,7 @@ export function SyllableLyrics({
   const [currentLine, setCurrentLine] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<number>(0);
-  const playing = useSourcePlayPause(); // Use source state for accurate sync
+  const playing = useSourcePlayPause();
   const [multipleSinger, setMultipleSinger] = useState<boolean>(false);
 
   const { songData } = useCurrentSong();
@@ -425,6 +429,29 @@ export function SyllableLyrics({
       }))
     );
   }, [lyrics]);
+
+  const { scrollToLine, setLineRef, reset, pause, resume } = useSpringLyricScroll(
+    containerRef,
+    lines.length,
+    {
+      anchorPosition: isMobile ? 0.2 : 0.5,
+    }
+  );
+
+  // Pause/resume spring scroll based on user interaction
+  useEffect(() => {
+    if (isMouseMoving) {
+      pause();
+    } else {
+      resume();
+    }
+  }, [isMouseMoving, pause, resume]);
+
+  // Reset on song change
+  useEffect(() => {
+    setCurrentLine(0);
+    reset();
+  }, [songData, reset]);
 
   useEffect(() => {
     let rafId: number | null = null;
@@ -497,40 +524,23 @@ export function SyllableLyrics({
     const currentLineIndex = lines.findIndex((line) => line.start > progress);
     setCurrentLine(currentLineIndex - 1);
 
-    if (lines[currentLineIndex - 1]?.end > lines[currentLineIndex ]?.start + 2) {
-
-        setTwoActive(currentLineIndex - 1);
+    if (lines[currentLineIndex - 1]?.end > lines[currentLineIndex]?.start + 2) {
+      setTwoActive(currentLineIndex - 1);
     }
 
-     if ((twoActive !== undefined && currentLineIndex - 2 > twoActive) || (twoActive !== undefined && currentLineIndex < twoActive)) {
-       setTwoActive(undefined);
-     }
+    if ((twoActive !== undefined && currentLineIndex - 2 > twoActive) || (twoActive !== undefined && currentLineIndex < twoActive)) {
+      setTwoActive(undefined);
+    }
 
     console.log(currentLineIndex - 1, twoActive);
   }, [progress]);
 
+  // Spring scroll when current line changes (skip when two lines are active)
   useEffect(() => {
-    if (containerRef.current && !isMouseMoving && twoActive !== currentLine -1) {
-      const container = containerRef.current;
-      const currentLineElement = container.querySelector(
-        `[data-line="${currentLine}"]`
-      );
-      if (currentLineElement && !isMobile) {
-        currentLineElement.scrollIntoView({ block: 'center' });
-      } else if (currentLineElement && isMobile) {
-        const elementRect = currentLineElement.getBoundingClientRect();
-        const containerRect = container.getBoundingClientRect();
-        const targetOffset = window.innerHeight * 0.23; // 23vh
-        container.scrollTo({
-          top:
-            container.scrollTop +
-            (elementRect.top - containerRect.top) -
-            targetOffset,
-          behavior: 'smooth',
-        });
-      }
+    if (!isMouseMoving && twoActive !== currentLine - 1) {
+      scrollToLine(currentLine);
     }
-  }, [currentLine, isMouseMoving]);
+  }, [currentLine, isMouseMoving, twoActive, scrollToLine]);
 
   useEffect(() => {
     if (
@@ -554,18 +564,17 @@ export function SyllableLyrics({
         lines.map((line, index) => (
           <button
             key={index}
+            ref={setLineRef(index)}
             onClick={() => handleLyricClick(line.start)}
             data-line={index}
-            className={`text-left ${index < currentLine && !isMouseMoving ? 'opacity-0' : ''}  mb-16 flex transition-all duration-700 ${((index > currentLine || index < currentLine) && index !== twoActive) && !isMouseMoving ? 'blur-sm' : ''} pl-2 ${multipleSinger && line.agent !== 'v2' ? 'w-4/6' : 'w-full'} ${line.agent === 'v2' && 'items-end justify-end'} ${index == twoActive ? "opacity-100 blur-0" : ''}`}
+            style={{ willChange: 'transform' }}
+            className={`text-left ${index < currentLine && !isMouseMoving ? 'opacity-0' : ''}  mb-16 flex  ${((index > currentLine || index < currentLine) && index !== twoActive) && !isMouseMoving ? 'blur-sm' : ''} pl-2 ${multipleSinger && line.agent !== 'v2' ? 'w-4/6' : 'w-full'} ${line.agent === 'v2' && 'items-end justify-end'} ${index == twoActive ? "opacity-100 blur-0" : ''}`}
           >
             <GradientTextLine
               words={line.words}
-              // fontUrl="https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-bold-webfont.woff  "
               progress={progress}
               active={index === currentLine}
               agent={line.agent}
-              // start={line.start}
-              // end={line.end}
             />
             {line.words.length == 0 && index === currentLine && (
               <div className='mb-10 flex gap-2'>
@@ -584,3 +593,4 @@ export function SyllableLyrics({
     </>
   );
 }
+
