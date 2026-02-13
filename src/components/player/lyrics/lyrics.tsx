@@ -87,7 +87,7 @@ export default function Lyrics({ tab, setTab, isMobile }: NormalLyricsProps) {
       <div
         ref={lyricsContainerRef}
         className={`${synced ? 'py-[20vh] md:py-[50vh]' : 'py-[10vh]'} no-scrollbar group flex h-full w-full flex-col ${!syllable && 'items-center'} overflow-y-auto overflow-x-hidden overscroll-none md:mr-10`}
-        style={{ scrollBehavior: 'smooth' }}
+        // style={{ scrollBehavior: 'smooth' }}
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setIsMouseMoving(false)}
         onTouchStart={handleMouseMove}
