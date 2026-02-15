@@ -54,7 +54,7 @@ export function useSpringLyricScroll(
 ) {
   const {
     anchorPosition = 0.35,
-    staggerRange = 4,
+    staggerRange = 10,
     staggerStep = 0.055,
     scrollTension = 100,
     scrollFriction = 16,
