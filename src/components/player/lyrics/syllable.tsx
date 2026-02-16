@@ -372,7 +372,7 @@ const GradientTextLine: React.FC<GradientTextLineProps> = ({
 
   return (
     <div
-      className={`mb-4 flex flex-wrap drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] md:text-6xl ${active ? '' : 'text-3xl'} ${agent == 'v2' ? 'w-4/6 justify-end pr-4' : 'w-full'} `}
+      className={`mb-4 flex flex-wrap drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] md:text-6xl  ${active ? '' : 'text-3xl'} ${agent == 'v2' ? 'w-4/6 justify-end pr-4' : 'w-full'} `}
     >
       {words.map((w, index) => (
         <>
@@ -562,28 +562,34 @@ export function SyllableLyrics({
       )}
       {lyrics ? (
         lines.map((line, index) => (
-          <button
-            key={index}
+          <div
             ref={setLineRef(index)}
-            onClick={() => handleLyricClick(line.start)}
-            data-line={index}
+            key={index}
             style={{ willChange: 'transform' }}
-            className={`text-left ${index < currentLine && !isMouseMoving ? 'opacity-0' : ''}  mb-16 flex  ${((index > currentLine || index < currentLine) && index !== twoActive) && !isMouseMoving ? 'blur-sm' : ''} pl-2 ${multipleSinger && line.agent !== 'v2' ? 'w-4/6' : 'w-full'} ${line.agent === 'v2' && 'items-end justify-end'} ${index == twoActive ? "opacity-100 blur-0" : ''}`}
-          >
-            <GradientTextLine
-              words={line.words}
-              progress={progress}
-              active={index === currentLine}
-              agent={line.agent}
-            />
-            {line.words.length == 0 && index === currentLine && (
-              <div className='mb-10 flex gap-2'>
-                <div className='aspect-square w-10 scale-75 animate-[pulse_3s_ease-out_infinite] rounded-full bg-white pb-4 pt-4'></div>
-                <div className='aspect-square w-10 scale-75 animate-[pulse_3s_ease-out_infinite] rounded-full bg-white pb-4 pt-4 delay-200'></div>
-                <div className='aspect-square w-10 scale-75 animate-[pulse_3s_ease-out_infinite] rounded-full bg-white pb-4 pt-4 delay-500'></div>
-              </div>
-            )}
-          </button>
+            >
+            <button
+              key={index}
+              
+              onClick={() => handleLyricClick(line.start)}
+              data-line={index}
+              
+              className={` duration-700 transition-all text-left ${index < currentLine && !isMouseMoving ? 'opacity-0' : ''}  mb-16 flex  ${((index > currentLine || index < currentLine) && index !== twoActive) && !isMouseMoving ? 'blur-sm' : ''} pl-2 ${multipleSinger && line.agent !== 'v2' ? 'w-4/6' : 'w-full'} ${line.agent === 'v2' && 'items-end justify-end'} ${index == twoActive ? "opacity-100 blur-0" : ''}`}
+            >
+              <GradientTextLine
+                words={line.words}
+                progress={progress}
+                active={index === currentLine}
+                agent={line.agent}
+              />
+              {line.words.length == 0 && index === currentLine && (
+                <div className='mb-10 flex gap-2'>
+                  <div className='aspect-square w-10 scale-75 animate-[pulse_3s_ease-out_infinite] rounded-full bg-white pb-4 pt-4'></div>
+                  <div className='aspect-square w-10 scale-75 animate-[pulse_3s_ease-out_infinite] rounded-full bg-white pb-4 pt-4 delay-200'></div>
+                  <div className='aspect-square w-10 scale-75 animate-[pulse_3s_ease-out_infinite] rounded-full bg-white pb-4 pt-4 delay-500'></div>
+                </div>
+              )}
+            </button>
+          </div>
         ))
       ) : (
         <p className='mt-6 text-center text-4xl font-bold text-gray-400 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]'>
