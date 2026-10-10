@@ -22,8 +22,9 @@ serve(async (req) => {
     // Import the private key
     const privateKey = await importPKCS8(privateKeyPEM, 'ES256')
 
-    // Current time in seconds since epoch
-    const now = Math.floor(Date.now() / 1000)
+    // Backdated by a minute: Apple rejects a token whose `iat` is ahead of its
+    // own clock, which happens when this server's clock runs slightly fast
+    const now = Math.floor(Date.now() / 1000) - 60
 
     // Create the token
     const token = await create(

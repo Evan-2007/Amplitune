@@ -21,6 +21,9 @@ export interface Song {
   artist: string;
   album: string;
   albumId?: string;
+  artistId?: string;
+  trackNumber?: number;
+  explicit?: boolean;
   /** Milliseconds */
   duration: number;
   quality?: string;
@@ -76,12 +79,14 @@ export interface AlbumSummary {
   id: string;
   title: string;
   artist: string;
+  artistId?: string;
   imageUrl: string;
   releaseDate: string;
   source: string;
   availableSources: string[];
   sourceIds?: Record<string, string>;
   totalTracks: number;
+  isSingle?: boolean;
 }
 
 export interface ArtistSummary {
@@ -123,7 +128,12 @@ export interface ArtistData {
   imageUrl: string;
   bio?: string;
   genres?: string[];
+  /** Full-length releases, newest first */
   albums?: AlbumSummary[];
+  /** Singles and EPs, newest first */
+  singles?: AlbumSummary[];
+  latestRelease?: AlbumSummary;
+  /** Top songs, most popular first */
   songs?: Song[];
   artwork?: ArtWork;
   editorialVideo?: {

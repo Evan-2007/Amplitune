@@ -21,7 +21,12 @@ export interface queueStore {
   toggleShuffle: () => void;
   setQueue: (songs: Song[], shuffle: boolean, clearQueue: boolean) => void;
   play: (song: Song | string) => void;
-  playAlbum: (album: Song[], action: 'clear' | 'preserve') => void;
+  /** `startIndex` is the track within `album` to start on */
+  playAlbum: (
+    album: Song[],
+    action: 'clear' | 'preserve',
+    startIndex?: number
+  ) => void;
   setPlaying: (playing: 'playing' | 'paused' | 'ended') => void;
 }
 
@@ -106,14 +111,15 @@ export const useQueueStore = create<queueStore>()(
         }
       },
 
-      playAlbum: (album, action) => {
+      playAlbum: (album, action, startIndex = 0) => {
+        if (album.length === 0) return;
         if (action === 'clear') {
           set(() => ({
             queue: {
               songs: album,
               currentSong: {
-                track: album[0],
-                index: 0,
+                track: album[startIndex],
+                index: startIndex,
               },
               repeat: 0,
               shuffle: false,
@@ -122,6 +128,20 @@ export const useQueueStore = create<queueStore>()(
             },
           }));
         } else if (action === 'preserve') {
+          // Picking another track from a list that is already queued moves
+          // to it instead of queueing the whole list a second time
+          const queued = get().queue.songs;
+          const at = queued.findIndex((_, position) =>
+            album.every(
+              (song, offset) =>
+                queued[position + offset]?.id === song.id &&
+                queued[position + offset]?.source === song.source
+            )
+          );
+          if (at !== -1) {
+            get().setCurrentSong(at + startIndex);
+            return;
+          }
           set((state) => ({
             queue: {
               ...state.queue,
@@ -134,8 +154,8 @@ export const useQueueStore = create<queueStore>()(
                 ...state.queue.songs.slice(state.queue.currentSong.index + 1),
               ],
               currentSong: {
-                track: album[0],
-                index: state.queue.currentSong.index + 1,
+                track: album[startIndex],
+                index: state.queue.currentSong.index + 1 + startIndex,
               },
             },
           }));

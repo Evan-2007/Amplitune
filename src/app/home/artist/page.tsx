@@ -1,115 +1,218 @@
 'use client';
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useArtistData } from '@/lib/hooks';
+import { useQueueStore } from '@/lib/queue';
+import { ArtistData } from '@/lib/sources/types';
+import { formatReleaseDate, joinMeta, pluralize } from '@/lib/format';
 import { HLSPlayer } from '@/components/ui/HLSPlayer';
-import Image from 'next/image';
-import Link from 'next/link';
+import { Artwork } from '@/components/media/artwork';
+import { SourceBadge } from '@/components/media/source-badges';
+import { TrackRow, TrackSubtitle } from '@/components/media/track-row';
+import {
+  AlbumCard,
+  MediaGrid,
+  Section,
+  SectionAction,
+} from '@/components/media/media-card';
+import { PlayActions } from '@/components/media/play-actions';
+import {
+  DetailSkeleton,
+  ExpandableText,
+  PageBody,
+  PageError,
+} from '@/components/media/page-state';
+
+const TOP_SONGS_SHOWN = 5;
+const RELEASES_SHOWN = 6;
 
 export default function Page() {
   return (
-    <div className='flex h-full w-full flex-col items-center'>
-      <Suspense fallback={<div>Loading...</div>}>
-        <ArtistPage />
-      </Suspense>
-    </div>
+    <Suspense fallback={<DetailSkeleton />}>
+      <ArtistPage />
+    </Suspense>
   );
 }
 
 function ArtistPage() {
-  const { data: artist, loading } = useArtistData();
+  const { data: artist, loading, error, retry } = useArtistData();
 
-  if (!artist || loading) {
-    return <div>Loading album data...</div>;
+  if (loading) return <DetailSkeleton />;
+  if (error || !artist) {
+    return (
+      <PageError
+        title="Couldn't load this artist"
+        error={error}
+        onRetry={retry}
+      />
+    );
   }
+  // Keyed so "show all" toggles reset when moving to another artist
+  return <Artist key={`${artist.source}-${artist.id}`} artist={artist} />;
+}
 
-  const artworkUrl = artist.artwork?.url || artist.imageUrl || '';
-  const videoSrc = artist.editorialVideo?.fullscreen;
+function Artist({ artist }: { artist: ArtistData }) {
+  const playAlbum = useQueueStore((state) => state.playAlbum);
+  const [allSongs, setAllSongs] = useState(false);
 
-  const sortedAlbums = [...(artist.albums || [])].sort(
-    (a, b) =>
-      new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
-  );
-  const mostRecentAlbum = sortedAlbums.length > 0 ? sortedAlbums[0] : null;
+  const songs = artist.songs ?? [];
+  const shownSongs = allSongs ? songs : songs.slice(0, TOP_SONGS_SHOWN);
+  const latest = artist.latestRelease;
 
   return (
-    <div className='flex h-full w-full flex-col items-center'>
-      <div className='relative flex h-[30vw] w-full flex-col items-center overflow-hidden rounded-t-md bg-black'>
-        <div className='absolute'>
-          {videoSrc ? (
-            <HLSPlayer src={videoSrc} />
-          ) : (
-            <div className='flex h-[30vw] w-full items-center justify-center text-white'>
-              No video available
-            </div>
-          )}
+    <div className='w-full'>
+      <Banner artist={artist} />
+      <PageBody className='pt-4'>
+        <div className='flex items-center justify-between gap-4'>
+          {songs.length > 0 ? <PlayActions songs={songs} /> : <div />}
+          <SourceBadge source={artist.source} />
         </div>
-        <div className='0 absolute bottom-0 left-0 flex w-full'>
-          <Image
-            src={artworkUrl || '/placeholder.png'}
-            alt={artist.name || 'Artist Artwork'}
-            width={180}
-            height={180}
-            className='mb-6 ml-6 rounded-full'
-          />
-          <div className='mb-6 ml-4 flex flex-col justify-center'>
-            <h1 className='text-3xl font-bold text-white'>{artist.name}</h1>
-            <p className='w-1/2 p-4 pr-6 text-sm text-gray-800'>
-              {artist.bio
-                ? artist.bio.length > 180
-                  ? artist.bio.slice(0, 180) + '...'
-                  : artist.bio
-                : ''}
-            </p>
-          </div>
-        </div>
-      </div>
 
-      <div className='flex w-full p-10'>
-        {mostRecentAlbum && (
-          <div>
-            <h2 className='mb-2 text-2xl font-bold'>New Release:</h2>
-            <div className='flex flex-col items-start gap-4 md:flex-row'>
-              <div className='relative'>
-                <Image
-                  src={mostRecentAlbum.imageUrl || ''}
-                  width={180}
-                  height={180}
-                  alt={mostRecentAlbum.title || ''}
-                />
-              </div>
-              <div className='mt-2 flex flex-col'>
-                <Link
-                  className='mt-2 text-lg font-semibold hover:underline'
-                  href={`/home/album?id=${mostRecentAlbum.id}&source=${artist.source}`}
-                >
-                  <p>{mostRecentAlbum.title}</p>
-                </Link>
-                <div className='text-gray-600'>
-                  Released on:{' '}
-                  {new Date(mostRecentAlbum.releaseDate).toLocaleDateString()}
+        {(latest || songs.length > 0) && (
+          <div
+            className={
+              latest && songs.length > 0
+                ? 'grid gap-x-8 lg:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]'
+                : undefined
+            }
+          >
+            {latest && (
+              <Section title='Latest release'>
+                <div className='-mx-2 max-w-56'>
+                  <AlbumCard
+                    album={latest}
+                    subtitle={joinMeta(
+                      formatReleaseDate(latest.releaseDate),
+                      latest.totalTracks > 0 &&
+                        pluralize(latest.totalTracks, 'track')
+                    )}
+                  />
                 </div>
-                <div className='text-gray-600'>
-                  Total Tracks: {mostRecentAlbum.totalTracks}
+              </Section>
+            )}
+            {songs.length > 0 && (
+              <Section
+                title='Top songs'
+                action={
+                  songs.length > TOP_SONGS_SHOWN ? (
+                    <SectionAction onClick={() => setAllSongs(!allSongs)}>
+                      {allSongs ? 'Show less' : 'Show all'}
+                    </SectionAction>
+                  ) : undefined
+                }
+              >
+                <div className='-mx-2 flex flex-col'>
+                  {shownSongs.map((song, index) => (
+                    <TrackRow
+                      key={song.id}
+                      song={song}
+                      number={index + 1}
+                      subtitle={<TrackSubtitle song={song} showArtist={false} />}
+                      // Keeps what is queued and carries on down the list
+                      onPlay={() => playAlbum(songs, 'preserve', index)}
+                    />
+                  ))}
                 </div>
-              </div>
-            </div>
+              </Section>
+            )}
           </div>
         )}
-        <div className='grid grid-cols-7 overflow-scroll'>
-          {artist.songs &&
-            artist.songs.length > 0 &&
-            artist.songs.map((song, index) => (
-              <div key={index} className='mb-2'>
-                <Link
-                  className='text-md hover:underline'
-                  href={`/home/album?id=${song.albumId || ''}&source=${artist.source}`}
-                >
-                  {song.title}
-                </Link>
-              </div>
-            ))}
+
+        <Releases title='Albums' albums={artist.albums ?? []} />
+        <Releases title='Singles and EPs' albums={artist.singles ?? []} />
+
+        {artist.bio && (
+          <Section title='About'>
+            <ExpandableText text={artist.bio} />
+          </Section>
+        )}
+
+        {!latest &&
+          songs.length === 0 &&
+          !artist.albums?.length &&
+          !artist.singles?.length && (
+            <p className='mt-8 text-sm text-muted-foreground'>
+              Nothing from this artist is available here yet.
+            </p>
+          )}
+      </PageBody>
+    </div>
+  );
+}
+
+function Banner({ artist }: { artist: ArtistData }) {
+  const image = artist.artwork?.url || artist.imageUrl;
+  const video = artist.editorialVideo?.wide ?? artist.editorialVideo?.fullscreen;
+  // A stream that will not play falls back to the artwork
+  const [videoFailed, setVideoFailed] = useState(false);
+  useEffect(() => setVideoFailed(false), [video]);
+
+  return (
+    <div className='relative flex h-56 w-full items-end overflow-hidden bg-zinc-900 md:h-72 md:rounded-t-xl'>
+      {video && !videoFailed ? (
+        <HLSPlayer
+          src={video}
+          onError={() => setVideoFailed(true)}
+          className='absolute inset-0 h-full w-full object-cover'
+        />
+      ) : (
+        image && (
+          <img
+            src={image}
+            alt=''
+            aria-hidden
+            className='absolute inset-0 h-full w-full scale-125 object-cover blur-2xl'
+          />
+        )
+      )}
+      <div className='absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10' />
+      <div className='relative flex w-full items-end gap-4 p-4 md:p-8'>
+        <Artwork
+          src={image}
+          alt={artist.name}
+          kind='artist'
+          className='h-24 w-24 shadow-lg md:h-32 md:w-32'
+        />
+        <div className='min-w-0 text-white'>
+          <p className='text-xs text-white/70'>Artist</p>
+          <h1 className='line-clamp-2 text-3xl font-bold md:text-5xl'>
+            {artist.name}
+          </h1>
+          {!!artist.genres?.length && (
+            <p className='mt-1 truncate text-sm text-white/70'>
+              {artist.genres.slice(0, 3).join(' · ')}
+            </p>
+          )}
         </div>
       </div>
     </div>
+  );
+}
+
+function Releases({
+  title,
+  albums,
+}: {
+  title: string;
+  albums: ArtistData['albums'];
+}) {
+  const [all, setAll] = useState(false);
+  if (!albums?.length) return null;
+  return (
+    <Section
+      title={title}
+      action={
+        albums.length > RELEASES_SHOWN ? (
+          <SectionAction onClick={() => setAll(!all)}>
+            {all ? 'Show less' : 'Show all'}
+          </SectionAction>
+        ) : undefined
+      }
+    >
+      <MediaGrid>
+        {(all ? albums : albums.slice(0, RELEASES_SHOWN)).map((album) => (
+          <AlbumCard key={album.id} album={album} showArtist={false} />
+        ))}
+      </MediaGrid>
+    </Section>
   );
 }

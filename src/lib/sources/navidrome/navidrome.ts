@@ -97,7 +97,7 @@ export class Navidrome implements SourceInterface {
     return await this.platform.getPlaylistById(playlistId);
   }
   async getArtistById(artistId: string): Promise<ArtistData> {
-    throw new Error('Method not implemented.');
+    return await this.platform.getArtistById(artistId);
   }
   async search(query: string): Promise<SearchResult> {
     return await this.platform.search(query);

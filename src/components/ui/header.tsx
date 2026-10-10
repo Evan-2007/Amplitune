@@ -1,50 +1,29 @@
 'use client';
-import React, { use } from 'react';
-import { ModeToggle } from '../theme-toggle';
-import { Search as SearchIcon, CirclePlay } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Play, Search as SearchIcon } from 'lucide-react';
 import { Input } from '../ui/input';
-import { useEffect, useState, useRef, useMemo } from 'react';
-import { isElectron as checkIsElectron } from '@/lib/utils';
-import { CrossPlatformStorage } from '@/lib/storage/cross-platform-storage';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { useQueueStore } from '@/lib/queue';
-import { subsonicURL } from '@/lib/sources/navidrome';
-import { useSourceManager } from '@/lib/hooks';
 import { debounce } from 'lodash';
+import { useQueueStore } from '@/lib/queue';
+import { useSourceManager } from '@/lib/hooks';
 import { SearchResult } from '@/lib/sources/types';
-import AMIcon from '@/assets/apple-music_dark.svg';
-import NavidromeIcon from '@/assets/navidrome_dark.svg';
-
-import {
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownSection,
-  DropdownItem,
-} from '@nextui-org/dropdown';
+import { albumHref, artistHref, trackHref } from '@/lib/format';
+import { Artwork } from '@/components/media/artwork';
+import { SongDropdown } from '@/components/song/dropdown';
 
 export function Header() {
-  const localStorage = new CrossPlatformStorage();
-
-  const [isElectronApp, setIsElectronApp] = useState(false);
-
-  useEffect(() => {
-    setIsElectronApp(checkIsElectron());
-  }, []);
-
   return (
-    <div className='z-10 flex items-center md:justify-between bg-card md:p-4 p-2 justify-center'>
-      <div className="max-md:hidden">
+    <div className='z-10 flex items-center justify-center bg-card p-2 md:justify-between md:p-4'>
+      <div className='max-md:hidden'>
         <LeftMenu />
       </div>
       <div>
-        <Search />
+        <React.Suspense fallback={null}>
+          <Search />
+        </React.Suspense>
       </div>
-      <div className="max-md:hidden">
+      <div className='max-md:hidden'>
         <RightMenu />
       </div>
     </div>
@@ -54,9 +33,11 @@ export function Header() {
 function LeftMenu() {
   return (
     <ul className='flex space-x-4'>
-      <li>Home</li>
-      <li>Library</li>
-      <li>Search</li>
+      <li>
+        <Link className='hover:underline' href='/home'>
+          Home
+        </Link>
+      </li>
     </ul>
   );
 }
@@ -73,303 +54,199 @@ function RightMenu() {
   );
 }
 
+const QUICK_ARTISTS = 2;
+const QUICK_SONGS = 4;
+const QUICK_ALBUMS = 3;
+
 function Search() {
   const sourceManager = useSourceManager();
-  const queue = useQueueStore((state) => state);
-
-  const [results, setResults] = useState<SearchResult | null>(null);
-
-  const [activeInput, setActiveInput] = useState(false);
-  const [search, setSearch] = useState('');
-
   const play = useQueueStore((state) => state.play);
-
-  const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
-  const resultsContainerRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  useEffect(() => {
-    const handleFocus = () => {
-      if (document.activeElement === inputRef.current) {
-        setActiveInput(true);
-      }
-    };
+  const [text, setText] = useState('');
+  const [results, setResults] = useState<SearchResult | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
 
-    const handleBlur = () => {
-      if (
-        document.activeElement !== inputRef.current &&
-        resultsContainerRef.current &&
-        resultsContainerRef.current.querySelector(':hover') === null
-      ) {
-        resultsContainerRef.current?.classList.remove('animate-[fadeIn_.001s]');
-        resultsContainerRef.current?.classList.add('animate-[fadeOut_.001s]');
-        setTimeout(() => {
-          setActiveInput(false); //false
-        }, 100);
-      }
-    };
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  // Only the answer to the latest keystroke is shown
+  const requestRef = useRef(0);
 
-    document.addEventListener('click', handleBlur, true);
-    document.addEventListener('focus', handleFocus, true);
-    document.addEventListener('blur', handleBlur, true);
-
-    return () => {
-      document.removeEventListener('click', handleBlur, true);
-      document.removeEventListener('focus', handleFocus, true);
-      document.removeEventListener('blur', handleBlur, true);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (activeInput && resultsContainerRef.current) {
-      document.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          router.push(`/home/search?query=${inputRef.current?.value}`);
-          setActiveInput(false);
-        }
-      });
-    }
-  }, [activeInput]);
-
-  const handleUpdate = useMemo(
+  const runSearch = useMemo(
     () =>
-      debounce(async (e: any) => {
-        const results = await sourceManager.search(e.target.value);
-        setResults(results);
-      }, 100),
-    []
+      debounce(async (query: string, request: number) => {
+        try {
+          const found = await sourceManager.search(query);
+          if (request === requestRef.current) setResults(found);
+        } catch (error) {
+          console.error('Search failed', error);
+          if (request === requestRef.current) setResults(null);
+        } finally {
+          if (request === requestRef.current) setLoading(false);
+        }
+      }, 250),
+    [sourceManager]
   );
-  return (
-    <div className='z-10 flex items-center space-x-2 overflow-visible'>
-      <div className='flex flex-col items-center justify-center'>
-        <Input
-          placeholder='Search'
-          className='h-8 w-64 rounded-2xl'
-          onChange={(e) => handleUpdate(e)}
-          ref={inputRef}
-        />
+  useEffect(() => () => runSearch.cancel(), [runSearch]);
 
-        {activeInput && (
-          <>
-            <div
-              className={`absolute top-10 z-20 mt-5 h-96 w-96 animate-[fadeIn_.001s] overflow-visible rounded-xl border border-border bg-card/60 backdrop-blur-md duration-1000 ease-in-out`}
-              ref={resultsContainerRef}
-            >
-              <ScrollArea className='relative h-full w-full overflow-visible'>
-                {results !== null ? (
-                  <div className='flex h-full flex-col rounded-xl'>
-                    {results.artists &&
-                      results.artists.length > 0 &&
-                      results.artists.map((artist, index) => (
-                        <div className='' key={index}>
-                          <div className='col-auto grid grid-cols-7 py-2 pl-2'>
-                            <button
-                              key={index}
-                              className='group relative flex w-full items-center pb-2 pt-2 filter-none'
-                              onClick={() =>
-                                router.push(
-                                  `/home/artist?id=${artist.id}&source=${artist.source}`
-                                )
-                              }
-                            >
-                              <img
-                                className='absolute w-11 rounded-full'
-                                src={artist.imageUrl}
-                                alt=''
-                              />
-                            </button>
-                            <div className='col-span-5 space-y-1 pr-3'>
-                              <Link
-                                className='line-clamp-1 text-sm hover:underline'
-                                href={`/home/artist?id=${artist.id}&source=${artist.source}`}
-                              >
-                                {artist.name}
-                              </Link>
-                              <Link
-                                className='line-clamp-1 text-[11px] text-gray-500 hover:underline'
-                                href={`/home/artist?id=${artist.id}&source=${artist.source}`}
-                              >
-                                Artist
-                              </Link>
-                            </div>
-                            <ItemMenu />
-                          </div>
-                          <div className='line-clamp-1 h-[1px] w-full bg-border px-2'></div>
-                        </div>
-                      ))}
-
-                    {results.songs &&
-                      results.songs.length > 0 &&
-                      results.songs.map((song, index) => (
-                        <div className='' key={index}>
-                          <div className='col-auto grid grid-cols-7 py-2 pl-2'>
-                            <button
-                              key={index}
-                              className='group relative flex w-full items-center filter-none'
-                              onClick={() => play(song)}
-                            >
-                              <img
-                                className='absolute w-11 rounded-md'
-                                src={song.imageUrl}
-                                alt=''
-                              />
-                              <div className='invisible absolute z-50 flex h-11 w-11 items-center justify-center rounded-md bg-card/20 opacity-0 backdrop-blur-[2px] transition-all duration-300 ease-in group-hover:visible group-hover:opacity-100'>
-                                <CirclePlay
-                                  className='m-auto h-8 w-8 text-white'
-                                  strokeWidth={0.8}
-                                />
-                              </div>
-                            </button>
-                            <div className='col-span-5 space-y-1 pr-3'>
-                              <Link
-                                className='line-clamp-1 flex text-sm hover:underline'
-                                href={`/home/?playing=${song.id}&play=true`}
-                              >
-                                {song.title}
-                                <div className='ml-2 flex items-center space-x-1'>
-                                  {song.availableSources.includes(
-                                    'musicKit'
-                                  ) && <AMIcon className='h-4 w-4' />}
-                                  {song.availableSources.includes(
-                                    'navidrome'
-                                  ) && <NavidromeIcon className='h-4 w-4' />}
-                                </div>
-                              </Link>
-                              <Link
-                                className='line-clamp-1 text-[11px] text-gray-500 hover:underline'
-                                href={`/home/?playing=${song.id}&play=true`}
-                              >
-                                {song.artist} - Song
-                              </Link>
-                            </div>
-                            <Dropdown
-                              classNames={{
-                                content:
-                                  'bg-background border-border border rounded-xl backdrop-blur-xl',
-                              }}
-                            >
-                              <DropdownTrigger>
-                                <Ellipsis size={24} />
-                              </DropdownTrigger>
-                              <DropdownMenu className='text-sm'>
-                                <DropdownItem
-                                  onClick={() => queue.addToQueue(song)}
-                                  key={index}
-                                >
-                                  Add To Queue
-                                </DropdownItem>
-                              </DropdownMenu>
-                            </Dropdown>
-                          </div>
-                          <div className='line-clamp-1 h-[1px] w-full bg-border px-2'></div>
-                        </div>
-                      ))}
-
-                    {results.albums &&
-                      results.albums.length > 0 &&
-                      results.albums.map((album, index) =>
-                        //check count
-                        album ? (
-                          <div className='overflow-visible' key={index}>
-                            <div className='col-auto grid grid-cols-7 overflow-visible py-2 pl-2'>
-                              <button
-                                key={index}
-                                className='group relative flex w-full items-center filter-none'
-                                onClick={() =>
-                                  router.push(
-                                    `/home/?playing=${album.id}&play=true`
-                                  )
-                                }
-                              >
-                                <img
-                                  className='absolute w-11 rounded-md'
-                                  src={album.imageUrl}
-                                  alt=''
-                                />
-                                <div className='invisible absolute z-50 flex h-11 w-11 items-center justify-center rounded-md bg-card/20 opacity-0 backdrop-blur-[2px] transition-all duration-300 ease-in group-hover:visible group-hover:opacity-100'>
-                                  <CirclePlay
-                                    className='m-auto h-8 w-8 text-white'
-                                    strokeWidth={0.8}
-                                  />
-                                </div>
-                              </button>
-                              <div className='col-span-5 space-y-1 pr-3'>
-                                <Link
-                                  className='line-clamp-1 text-sm hover:underline'
-                                  href={`/home/?playing=${album.id}&play=true`}
-                                >
-                                  {album.title}
-                                </Link>
-                                <Link
-                                  className='line-clamp-1 text-[11px] text-gray-500 hover:underline'
-                                  href={`/home/?playing=${album.id}&play=true`}
-                                >
-                                  {album.artist} - Album
-                                </Link>
-                              </div>
-                              <ItemMenu>
-                                <Item>Add To Queue</Item>
-                              </ItemMenu>
-                            </div>
-                            <div className='line-clamp-1 h-[1px] w-full bg-border px-2'></div>
-                          </div>
-                        ) : null
-                      )}
-                  </div>
-                ) : (
-                  <div className='flex w-full items-center justify-center'>
-                    <p>No results found</p>
-                  </div>
-                )}
-              </ScrollArea>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-import { Ellipsis } from 'lucide-react';
-
-import { Button } from '@/components/ui/button';
-
-function ItemMenu({ children }: { children?: React.ReactNode }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const toggleMenu = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsOpen(!isOpen);
+  const onChange = (value: string) => {
+    setText(value);
+    setOpen(true);
+    const request = ++requestRef.current;
+    if (!value.trim()) {
+      runSearch.cancel();
+      setResults(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    runSearch(value.trim(), request);
   };
 
+  // Close when clicking elsewhere, and whenever the page changes
+  useEffect(() => {
+    const onPointerDown = (event: MouseEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    return () => document.removeEventListener('mousedown', onPointerDown);
+  }, []);
+  useEffect(() => setOpen(false), [pathname, searchParams]);
+
+  const submit = () => {
+    const query = text.trim();
+    if (!query) return;
+    runSearch.cancel();
+    setOpen(false);
+    inputRef.current?.blur();
+    router.push(`/home/search?query=${encodeURIComponent(query)}`);
+  };
+
+  const artists = results?.artists.slice(0, QUICK_ARTISTS) ?? [];
+  const songs = results?.songs.slice(0, QUICK_SONGS) ?? [];
+  const albums = results?.albums.slice(0, QUICK_ALBUMS) ?? [];
+  const empty = artists.length + songs.length + albums.length === 0;
+
   return (
-    <div className='z-10 flex w-24 items-center space-x-2 overflow-visible pr-4'>
-      <Ellipsis size={24} onClick={toggleMenu} />
-      {isOpen && (
-        <div ref={menuRef} className='absolute z-50 overflow-visible pl-8'>
-          {children}
+    <div ref={containerRef} className='relative z-20'>
+      <div className='relative'>
+        <SearchIcon className='pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+        <Input
+          ref={inputRef}
+          value={text}
+          placeholder='Search'
+          aria-label='Search'
+          className='h-8 w-64 rounded-2xl pl-8'
+          onChange={(event) => onChange(event.target.value)}
+          onFocus={() => setOpen(true)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') submit();
+            if (event.key === 'Escape') setOpen(false);
+          }}
+        />
+      </div>
+
+      {open && text.trim() && (
+        <div className='absolute left-1/2 top-full mt-3 max-h-[70vh] w-96 max-w-[92vw] -translate-x-1/2 overflow-y-auto rounded-xl border border-border bg-card/80 p-1 shadow-lg backdrop-blur-md scrollbar-none'>
+          {empty ? (
+            <p className='px-3 py-6 text-center text-sm text-muted-foreground'>
+              {loading ? 'Searching…' : `No results for "${text.trim()}"`}
+            </p>
+          ) : (
+            <>
+              {artists.map((artist) => (
+                <QuickLink
+                  key={`${artist.source}-${artist.id}`}
+                  href={artistHref(artist.id, artist.source)}
+                  image={artist.imageUrl}
+                  kind='artist'
+                  title={artist.name}
+                  subtitle='Artist'
+                />
+              ))}
+              {songs.map((song) => (
+                <div
+                  key={`${song.source}-${song.id}`}
+                  className='group flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-accent'
+                >
+                  <button
+                    aria-label={`Play ${song.title}`}
+                    onClick={() => play(song)}
+                    className='relative h-10 w-10 shrink-0'
+                  >
+                    <Artwork
+                      src={song.imageUrl}
+                      alt=''
+                      kind='track'
+                      className='h-10 w-10'
+                    />
+                    <span className='absolute inset-0 hidden items-center justify-center rounded-md bg-black/50 text-white group-hover:flex'>
+                      <Play className='h-4 w-4 fill-current' />
+                    </span>
+                  </button>
+                  <Link href={trackHref(song)} className='min-w-0 flex-1'>
+                    <p className='truncate text-sm group-hover:underline'>
+                      {song.title}
+                    </p>
+                    <p className='truncate text-xs text-muted-foreground'>
+                      Song · {song.artist}
+                    </p>
+                  </Link>
+                  <SongDropdown song={song} />
+                </div>
+              ))}
+              {albums.map((album) => (
+                <QuickLink
+                  key={`${album.source}-${album.id}`}
+                  href={albumHref(album.id, album.source)}
+                  image={album.imageUrl}
+                  kind='album'
+                  title={album.title}
+                  subtitle={`Album · ${album.artist}`}
+                />
+              ))}
+              <button
+                onClick={submit}
+                className='mt-1 w-full rounded-lg px-2 py-2 text-center text-sm text-muted-foreground hover:bg-accent hover:text-foreground'
+              >
+                See all results
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-function Item({ children }: { children?: React.ReactNode }) {
+function QuickLink({
+  href,
+  image,
+  kind,
+  title,
+  subtitle,
+}: {
+  href: string;
+  image: string;
+  kind: 'artist' | 'album';
+  title: string;
+  subtitle: string;
+}) {
   return (
-    <div className='absolute z-10 flex w-24 items-center space-x-2 overflow-visible pr-4'>
-      {children}
-    </div>
+    <Link
+      href={href}
+      className='group flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-accent'
+    >
+      <Artwork src={image} alt='' kind={kind} className='h-10 w-10' />
+      <div className='min-w-0 flex-1'>
+        <p className='truncate text-sm group-hover:underline'>{title}</p>
+        <p className='truncate text-xs text-muted-foreground'>{subtitle}</p>
+      </div>
+    </Link>
   );
 }

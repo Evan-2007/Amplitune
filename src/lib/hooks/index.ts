@@ -15,6 +15,7 @@ export {
   useAlbumData,
   usePlaylistData,
   useArtistData,
+  useSongData,
   useSourceSearch,
   useLyrics,
 } from './useSourceData';

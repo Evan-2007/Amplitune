@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { SourceManager } from '@/lib/sources/source-manager';
 import {
@@ -7,12 +7,14 @@ import {
   SearchResult,
   NormalLyrics,
   ArtistData,
+  Song,
 } from '@/lib/sources/types';
 
 interface UseSourceDataResult<T> {
   data: T | null;
   loading: boolean;
   error: Error | null;
+  retry: () => void;
 }
 
 /**
@@ -32,29 +34,50 @@ export function useSourceData<T>(
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!id || !source) {
+      setData(null);
+      setError(new Error('Nothing to show here'));
       setLoading(false);
       return;
     }
 
+    // Navigating between two items of the same kind reuses this component
+    let cancelled = false;
+    setData(null);
     setLoading(true);
     setError(null);
 
     const sourceManager = SourceManager.getInstance();
     fetcher(sourceManager, id, source)
       .then((result) => {
+        if (cancelled) return;
         setData(result);
         setLoading(false);
       })
       .catch((err) => {
-        setError(err);
+        if (cancelled) return;
+        console.error(err);
+        setError(err instanceof Error ? err : new Error(String(err)));
         setLoading(false);
       });
-  }, [id, source]);
+    return () => {
+      cancelled = true;
+    };
+  }, [id, source, attempt]);
 
-  return { data, loading, error };
+  const retry = useCallback(() => setAttempt((count) => count + 1), []);
+
+  return { data, loading, error, retry };
+}
+
+/**
+ * Hook for fetching a single track.
+ */
+export function useSongData() {
+  return useSourceData<Song>((sm, id, source) => sm.getSongData(id, source));
 }
 
 /**

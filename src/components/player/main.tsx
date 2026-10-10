@@ -22,6 +22,8 @@ import { usePlayerStore, useUiStore } from '@/lib/state';
 import Controls from '@/components/player/controls';
 import { useSourceManager, useSourcePlayPause, useCurrentSong, useQueueActions } from '@/lib/hooks';
 
+import { albumHref, artistHref, trackHref } from '@/lib/format';
+
 const localStorage = new CrossPlatformStorage();
 
 function SearchParamsWrapper({ children }: { children: React.ReactNode }) {
@@ -192,21 +194,33 @@ export function PlayerContent() {
             </div>
           </div>
           <div className=''>
-            <Link href={`/home/track/${songData.id}`}>
-              <p>{songData.title}</p>{' '}
-            </Link>
+            {songData.id ? (
+              <Link href={trackHref(songData)} className='hover:underline'>
+                <p>{songData.title}</p>
+              </Link>
+            ) : (
+              <p>{songData.title}</p>
+            )}
             <div className='flex flex-row'>
-              <Link href={`/home/album/${songData.album}`}>
-                <p className='pr-1 text-sm text-slate-500 hover:underline'>
-                  {songData.album}
-                </p>
-              </Link>
-              <p className='pr-1 text-sm text-slate-500'>-</p>
-              <Link href={`/home/artist/${songData.artist}`}>
-                <p className='text-sm text-slate-500 hover:underline'>
-                  {songData.artist}
-                </p>
-              </Link>
+              <MaybeLink
+                href={
+                  songData.albumId &&
+                  albumHref(songData.albumId, songData.source)
+                }
+              >
+                {songData.album}
+              </MaybeLink>
+              {songData.album && songData.artist && (
+                <p className='pr-1 text-sm text-slate-500'>-</p>
+              )}
+              <MaybeLink
+                href={
+                  songData.artistId &&
+                  artistHref(songData.artistId, songData.source)
+                }
+              >
+                {songData.artist}
+              </MaybeLink>
             </div>
             <div className='flex'>
               <HoverCard>
@@ -234,6 +248,24 @@ export function PlayerContent() {
         </div>
       </div>
     </div>
+  );
+}
+
+/** Album and artist names only link when the source gave us their id. */
+function MaybeLink({
+  href,
+  children,
+}: {
+  href?: string | false;
+  children: React.ReactNode;
+}) {
+  const className = 'pr-1 text-sm text-slate-500';
+  return href ? (
+    <Link href={href}>
+      <p className={`${className} hover:underline`}>{children}</p>
+    </Link>
+  ) : (
+    <p className={className}>{children}</p>
   );
 }
 

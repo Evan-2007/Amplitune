@@ -88,6 +88,47 @@ return tokenMatch[0];
 
 }
 
+const DEVELOPER_TOKEN_KEY = 'amplitune.musickit-developer-token';
+const DEVELOPER_TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // seconds
+// Apple answers 401 to a token whose `iat` is still in the future by its
+// clock, which a token minted this very second can be
+const FRESH_TOKEN_SETTLE_MS = 1500;
+
+function tokenClaims(token: string): { iat?: number; exp?: number } {
+  try {
+    const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(payload));
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * The MusicKit developer token. It is valid for months, so it is kept between
+ * visits instead of being minted on every page load.
+ */
+async function developerToken(): Promise<string> {
+  const now = Date.now() / 1000;
+  const cached = localStorage.getItem(DEVELOPER_TOKEN_KEY);
+  if (cached) {
+    const { iat, exp } = tokenClaims(cached);
+    if (iat && exp && now - iat < DEVELOPER_TOKEN_MAX_AGE && exp - now > 86400) {
+      return cached;
+    }
+  }
+
+  const response = await fetch(
+    'https://qgejhylfftwlxrlqsnak.supabase.co/functions/v1/musicKitJWT'
+  );
+  const { token } = await response.json();
+  if (!token) {
+    throw new Error('No developer token returned');
+  }
+  localStorage.setItem(DEVELOPER_TOKEN_KEY, token);
+  await new Promise((resolve) => setTimeout(resolve, FRESH_TOKEN_SETTLE_MS));
+  return token;
+}
+
 export function MusicKitProvider() {
   async function getAccsessToken() {
     try {
@@ -103,10 +144,7 @@ export function MusicKitProvider() {
 
     async function configureMusicKit() {
       try {
-        const response = await fetch(
-          'https://qgejhylfftwlxrlqsnak.supabase.co/functions/v1/musicKitJWT'
-        );
-        const { token } = await response.json();
+        const token = await developerToken();
 
         await window.MusicKit.configure({
           developerToken: token,

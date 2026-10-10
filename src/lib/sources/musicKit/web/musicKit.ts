@@ -8,6 +8,7 @@ import {
   Playlist,
   PlaylistSummary,
   ArtistData,
+  ArtistSummary,
 } from '@/lib/sources/types';
 import { jwtDecode } from 'jwt-decode';
 import { last } from 'lodash';
@@ -186,52 +187,91 @@ export class musicKit implements SourceInterface {
 
     this.musicKitInstance.volume = volume;
   }
-  getSongData(): Promise<Song> {
-    throw new Error('Method not implemented.');
+  async getSongData(trackId: string): Promise<Song> {
+    await this.initializationPromise;
+    const result = await this.musicKitInstance.api.music(
+      `/v1/catalog/{{storefrontId}}/songs/${trackId}`,
+      { include: 'albums,artists' }
+    );
+    const song = result?.data?.data?.[0];
+    if (!song) {
+      throw new Error(`Song ${trackId} not found`);
+    }
+    return this.toSong(song);
+  }
+
+  private artworkUrl(item: any, size = 900): string {
+    return (
+      item?.attributes?.artwork?.url
+        ?.replace('{w}', String(size))
+        .replace('{h}', String(size))
+        .replace('{c}', 'cc')
+        .replace('{f}', 'webp') ?? ''
+    );
+  }
+
+  private toSong(song: any, album?: any): Song {
+    const attrs = song.attributes ?? {};
+    return {
+      id: song.id,
+      title: attrs.name ?? '',
+      artist: attrs.artistName ?? '',
+      album: attrs.albumName ?? album?.attributes?.name ?? '',
+      albumId: song.relationships?.albums?.data?.[0]?.id ?? album?.id,
+      artistId: song.relationships?.artists?.data?.[0]?.id,
+      trackNumber: attrs.trackNumber,
+      explicit: attrs.contentRating === 'explicit',
+      duration: attrs.durationInMillis ?? 0,
+      source: 'musicKit',
+      availableSources: ['musicKit'],
+      imageUrl: this.artworkUrl(song) || this.artworkUrl(album),
+      releaseDate: String(
+        attrs.releaseDate ?? album?.attributes?.releaseDate ?? ''
+      ),
+    };
+  }
+
+  private toAlbumSummary(album: any): AlbumSummary {
+    const attrs = album.attributes ?? {};
+    return {
+      id: album.id,
+      title: attrs.name ?? '',
+      artist: attrs.artistName ?? '',
+      artistId: album.relationships?.artists?.data?.[0]?.id,
+      imageUrl: this.artworkUrl(album, 500),
+      releaseDate: String(attrs.releaseDate ?? ''),
+      source: 'musicKit',
+      availableSources: ['musicKit'],
+      totalTracks: attrs.trackCount ?? 0,
+      isSingle: attrs.isSingle ?? false,
+    };
   }
 
   async getAlbumData(albumId: string, source: string): Promise<AlbumData> {
     await this.initializationPromise;
 
     const result = await this.musicKitInstance.api.music(
-      `/v1/catalog/{{storefrontId}}/albums/${albumId}`
+      `/v1/catalog/{{storefrontId}}/albums/${albumId}`,
+      { include: 'artists,tracks' }
     );
     if (!result || !result.data) {
-      console.error('Failed to fetch album data');
-      return {
-        id: albumId,
-        source: source,
-        releaseDate: '',
-        artWork: { url: '' },
-        name: 'Album Name',
-        artist: 'Album Artist',
-        isSingle: false,
-      };
+      throw new Error('Failed to fetch album data');
     }
-    const albumData = await result.data.data[0];
-    console.log('Album data fetched from MusicKit:', albumData);
-
-    let formatedTracks: Song[] = [];
-
-    if (albumData.relationships && albumData.relationships.tracks) {
-      formatedTracks = albumData.relationships.tracks.data.map(
-        (track: any) => ({
-          id: track.id,
-          title: track.attributes.name,
-          artist: track.attributes.artistName,
-          album: track.attributes.albumName || albumData.attributes.name,
-          duration: track.attributes.durationInMillis || 0,
-          //       quality: track.attributes.audioTraits[0],
-          source: 'musicKit',
-          availableSources: ['musicKit'],
-          imageUrl: (albumData.attributes.artwork.url ?? '').replace(
-            '{w}x{h}',
-            '900x900'
-          ),
-          releaseDate: albumData.attributes.releaseDate ?? '',
-        })
-      );
+    const albumData = result.data.data?.[0];
+    if (!albumData) {
+      throw new Error(`Album ${albumId} not found`);
     }
+
+    // Music videos can sit in an album's track list; they are not playable here
+    const formatedTracks: Song[] = (albumData.relationships?.tracks?.data ?? [])
+      .filter((track: any) => track.type !== 'music-videos')
+      .map((track: any) => ({
+        ...this.toSong(track, albumData),
+        albumId: albumData.id,
+        // Tracks never carry their own artwork, so use the album's
+        imageUrl: this.artworkUrl(albumData),
+      }));
+    const artwork = albumData.attributes.artwork ?? {};
 
     return {
       id: albumData.id,
@@ -239,19 +279,20 @@ export class musicKit implements SourceInterface {
       releaseDate: albumData.attributes.releaseDate || '',
       artWork: {
         type: 'apple',
-        url:
-          albumData.attributes.artwork.url.replace('{w}x{h}', '900x900') || '',
-        width: albumData.attributes.artwork.width || 0,
-        height: albumData.attributes.artwork.height || 0,
-        textColor1: albumData.attributes.artwork.textColor1 || '',
-        textColor2: albumData.attributes.artwork.textColor2 || '',
-        textColor3: albumData.attributes.artwork.textColor3 || '',
-        textColor4: albumData.attributes.artwork.textColor4 || '',
-        bgColor: albumData.attributes.artwork.bgColor || '',
-        hasP3: albumData.attributes.artwork.hasP3 || false,
+        url: this.artworkUrl(albumData),
+        width: artwork.width || 0,
+        height: artwork.height || 0,
+        textColor1: artwork.textColor1 || '',
+        textColor2: artwork.textColor2 || '',
+        textColor3: artwork.textColor3 || '',
+        textColor4: artwork.textColor4 || '',
+        bgColor: artwork.bgColor || '',
+        hasP3: artwork.hasP3 || false,
       },
-      name: albumData.attributes.name || 'Album Name',
-      artist: albumData.attributes.artistName || 'Album Artist',
+      name: albumData.attributes.name || '',
+      artist: albumData.attributes.artistName || '',
+      artistId: albumData.relationships?.artists?.data?.[0]?.id,
+      contentRating: albumData.attributes.contentRating,
       isSingle: albumData.attributes.isSingle || false,
       editorialNotes: albumData.attributes.editorialNotes,
       genres: albumData.attributes.genreNames || [],
@@ -264,6 +305,10 @@ export class musicKit implements SourceInterface {
     if (!this.musicKitInstance) {
       console.error('MusicKit not initialized');
       return Promise.reject('MusicKit not initialized');
+    }
+    // The library needs a signed-in user; asking without one is a 401
+    if (!this.musicKitInstance.isAuthorized) {
+      return [];
     }
     const result = await this.musicKitInstance.api.music(
       '/v1/me/library/playlists'
@@ -316,14 +361,15 @@ export class musicKit implements SourceInterface {
       quality: 'lossless',
       source: 'musicKit',
       availableSources: ['musicKit'],
-      imageUrl: track.attributes.artwork.url.replace('{w}x{h}', '900x900'),
-      releaseDate: track.attributes.releaseDate,
+      imageUrl: this.artworkUrl(track),
+      releaseDate: track.attributes.releaseDate ?? '',
     }));
 
     return {
       id: playlist.id,
       name: playlist.attributes.name,
-      imageUrl: playlist.attributes.artwork.url.replace('{w}x{h}', '900x900'),
+      // Playlists without custom art have no artwork at all
+      imageUrl: this.artworkUrl(playlist) || undefined,
       source: 'musicKit',
       lastModified: playlist.attributes.lastModifiedDate,
       canEdit: playlist.attributes.canEdit,
@@ -345,9 +391,16 @@ export class musicKit implements SourceInterface {
     if (!window.isTauri) {
       // Standard Apple Music API (appleMusic1)
       const artist = await this.musicKitInstance.api.music(
-        `/v1/catalog/{{storefrontId}}/artists/${artistId}?include=albums,songs,genres,music-videos`
+        `/v1/catalog/{{storefrontId}}/artists/${artistId}`,
+        {
+          include: 'albums',
+          views: 'top-songs,full-albums,singles,latest-release',
+        }
       );
-      const data = artist.data.data[0];
+      const data = artist?.data?.data?.[0];
+      if (!data) {
+        throw new Error(`Artist ${artistId} not found`);
+      }
       return this.normalizeAppleMusic1(data);
     } else {
       // Extended Apple Music API via Tauri (appleMusic2)
@@ -369,12 +422,57 @@ export class musicKit implements SourceInterface {
         },
       });
 
+      if (!response.ok) {
+        throw new Error(`Apple Music returned ${response.status}`);
+      }
       const apiData: ArtistResponse = {
         data: await response.json(),
         type: 'appleMusic2',
       };
+      if (!apiData.data?.resources?.artists?.[artistId]) {
+        throw new Error(`Artist ${artistId} not found`);
+      }
       return this.normalizeAppleMusic2(apiData.data, artistId);
     }
+  }
+
+  private newest(albums: AlbumSummary[]): AlbumSummary | undefined {
+    return [...albums].sort((a, b) =>
+      b.releaseDate.localeCompare(a.releaseDate)
+    )[0];
+  }
+
+  /**
+   * Builds the albums and singles lists, newest first. `unsorted` are releases
+   * Apple did not classify, which are split on its own single flag.
+   */
+  private splitReleases(
+    fullAlbums: any[],
+    singles: any[],
+    unsorted: any[]
+  ): { albums: AlbumSummary[]; singles: AlbumSummary[] } {
+    const known = new Set([...fullAlbums, ...singles].map((album) => album.id));
+    const rest = unsorted.filter((album) => !known.has(album.id));
+    const byDate = (a: AlbumSummary, b: AlbumSummary) =>
+      b.releaseDate.localeCompare(a.releaseDate);
+    const toList = (items: any[], isSingle: boolean) =>
+      items.map((album) => ({ ...this.toAlbumSummary(album), isSingle }));
+    return {
+      albums: [
+        ...toList(fullAlbums, false),
+        ...toList(
+          rest.filter((album) => !album.attributes?.isSingle),
+          false
+        ),
+      ].sort(byDate),
+      singles: [
+        ...toList(singles, true),
+        ...toList(
+          rest.filter((album) => album.attributes?.isSingle),
+          true
+        ),
+      ].sort(byDate),
+    };
   }
 
   private normalizeAppleMusic1(data: any): ArtistData {
@@ -385,41 +483,17 @@ export class musicKit implements SourceInterface {
       .replace('{c}', 'cc')
       .replace('{f}', 'webp') || '';
 
-    const albums: AlbumSummary[] = (data.relationships?.albums?.data || []).map(
-      (album: any) => ({
-        id: album.id,
-        title: album.attributes?.name || '',
-        artist: album.attributes?.artistName || '',
-        imageUrl: album.attributes?.artwork?.url
-          ?.replace('{w}', '500')
-          .replace('{h}', '500')
-          .replace('{c}', 'cc')
-          .replace('{f}', 'webp') || '',
-        releaseDate: album.attributes?.releaseDate || '',
-        source: 'musicKit',
-        availableSources: ['musicKit'],
-        totalTracks: album.attributes?.trackCount || 0,
-      })
+    const view = (name: string): any[] => data.views?.[name]?.data ?? [];
+    const releases = this.splitReleases(
+      view('full-albums'),
+      view('singles'),
+      data.relationships?.albums?.data ?? []
     );
-
-    const songs: Song[] = (data.relationships?.songs?.data || []).map(
-      (song: any) => ({
-        id: song.id,
-        title: song.attributes?.name || '',
-        artist: song.attributes?.artistName || '',
-        album: song.attributes?.albumName || '',
-        albumId: song.relationships?.albums?.data?.[0]?.id,
-        duration: song.attributes?.durationInMillis || 0,
-        source: 'musicKit',
-        availableSources: ['musicKit'],
-        imageUrl: song.attributes?.artwork?.url
-          ?.replace('{w}', '500')
-          .replace('{h}', '500')
-          .replace('{c}', 'cc')
-          .replace('{f}', 'webp') || '',
-        releaseDate: song.attributes?.releaseDate || '',
-      })
-    );
+    const latest = view('latest-release')[0];
+    const songs: Song[] = view('top-songs').map((song: any) => ({
+      ...this.toSong(song),
+      artistId: data.id,
+    }));
 
     return {
       id: data.id,
@@ -427,10 +501,10 @@ export class musicKit implements SourceInterface {
       name: attrs?.name || '',
       imageUrl: artworkUrl,
       genres: attrs?.genreNames,
-      albums: albums.sort(
-        (a, b) =>
-          new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
-      ),
+      ...releases,
+      latestRelease: latest
+        ? this.toAlbumSummary(latest)
+        : this.newest([...releases.albums, ...releases.singles]),
       songs,
       artwork: attrs?.artwork
         ? {
@@ -458,59 +532,45 @@ export class musicKit implements SourceInterface {
       .replace('{c}', 'cc')
       .replace('{f}', 'webp') || '';
 
+    // This response is a map of resources; each view only lists ids into it
     const albumsObj = data?.resources?.albums || {};
-    const albums: AlbumSummary[] = Object.values(albumsObj).map(
-      (album: any) => ({
-        id: album.id,
-        title: album.attributes?.name || '',
-        artist: album.attributes?.artistName || '',
-        imageUrl: album.attributes?.artwork?.url
-          ?.replace('{w}', '500')
-          .replace('{h}', '500')
-          .replace('{c}', 'cc')
-          .replace('{f}', 'webp') || '',
-        releaseDate: album.attributes?.releaseDate
-          ? String(album.attributes.releaseDate)
-          : '',
-        source: 'musicKit',
-        availableSources: ['musicKit'],
-        totalTracks: album.attributes?.trackCount || 0,
-      })
-    );
-
     const songsObj = data?.resources?.songs || {};
-    const songs: Song[] = Object.values(songsObj).map((song: any) => ({
-      id: song.id,
-      title: song.attributes?.name || '',
-      artist: song.attributes?.artistName || '',
-      album: song.attributes?.albumName || '',
-      albumId: song.relationships?.albums?.data?.[0]?.id,
-      duration: song.attributes?.durationInMillis || 0,
-      source: 'musicKit',
-      availableSources: ['musicKit'],
-      imageUrl: song.attributes?.artwork?.url
-        ?.replace('{w}', '500')
-        .replace('{h}', '500')
-        .replace('{c}', 'cc')
-        .replace('{f}', 'webp') || '',
-      releaseDate: song.attributes?.releaseDate
-        ? String(song.attributes.releaseDate)
-        : '',
-    }));
+    const view = (name: string, resources: Record<string, any>): any[] =>
+      (artist?.views?.[name]?.data ?? [])
+        .map((ref: any) => resources[ref.id])
+        .filter(Boolean);
+
+    const fullAlbums = view('full-albums', albumsObj);
+    const singles = view('singles', albumsObj);
+    const releases = this.splitReleases(
+      fullAlbums,
+      singles,
+      // Without views, every album in the response is all there is to go on
+      fullAlbums.length || singles.length ? [] : Object.values(albumsObj)
+    );
+    const latest = view('latest-release', albumsObj)[0];
+    const topSongs = view('top-songs', songsObj);
+    const songs: Song[] = (
+      topSongs.length ? topSongs : Object.values(songsObj)
+    ).map((song: any) => ({ ...this.toSong(song), artistId }));
 
     const editorialVideo = attrs?.editorialVideo;
+    // Bios arrive as HTML
+    const bio = String(attrs?.artistBio ?? '')
+      .replace(/<[^>]*>/g, '')
+      .trim();
 
     return {
       id: artistId,
       source: 'musicKit',
       name: attrs?.name || '',
       imageUrl: artworkUrl,
-      bio: attrs?.artistBio,
+      bio: bio || undefined,
       genres: attrs?.genreNames,
-      albums: albums.sort(
-        (a, b) =>
-          new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
-      ),
+      ...releases,
+      latestRelease: latest
+        ? this.toAlbumSummary(latest)
+        : this.newest([...releases.albums, ...releases.singles]),
       songs,
       artwork: attrs?.artwork
         ? {
@@ -551,66 +611,37 @@ export class musicKit implements SourceInterface {
       term: query,
       limit: 25,
       types: ['songs', 'albums', 'artists'],
+      // Results only carry names; these add the ids the links need
+      'include[songs]': 'albums,artists',
+      'include[albums]': 'artists',
     };
     const result = await this.musicKitInstance.api.music(
       '/v1/catalog/{{storefrontId}}/search',
       params
     );
 
-    const artworkUrl = (item: any) =>
-      item.attributes.artwork?.url?.replace('{w}x{h}', '900x900') ?? '';
-
-    let songs = [];
-
-    if (result.data.meta.results.order.includes('songs')) {
-      songs = result.data.results.songs.data.map((song: any) => ({
-        id: song.id,
-        title: song.attributes.name,
-        artist: song.attributes.artistName,
-        album: song.attributes.albumName,
-        duration: song.attributes.durationInMillis,
-        quality: 'lossless',
-        source: 'musicKit',
-        availableSources: ['musicKit'],
-        imageUrl: artworkUrl(song),
-        releaseDate: song.attributes.releaseDate,
-      }));
-    }
-
-    let albums = [];
-
-    if (result.data.meta.results.order.includes('albums')) {
-      albums = result.data.results.albums.data.map((album: any) => ({
-        id: album.id,
-        title: album.attributes.name,
-        artist: album.attributes.artistName,
-        imageUrl: artworkUrl(album),
-        source: 'musicKit',
-        availableSources: ['musicKit'],
-        releaseDate: album.attributes.releaseDate,
-        totalTracks: album.attributes.trackCount,
-      }));
-    }
-
-    let artists = [];
-
-    if (result.data.meta.results.order.includes('artists')) {
-      artists = result.data.results.artists.data.map((artist: any) => ({
-        id: artist.id,
-        name: artist.attributes.name,
-        imageUrl: artworkUrl(artist),
-        source: 'musicKit',
-        availableSources: ['musicKit'],
-      }));
-    }
-
-    const filteredAlbums = albums.filter(
-      (album: AlbumSummary) => album.totalTracks > 1
+    // A type with no matches is left out of the response entirely
+    const found = result?.data?.results ?? {};
+    const songs: Song[] = (found.songs?.data ?? []).map((song: any) =>
+      this.toSong(song)
     );
+    const albums: AlbumSummary[] = (found.albums?.data ?? []).map(
+      (album: any) => this.toAlbumSummary(album)
+    );
+    const artists: ArtistSummary[] = (found.artists?.data ?? []).map(
+      (artist: any) => ({
+        id: artist.id,
+        name: artist.attributes?.name ?? '',
+        imageUrl: this.artworkUrl(artist, 500),
+        source: 'musicKit',
+        availableSources: ['musicKit'],
+      })
+    );
+
     return {
       songs,
-      //videos: [],
-      albums: filteredAlbums,
+      // Singles show up as one-track albums and only repeat the song results
+      albums: albums.filter((album) => album.totalTracks > 1),
       artists,
     };
   }

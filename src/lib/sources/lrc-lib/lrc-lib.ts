@@ -32,10 +32,26 @@ export async function getLRCLIBLyrics(
       };
     }
 
+    if (data.syncedLyrics) {
+      return {
+        lines: formatLyrics(data.syncedLyrics),
+        source: 'LRC-LIB',
+        synced: true,
+      };
+    }
+    // Some entries only have plain text, or are marked instrumental
+    if (data.plainLyrics) {
+      return {
+        lines: data.plainLyrics
+          .split('\n')
+          .map((value: string) => ({ value })),
+        source: 'LRC-LIB',
+        synced: false,
+      };
+    }
     return {
-      lines: formatLyrics(data.syncedLyrics),
+      error: 'No lyrics found',
       source: 'LRC-LIB',
-      synced: true,
     };
   } catch (error) {
     console.error(error);

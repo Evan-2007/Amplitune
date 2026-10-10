@@ -31,6 +31,7 @@ interface CurrentTrack {
   source: string;
   position: number;
   album?: string;
+  song: Song;
 }
 
 interface Mergeable {
@@ -264,25 +265,11 @@ export class SourceManager {
     // The queue starts out with an empty placeholder track
     if (!track || !track.id) return;
 
-    const available = track.availableSources?.length
-      ? track.availableSources
-      : [track.source];
-    // Ids are per-source, so only sources we know this track's id for qualify
-    const candidates = this.getSourceOrder(available)
-      .map((sourceId) => ({
-        sourceId,
-        trackId:
-          track.sourceIds?.[sourceId] ??
-          (track.source === sourceId ? track.id : undefined),
-      }))
-      .filter(
-        (candidate): candidate is { sourceId: string; trackId: string } =>
-          !!candidate.trackId
-      );
+    const candidates = this.getPlayableSources(track);
 
     if (candidates.length === 0) {
       console.error(
-        `No available source for "${track.title}" (wants ${available.join(', ')}; connected: ${this.getRegisteredSources().join(', ') || 'none'})`
+        `No available source for "${track.title}" (wants ${(track.availableSources ?? [track.source]).join(', ')}; connected: ${this.getRegisteredSources().join(', ') || 'none'})`
       );
       return;
     }
@@ -309,6 +296,7 @@ export class SourceManager {
         source: sourceId,
         position: 0,
         album: track.album,
+        song: track,
       };
       this.currentPosition = 0;
       this.trackDuration = 0;
@@ -443,37 +431,69 @@ export class SourceManager {
   }
 
   // Lyrics handling
+  /** Lyrics for the track that is playing. */
   public async getLyrics(trackId: string): Promise<Lyrics> {
-    await this.initializationPromise;
-
-    const source = this.getActiveSource();
-    if (!source) {
+    if (!this.currentTrack) {
       return { error: 'No source playing', source: 'source-manager' };
     }
+    return this.getLyricsForSong(this.currentTrack.song);
+  }
 
-    // The active source may know this track under a different id
-    const lyrics = await source.getLyrics(this.currentTrack?.id ?? trackId);
-    if (this.shouldFetchBackupLyrics(lyrics) && this.currentTrack) {
-      const backupLyrics = await getLRCLIBLyrics(
-        this.currentTrack.title,
-        this.currentTrack.artist,
-        this.currentTrack.album || ''
-      );
-      if (!backupLyrics) {
-        return lyrics;
-      } else {
-        return backupLyrics;
+  /**
+   * Lyrics come from the highest-priority source that has the track. If that
+   * source has none (or only unsynced ones) LRCLIB is tried next; lower
+   * priority sources are never asked.
+   */
+  public async getLyricsForSong(song: Song): Promise<Lyrics> {
+    await this.initializationPromise;
+
+    const top = this.getPlayableSources(song)[0];
+    let lyrics: Lyrics = { error: 'No lyrics found', source: 'source-manager' };
+    if (top) {
+      try {
+        lyrics = await this.sources.get(top.sourceId)!.getLyrics(top.trackId);
+      } catch (error) {
+        console.error(`Lyrics failed on ${top.sourceId}`, error);
       }
     }
+    if ('lines' in lyrics && lyrics.synced) {
+      return lyrics;
+    }
 
+    const backupLyrics = await getLRCLIBLyrics(
+      song.title,
+      song.artist,
+      song.album || ''
+    );
+    if (backupLyrics && 'lines' in backupLyrics) {
+      // Unsynced lyrics from the track's own source beat unsynced LRCLIB ones
+      return 'lines' in lyrics && !backupLyrics.synced ? lyrics : backupLyrics;
+    }
     return lyrics;
   }
 
-  private shouldFetchBackupLyrics(lyrics: Lyrics): boolean {
-    return (
-      ('error' in lyrics && lyrics.error === 'No lyrics found') ||
-      ('synced' in lyrics && lyrics.synced === false)
-    );
+  /**
+   * The registered sources that can play `track`, highest priority first,
+   * with the track's id in each. Ids are per-source, so a source only
+   * qualifies when its id for this track is known.
+   */
+  public getPlayableSources(
+    track: Song
+  ): { sourceId: string; trackId: string }[] {
+    const available = track.availableSources?.length
+      ? track.availableSources
+      : [track.source];
+    return this.getSourceOrder(available)
+      .map((sourceId) => ({
+        sourceId,
+        trackId:
+          track.sourceIds?.[sourceId] ??
+          (track.source === sourceId ? track.id : undefined),
+      }))
+      .filter(
+        (candidate): candidate is { sourceId: string; trackId: string } =>
+          !!candidate.trackId
+      );
   }
 
   public async search(query: string): Promise<SearchResult> {
