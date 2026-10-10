@@ -35,7 +35,8 @@ export async function getLyrics(trackId: string): Promise<Lyrics> {
     }
   } catch (error) {
     return {
-      error: error as string,
+      // The lyrics view renders this, so it has to be a string, not an Error
+      error: error instanceof Error ? error.message : String(error),
       source: 'Navidrome',
     };
   }

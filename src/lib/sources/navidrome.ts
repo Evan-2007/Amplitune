@@ -1,5 +1,5 @@
-import { useRouter } from 'next/router';
-import { CrossPlatformStorage } from '@/lib/storage/cross-platform-storage';
+import { getActiveNavidromeAccount } from '@/lib/accounts/store';
+import { subsonicBaseUrl } from './navidrome/web/subsonic';
 
 interface navidromeRequest {
   response?: any;
@@ -7,21 +7,18 @@ interface navidromeRequest {
 }
 
 export const navidromeApi = async (path: string): Promise<navidromeRequest> => {
-  const storage = new CrossPlatformStorage();
-  const activeServer = await storage.getItem('activeServer');
-  if (!activeServer) {
+  const account = getActiveNavidromeAccount();
+  if (!account) {
     return { response: null, error: 'no_server' };
   }
-  const parsedServer = await JSON.parse(activeServer);
-  if (!parsedServer || parsedServer.token === undefined) {
+  if (!account.token) {
     return { response: null, error: 'not_authenticated' };
   }
 
-  const url = `${parsedServer.url}${path}`;
   try {
-    const response = await fetch(url, {
+    const response = await fetch(`${account.url}${path}`, {
       headers: {
-        'X-Nd-Authorization': `Bearer ${parsedServer.token}`,
+        'X-Nd-Authorization': `Bearer ${account.token}`,
       },
     });
     if (response.status === 401) {
@@ -36,30 +33,14 @@ export const navidromeApi = async (path: string): Promise<navidromeRequest> => {
     }
     return { response: null, error: 'error' };
   } catch (err) {
-    return { response: null, error: 'not_authenticated' };
+    return { response: null, error: 'error' };
   }
 };
 
-interface server {
-  url: string;
-  username: string;
-  password: string;
-  id: string;
-  salt: string;
-  hash: string;
-  type: 'navidrome';
-}
-
 export const subsonicURL = async (path: string, params?: string) => {
-  const storage = new CrossPlatformStorage();
-  const activeServer = await storage.getItem('activeServer');
-  if (activeServer === 'undefined') {
+  try {
+    return await subsonicBaseUrl(path, params ?? '');
+  } catch {
     return 'error';
   }
-  if (!activeServer) {
-    return 'error';
-  }
-  const parsedServer = await JSON.parse(activeServer);
-  const url = `${parsedServer.url}${path}?u=${parsedServer.username}&t=${parsedServer.hash}&s=${parsedServer.salt}&v=1.13.0&c=myapp&f=json${params}`;
-  return url;
 };

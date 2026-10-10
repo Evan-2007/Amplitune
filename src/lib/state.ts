@@ -12,6 +12,9 @@ export interface uiStore {
   toggleSideBar: () => void;
   sideBarType: 'queue' | 'lyrics';
   fullScreenPlayer: boolean;
+
+  isNativeFullscreen: boolean;
+  setIsNativeFullscreen: (isFullscreen: boolean) => void;
 }
 
 export const useUiStore = create<uiStore>((set) => ({
@@ -26,6 +29,9 @@ export const useUiStore = create<uiStore>((set) => ({
   toggleFullScreenPlayer: () =>
     set((state) => ({ fullScreenPlayer: !state.fullScreenPlayer })),
   sideBarType: 'queue',
+
+  isNativeFullscreen: false,
+  setIsNativeFullscreen: (isFullscreen) => set({ isNativeFullscreen: isFullscreen }),
 }));
 
 export interface playerStore {
@@ -68,45 +74,5 @@ export const usePlayerStore = create<playerStore>((set) => ({
           repeat: state.repeat + 1,
         };
       }
-    }),
-}));
-
-interface configStore {
-  config: {
-    activeServer?: {
-      url: string;
-      username: string;
-      password: string;
-      id: string;
-      salt: string;
-      hash: string;
-      type: 'navidrome';
-    };
-  };
-
-  setActiveServer: (server: {
-    url: string;
-    username: string;
-    password: string;
-    id: string;
-    salt: string;
-    hash: string;
-    type: 'navidrome';
-  }) => void;
-}
-
-export const useConfigStore = create<configStore>((set) => ({
-  config: {
-    activeServer: undefined,
-  },
-
-  setActiveServer: (server) =>
-    set((state) => {
-      return {
-        config: {
-          ...state.config,
-          activeServer: server,
-        },
-      };
     }),
 }));

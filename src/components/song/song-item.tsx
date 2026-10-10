@@ -6,6 +6,7 @@ import {
 import { SourceManager } from '@/lib/sources/source-manager';
 import { useRouter } from 'next/navigation';
 import { useQueueStore } from '@/lib/queue';
+import { stripSubsonicAuth } from '@/lib/sources/navidrome/web/subsonic';
 
 type SongItemProps =
   | { type: 'song'; data: Song }
@@ -19,9 +20,13 @@ export function SongItem({ data, type }: SongItemProps) {
   const play = useQueueStore((state) => state.play);
   const handleClick = () => {
     if (type === 'song') {
-      const queryParams = new URLSearchParams(
-        Object.entries(data as unknown as Record<string, string>)
-      ).toString();
+      // Routes end up in history, so the cover URL goes in without credentials
+      const { sourceIds, ...song } = data;
+      const queryParams = new URLSearchParams({
+        ...(song as unknown as Record<string, string>),
+        imageUrl: stripSubsonicAuth(song.imageUrl),
+        sourceIds: JSON.stringify(sourceIds ?? {}),
+      }).toString();
       router.push(`track?${queryParams}`);
     } else if (type === 'playlist') {
       router.push(`playlist/${data.source}/${data.id}`);

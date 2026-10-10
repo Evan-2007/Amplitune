@@ -17,11 +17,6 @@ export default function Left({
 }) {
   const [isMouseMoving, setIsMouseMoving] = useState<boolean>(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [credentials, setCredentials] = useState<{
-    username: string;
-    password: string;
-    salt: string;
-  } | null>(null);
 
   const songData = useQueueStore((state) => state.queue.currentSong?.track);
 
@@ -35,20 +30,6 @@ export default function Left({
     }, 2000),
     []
   );
-
-  useEffect(() => {
-    getCredentials();
-  }, []);
-
-  async function getCredentials() {
-    const username = await storage.getItem('username');
-    const password = await storage.getItem('password');
-    const salt = await storage.getItem('salt');
-    if (!username || !password || !salt) {
-      return null;
-    }
-    setCredentials({ username, password, salt });
-  }
 
   const handleMouseMove = useCallback(() => {
     setIsMouseMoving(true);

@@ -63,7 +63,6 @@ const response = await fetch('https://music.apple.com/us/browse', {
 // console.log(response)
 const htmlText = await response.text();
 
-console.log('Fetched HTML:', htmlText);
 const entryMatch = htmlText.match(/\/assets\/(index(?:\.esm)?~[a-f0-9]+\.js)/i)
                 || htmlText.match(/src="(\/assets\/index[^"]+\.js)"/i);
 
@@ -84,8 +83,6 @@ const tokenMatch = jsText.match(/eyJ[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.[A-Za-z0-9
 if (!tokenMatch) {
   throw new Error('Could not find JWT in bundle: ' + jsPath);
 }
-
-console.log('Success! Access token:', tokenMatch[0]);
 
 return tokenMatch[0];
 
@@ -121,22 +118,25 @@ export function MusicKitProvider() {
       
         console.log('MusicKit configured successfully.');
 
-        window.dispatchEvent(new Event('musickitready'));
+        // Status first: listeners read it as soon as the event fires
         window.musicKitStatus = 'ready';
+        window.dispatchEvent(new Event('musickitready'));
       } catch (error) {
         console.error('Error configuring MusicKit:', error);
       }
     }
 
+    if (window.musicKitStatus === 'ready') return;
+
     if (window.MusicKit && typeof window.MusicKit.configure === 'function') {
-      console.log('MusicKit is already loaded. Configuring...');
       configureMusicKit();
+      return;
     }
 
-    // Set up the event listener immediately
-    document.addEventListener('musickitloaded', async () => {
-      await configureMusicKit();
-    });
+    document.addEventListener('musickitloaded', configureMusicKit);
+    return () => {
+      document.removeEventListener('musickitloaded', configureMusicKit);
+    };
   }, []);
 
   return (

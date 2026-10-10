@@ -31,8 +31,8 @@ export class musicKit implements SourceInterface {
       this.initializationPromise = this.initialize();
     }
 
-    this.setUpPlayerEvents();
-    this.setupPlayPauseEvents();
+    this.setUpPlayerEvents().catch((error) => console.error(error));
+    this.setupPlayPauseEvents().catch((error) => console.error(error));
   }
 
   private async initialize(): Promise<void> {
@@ -100,9 +100,8 @@ export class musicKit implements SourceInterface {
   getQueue(): void {
     throw new Error('Method not implemented.');
   }
-  getLyrics(): Promise<Lyrics> {
+  async getLyrics(): Promise<Lyrics> {
     return {
-      //@ts-ignore
       error: 'No lyrics found',
       source: 'musicKit',
     };
@@ -558,15 +557,8 @@ export class musicKit implements SourceInterface {
       params
     );
 
-    const queryParameters = { l: 'en-us' };
-    const me = await this.musicKitInstance.api.music(
-      '/v1/me/recent/played',
-      queryParameters
-    );
-
-    console.log(me);
-
-    const response = await result;
+    const artworkUrl = (item: any) =>
+      item.attributes.artwork?.url?.replace('{w}x{h}', '900x900') ?? '';
 
     let songs = [];
 
@@ -580,7 +572,7 @@ export class musicKit implements SourceInterface {
         quality: 'lossless',
         source: 'musicKit',
         availableSources: ['musicKit'],
-        imageUrl: song.attributes.artwork.url.replace('{w}x{h}', '900x900'),
+        imageUrl: artworkUrl(song),
         releaseDate: song.attributes.releaseDate,
       }));
     }
@@ -592,7 +584,7 @@ export class musicKit implements SourceInterface {
         id: album.id,
         title: album.attributes.name,
         artist: album.attributes.artistName,
-        imageUrl: album.attributes.artwork.url.replace('{w}x{h}', '900x900'),
+        imageUrl: artworkUrl(album),
         source: 'musicKit',
         availableSources: ['musicKit'],
         releaseDate: album.attributes.releaseDate,
@@ -606,18 +598,11 @@ export class musicKit implements SourceInterface {
       artists = result.data.results.artists.data.map((artist: any) => ({
         id: artist.id,
         name: artist.attributes.name,
-        imageUrl: artist.attributes.artwork.url.replace('{w}x{h}', '900x900'),
+        imageUrl: artworkUrl(artist),
         source: 'musicKit',
         availableSources: ['musicKit'],
       }));
     }
-
-    console.log(songs);
-
-    const videos = await this.musicKitInstance.api.music(
-      '/v1/catalog/{{storefrontId}}/search',
-      params
-    );
 
     const filteredAlbums = albums.filter(
       (album: AlbumSummary) => album.totalTracks > 1

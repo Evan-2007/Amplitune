@@ -17,16 +17,10 @@ import { Song } from '@/lib/sources/types';
 
 import { Ellipsis } from 'lucide-react';
 import { useQueueStore } from '@/lib/queue';
-import { subsonicURL } from '@/lib/sources/navidrome';
-import { useEffect, useState } from 'react';
 
 export function SongDropdown({ song }: { song: Song }) {
-  const queue = useQueueStore((state) => state);
   const addToQueue = useQueueStore((state) => state.addToQueue);
   const playNext = useQueueStore((state) => state.playNext);
-  const [songData, setSongData] = useState<Song | null>(null);
-
-  useEffect(() => {}, []);
 
   return (
     <DropdownMenu>
@@ -34,10 +28,10 @@ export function SongDropdown({ song }: { song: Song }) {
         <Ellipsis size={20} />
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem onClick={() => playNext(song.id)}>
+        <DropdownMenuItem onClick={() => playNext(song)}>
           Play next
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => addToQueue(song.id)}>
+        <DropdownMenuItem onClick={() => addToQueue(song)}>
           Add to queue
         </DropdownMenuItem>
       </DropdownMenuContent>

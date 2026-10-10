@@ -91,19 +91,6 @@ export default function FullScreenPlayer({}: {}) {
   };
 
   useEffect(() => {
-    getCredentials();
-  }, []);
-
-  async function getCredentials() {
-    const username = await storage.getItem('username');
-    const password = await storage.getItem('password');
-    const salt = await storage.getItem('salt');
-    if (!username || !password || !salt) {
-      return null;
-    }
-  }
-
-  useEffect(() => {
     getImageColors();
   }, [imageUrl]);
 

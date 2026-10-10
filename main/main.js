@@ -1,4 +1,4 @@
-import { app, BrowserWindow, components } from 'electron';
+import { app, BrowserWindow, components, ipcMain } from 'electron';
 import serve from 'electron-serve';
 import path from 'path';
 
@@ -10,6 +10,8 @@ const appServe = app.isPackaged
     })
   : null;
 
+let mainWindow = null;
+
 const createWindow = () => {
   const win = new BrowserWindow({
     width: 800,
@@ -20,7 +22,18 @@ const createWindow = () => {
     },
   });
 
+  mainWindow = win;
+
   win.setMenuBarVisibility(false);
+
+  // Listen for fullscreen events and notify renderer
+  win.on('enter-full-screen', () => {
+    win.webContents.send('window-fullscreen-changed', true);
+  });
+
+  win.on('leave-full-screen', () => {
+    win.webContents.send('window-fullscreen-changed', false);
+  });
 
   if (app.isPackaged) {
     appServe(win).then(() => {
@@ -39,6 +52,31 @@ app.whenReady().then(async () => {
   await components.whenReady();
   console.log('components ready:', components.status());
   createWindow();
+
+  // IPC handlers for window fullscreen control
+  ipcMain.on('window-fullscreen-enter', () => {
+    if (mainWindow) {
+      mainWindow.setFullScreen(true);
+    }
+  });
+
+  ipcMain.on('window-fullscreen-exit', () => {
+    if (mainWindow) {
+      mainWindow.setFullScreen(false);
+    }
+  });
+
+  ipcMain.on('window-fullscreen-toggle', () => {
+    if (mainWindow) {
+      mainWindow.setFullScreen(!mainWindow.isFullScreen());
+    }
+  });
+
+  ipcMain.on('window-fullscreen-query', (event) => {
+    if (mainWindow) {
+      event.reply('window-fullscreen-query-reply', mainWindow.isFullScreen());
+    }
+  });
 });
 
 app.on('window-all-closed', () => {

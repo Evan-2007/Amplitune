@@ -1,16 +1,10 @@
 'use client';
-import { useState, useEffect } from 'react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardFooter,
-} from '@/components/ui/card';
+import { useState } from 'react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { ModeToggle } from '@/components/theme-toggle';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -21,73 +15,46 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { SubmitButton } from '@/components/ui/submit-button';
-import { useTheme } from 'next-themes';
-import Image from 'next/image';
-import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-import md5 from 'md5';
-import { CrossPlatformStorage } from '@/lib/storage/cross-platform-storage';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Tooltip,
-  TooltipProvider,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import Link from 'next/link';
+import { normalizeServerUrl, useAccountsStore } from '@/lib/accounts/store';
 
 export function Login() {
-  const [servers, setServers] = useState<any[]>([]);
-
-  const storage = new CrossPlatformStorage();
-  useEffect(() => {
-    getServers();
-  }, []);
-
-  async function getServers() {
-    const servers = await storage.getItem('servers');
-    if (!servers) {
-      return null;
-    }
-    setServers(JSON.parse(servers));
-  }
-
-  const router = useRouter();
-  //check if user is logged in
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  async function checkAuth() {}
-
   return (
     <Card className='w-[350px]'>
       <CardHeader className='flex flex-row items-center justify-between align-middle'>
-        <h1 className='text-2xl'>Login</h1>
+        <h1 className='text-2xl'>Add Navidrome server</h1>
         <ModeToggle />
       </CardHeader>
       <CardContent>
         <LoginForm />
+        <Link
+          href='/accounts'
+          className='mt-4 block text-center text-sm text-muted-foreground hover:underline'
+        >
+          Back to accounts
+        </Link>
       </CardContent>
     </Card>
   );
 }
 
 const schema = z.object({
-  username: z.string(),
-  password: z.string(),
-  url: z.string().url(),
-  stayLoggedIn: z.boolean(),
+  username: z.string().min(1, 'Username is required'),
+  password: z.string().min(1, 'Password is required'),
+  url: z.string().url('Enter a full URL, including http:// or https://'),
 });
 
 function LoginForm() {
   const [loginError, setLoginError] = useState<string | undefined>();
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<boolean>(false);
-  const [stayLoggedIn, setStayLoggedIn] = useState<boolean>(false);
 
   const router = useRouter();
 
-  const localStorage = new CrossPlatformStorage();
+  const saveNavidromeAccount = useAccountsStore(
+    (state) => state.saveNavidromeAccount
+  );
 
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -95,16 +62,14 @@ function LoginForm() {
       username: '',
       password: '',
       url: '',
-      stayLoggedIn: false,
     },
   });
   const onSubmit = async (data: z.infer<typeof schema>) => {
     try {
-      console.log(data);
       setLoading(true);
-      const salt = window.crypto.getRandomValues(new Uint32Array(1))[0];
-      const hash = md5(data.password + salt);
-      const checkAuth = await fetch(`${data.url}/auth/login`, {
+      setError(false);
+      const url = normalizeServerUrl(data.url);
+      const checkAuth = await fetch(`${url}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -114,66 +79,32 @@ function LoginForm() {
           password: data.password,
         }),
       });
-      const response = await checkAuth.json();
-      if (response.token) {
-        const serers = await localStorage.getItem('servers');
-        if (serers) {
-          const servers = JSON.parse(serers);
-          servers.push({
-            url: data.url,
-            username: data.username,
-            password: stayLoggedIn ? data.password : undefined,
-            type: 'navidrome',
-            salt: response.subsonicSalt,
-            hash: response.subsonicToken,
-            token: response.token,
-            id: crypto.randomUUID(),
-          });
-          localStorage.setItem('servers', JSON.stringify(servers));
-        } else {
-          localStorage.setItem(
-            'servers',
-            JSON.stringify([
-              {
-                url: data.url,
-                username: data.username,
-                password: stayLoggedIn ? data.password : undefined,
-                type: 'navidrome',
-                salt: response.subsonicSalt,
-                hash: response.subsonicToken,
-                token: response.token,
-                id: crypto.randomUUID(),
-              },
-            ])
-          );
-        }
-        console.log(localStorage);
-        await localStorage.setItem(
-          'activeServer',
-          JSON.stringify({
-            url: data.url,
-            username: data.username,
-            password: stayLoggedIn ? data.password : undefined,
-            type: 'navidrome',
-            salt: response.subsonicSalt,
-            hash: response.subsonicToken,
-            token: response.token,
-            id: crypto.randomUUID(),
-          })
-        );
-        router.push('/');
-      } else if (response.error?.message === 'Invalid username or password') {
+      if (checkAuth.status === 401) {
         setLoginError('Invalid username or password');
         setError(true);
+        return;
+      }
+      const response = await checkAuth.json().catch(() => null);
+      if (response?.token) {
+        // The password is never persisted; the Subsonic salt/hash are enough.
+        // Logging in again to the same server replaces the old entry.
+        saveNavidromeAccount({
+          url,
+          username: data.username,
+          salt: response.subsonicSalt,
+          hash: response.subsonicToken,
+          token: response.token,
+        });
+        router.push('/home');
       } else {
+        setLoginError('That does not look like a Navidrome server');
         setError(true);
-        setLoginError('An error occurred');
-        throw new Error('An error occurred');
       }
     } catch (error) {
-      setLoginError('Faild to communicate with server');
+      // fetch rejects for both an unreachable host and a blocked CORS request
+      setLoginError('Could not reach the server. Check the URL and CORS.');
       setError(true);
-      console.error('An error occurred:', error);
+      console.error('Login failed:', error);
     } finally {
       setLoading(false);
     }
@@ -187,6 +118,17 @@ function LoginForm() {
       >
         <FormField
           control={form.control}
+          name='url'
+          render={({ field }) => (
+            <FormInput
+              field={field}
+              name='Server URL'
+              placeholder='https://music.example.com'
+            />
+          )}
+        />
+        <FormField
+          control={form.control}
           name='username'
           render={({ field }) => <FormInput field={field} name='Username' />}
         />
@@ -197,20 +139,6 @@ function LoginForm() {
             <FormInput field={field} name='Password' type='password' />
           )}
         />
-        <FormField
-          control={form.control}
-          name='url'
-          render={({ field }) => (
-            <FormInput field={field} name='Url (include http://)' />
-          )}
-        />
-        <FormField
-          control={form.control}
-          name='stayLoggedIn'
-          render={({ field }) => (
-            <FormCheckbox field={field} name='Stay Logged In' />
-          )}
-        />
         <div>
           <SubmitButton
             type='submit'
@@ -219,7 +147,7 @@ function LoginForm() {
             loading={loading}
             errorMessage={loginError}
           >
-            Login
+            Connect
           </SubmitButton>
         </div>
       </form>
@@ -231,45 +159,19 @@ function FormInput({
   field,
   name,
   type = 'text',
+  placeholder,
 }: {
   field: any;
   name: string;
   type?: 'text' | 'password';
+  placeholder?: string;
 }) {
   return (
     <FormItem>
       <FormLabel>{name}</FormLabel>
       <FormControl>
-        <Input type={type} placeholder={name} {...field} />
+        <Input type={type} placeholder={placeholder ?? name} {...field} />
       </FormControl>
-      <FormMessage />
-    </FormItem>
-  );
-}
-
-function FormCheckbox({ field, name }: { field: any; name: string }) {
-  return (
-    <FormItem className='flex flex-row items-center space-x-3 space-y-0'>
-      <FormControl>
-        <Checkbox
-          checked={field.value}
-          onCheckedChange={(checked) => {
-            return checked ? field.onChange(true) : field.onChange(false);
-          }}
-        />
-      </FormControl>
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <FormLabel className='text-center text-sm font-normal'>
-              {name}
-            </FormLabel>
-          </TooltipTrigger>
-          <TooltipContent>
-            <FormDescription>Saves username/password to device</FormDescription>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
       <FormMessage />
     </FormItem>
   );

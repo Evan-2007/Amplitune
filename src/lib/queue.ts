@@ -1,7 +1,11 @@
 import { create } from 'zustand';
-import { subsonicURL } from '@/lib/sources/navidrome';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Song } from '@/lib/sources/types';
+import { SourceManager } from '@/lib/sources/source-manager';
+import {
+  signSubsonicUrl,
+  stripSubsonicAuth,
+} from '@/lib/sources/navidrome/web/subsonic';
 
 export interface queueStore {
   queue: queue;
@@ -370,20 +374,49 @@ export const useQueueStore = create<queueStore>()(
     {
       name: 'queue-storage',
       storage: createJSONStorage(() => localStorage),
+      // Navidrome cover URLs carry the login token, so it is stripped before
+      // the queue is written to disk and added back when it is read
+      partialize: (state) => ({
+        queue: mapQueueSongs(state.queue, stripSubsonicAuth),
+      }),
+      merge: (persisted, current) => {
+        const stored = (persisted as Partial<queueStore> | undefined)?.queue;
+        return {
+          ...current,
+          queue: stored
+            ? mapQueueSongs({ ...current.queue, ...stored }, signSubsonicUrl)
+            : current.queue,
+        };
+      },
     }
   )
 );
 
+function mapQueueSongs(
+  queue: queue,
+  mapImageUrl: (url: string) => string
+): queue {
+  const mapSong = (song: Song): Song =>
+    song && song.imageUrl
+      ? { ...song, imageUrl: mapImageUrl(song.imageUrl) }
+      : song;
+  return {
+    ...queue,
+    songs: (queue.songs ?? []).map(mapSong),
+    unShuffledSongs: (queue.unShuffledSongs ?? []).map(mapSong),
+    currentSong: queue.currentSong && {
+      ...queue.currentSong,
+      track: mapSong(queue.currentSong.track),
+    },
+  };
+}
+
+// A bare id can only come from the Navidrome views; everything else passes a Song
 const getSongData = async (id: string): Promise<Song | undefined> => {
-  const baseUrl = await subsonicURL('/rest/getSong', '&id=' + id);
   try {
-    const res = await fetch(baseUrl);
-    const data = await res.json();
-    if (data['subsonic-response'].song) {
-      return data['subsonic-response'].song;
-    }
+    return await SourceManager.getInstance().getSongData(id, 'navidrome');
   } catch (err) {
-    console.log(err);
+    console.error(err);
   }
   return undefined;
 };

@@ -1,5 +1,3 @@
-import { TidalAuthParams, NavidromeAuthParams } from './authParams';
-
 export interface NormalLyrics {
   synced: boolean;
   lines: {
@@ -23,10 +21,14 @@ export interface Song {
   artist: string;
   album: string;
   albumId?: string;
+  /** Milliseconds */
   duration: number;
   quality?: string;
+  /** The source `id` belongs to */
   source: string;
   availableSources: string[];
+  /** This item's id in each of `availableSources` (ids are per-source) */
+  sourceIds?: Record<string, string>;
   imageUrl: string;
   releaseDate: string;
 }
@@ -78,6 +80,7 @@ export interface AlbumSummary {
   releaseDate: string;
   source: string;
   availableSources: string[];
+  sourceIds?: Record<string, string>;
   totalTracks: number;
 }
 
@@ -87,28 +90,13 @@ export interface ArtistSummary {
   imageUrl: string;
   source: string;
   availableSources: string[];
+  sourceIds?: Record<string, string>;
 }
 
 export interface SearchResult {
   songs: Song[];
   albums: AlbumSummary[];
   artists: ArtistSummary[];
-}
-
-export interface sources {
-  tidal: {
-    status: boolean;
-  };
-  navidrome: {
-    status: boolean;
-    hash: string;
-    id: string;
-    salt: string;
-    token: string;
-    url: string;
-    username: string;
-    type: 'navidrome';
-  };
 }
 
 export interface PlaylistSummary {

@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { SongDropdown } from '@/components/song/dropdown';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export default function HomePage() {
   const [baseUrl, setBaseUrl] = useState<string | null>(null);
@@ -18,13 +19,11 @@ export default function HomePage() {
       <h1 className='text-3xl'>Recently added</h1>
       <h1 className='text-3xl'>Artists</h1>
       <h1 className='text-3xl'>Albums</h1>
-      <Link
-        className='flex w-full items-center justify-center'
-        href='/accounts'
-      >
-        {' '}
-        Connect to Server{' '}
-      </Link>
+      <div className='flex w-full items-center justify-center pt-6'>
+        <Button asChild variant='outline'>
+          <Link href='/accounts'>Manage accounts</Link>
+        </Button>
+      </div>
     </ScrollArea>
   );
 }

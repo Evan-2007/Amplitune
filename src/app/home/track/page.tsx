@@ -6,6 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { useQueueStore } from '@/lib/queue';
 import { SourceManager } from '@/lib/sources/source-manager';
 import { Song } from '@/lib/sources/types';
+import { signSubsonicUrl } from '@/lib/sources/navidrome/web/subsonic';
 import NavidromeIcon from '@/assets/navidrome_dark.svg';
 import { GetListByKeyword, VideoItem } from '@/lib/youtubeSearch';
 import { Header } from '@/components/song-display/header';
@@ -29,10 +30,21 @@ function Track() {
   const searchParams = useSearchParams();
   const paramsObject = Object.fromEntries(searchParams.entries()) as any;
 
+  let sourceIds: Record<string, string> | undefined;
+  try {
+    sourceIds = JSON.parse(paramsObject.sourceIds);
+  } catch {
+    sourceIds = undefined;
+  }
+
   const fromattedParams = {
     ...paramsObject,
-    duration: parseInt(paramsObject.duration, 10),
-    availableSources: paramsObject.availableSources.split(','),
+    duration: parseInt(paramsObject.duration, 10) || 0,
+    availableSources: paramsObject.availableSources
+      ? paramsObject.availableSources.split(',')
+      : [paramsObject.source].filter(Boolean),
+    sourceIds,
+    imageUrl: signSubsonicUrl(paramsObject.imageUrl ?? ''),
   } as Song;
 
   return (

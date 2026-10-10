@@ -76,8 +76,15 @@ export class WebNavidrome implements SourceInterface {
     const url = await subsonicBaseUrl('/rest/stream', `&id=${trackId}`);
     await this.audioPlayer.load(url, trackId);
     this.currentTrack = trackId;
-    await this.audioPlayer.play();
     this.currentTrackId = trackId;
+    try {
+      await this.audioPlayer.play();
+    } catch (error) {
+      // Autoplay being blocked, or this load being superseded by the next
+      // track, is not a playback failure
+      const name = (error as DOMException)?.name;
+      if (name !== 'NotAllowedError' && name !== 'AbortError') throw error;
+    }
   }
   getAllPlaylists(): void {
     throw new Error('Method not implemented.');
@@ -102,18 +109,38 @@ export class WebNavidrome implements SourceInterface {
     this.audioPlayer.setVolume(volume);
   }
 
-  async getSongData(trackId: string): Promise<Song> {
+  private async toSong(song: any): Promise<Song> {
     return {
-      id: trackId,
-      title: 'Title',
-      artist: 'Artist',
-      album: 'Album',
-      duration: 0,
+      id: song.id,
+      title: song.title,
+      artist: song.artist,
+      album: song.album,
+      albumId: song.albumId,
+      // Subsonic reports seconds
+      duration: (song.duration ?? 0) * 1000,
       source: 'navidrome',
-      availableSources: [],
-      imageUrl: '',
-      releaseDate: '',
+      availableSources: ['navidrome'],
+      imageUrl: song.coverArt
+        ? await subsonicBaseUrl(
+            '/rest/getCoverArt',
+            `&id=${encodeURIComponent(song.coverArt)}`
+          )
+        : '',
+      releaseDate: song.year ? String(song.year) : '',
     };
+  }
+
+  async getSongData(trackId: string): Promise<Song> {
+    const url = await subsonicBaseUrl(
+      '/rest/getSong',
+      `&id=${encodeURIComponent(trackId)}`
+    );
+    const data = await (await fetch(url)).json();
+    const song = data['subsonic-response']?.song;
+    if (!song) {
+      throw new Error(`Song ${trackId} not found`);
+    }
+    return this.toSong(song);
   }
 
   async getAlbumData(
@@ -151,30 +178,21 @@ export class WebNavidrome implements SourceInterface {
   }
 
   async search(query: string): Promise<SearchResult> {
-    const url = await subsonicBaseUrl('/rest/search3', `&query=${query}`);
+    const url = await subsonicBaseUrl(
+      '/rest/search3',
+      `&query=${encodeURIComponent(query)}`
+    );
 
     const response = await fetch(url);
 
     const data = await response.json();
 
-    const songs = await Promise.all(
-      data['subsonic-response'].searchResult3.song.map(async (song: any) => ({
-        id: song.id,
-        title: song.title,
-        artist: song.artist,
-        album: song.album,
-        duration: song.duration,
-        source: 'navidrome',
-        availableSources: ['navidrome'],
-        imageUrl: await subsonicBaseUrl(
-          '/rest/getCoverArt',
-          `&id=${song.coverArt}`
-        ),
-        releaseDate: '',
-      }))
+    // Navidrome omits `song` entirely when nothing matches
+    const songs: Song[] = await Promise.all(
+      (data['subsonic-response']?.searchResult3?.song ?? []).map((song: any) =>
+        this.toSong(song)
+      )
     );
-
-    console.log(songs);
 
     return {
       songs,

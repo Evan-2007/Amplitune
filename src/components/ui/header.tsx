@@ -64,8 +64,11 @@ function LeftMenu() {
 function RightMenu() {
   return (
     <ul className='flex space-x-4'>
-      <li>Profile</li>
-      <li>Settings</li>
+      <li>
+        <Link className='hover:underline' href='/accounts'>
+          Accounts
+        </Link>
+      </li>
     </ul>
   );
 }
@@ -76,11 +79,6 @@ function Search() {
 
   const [results, setResults] = useState<SearchResult | null>(null);
 
-  const [credentials, setCredentials] = useState<{
-    username: string | null;
-    password: string | null;
-    salt: string | null;
-  }>({ username: null, password: null, salt: null });
   const [activeInput, setActiveInput] = useState(false);
   const [search, setSearch] = useState('');
 
@@ -105,7 +103,6 @@ function Search() {
       ) {
         resultsContainerRef.current?.classList.remove('animate-[fadeIn_.001s]');
         resultsContainerRef.current?.classList.add('animate-[fadeOut_.001s]');
-        console.log(resultsContainerRef.current.querySelector(':hover'));
         setTimeout(() => {
           setActiveInput(false); //false
         }, 100);
@@ -142,10 +139,6 @@ function Search() {
       }, 100),
     []
   );
-  useEffect(() => {
-    console.log(JSON.stringify(results));
-  }, [results]);
-
   return (
     <div className='z-10 flex items-center space-x-2 overflow-visible'>
       <div className='flex flex-col items-center justify-center'>
@@ -367,7 +360,6 @@ function ItemMenu({ children }: { children?: React.ReactNode }) {
       {isOpen && (
         <div ref={menuRef} className='absolute z-50 overflow-visible pl-8'>
           {children}
-          TEstawfafgsdgasg
         </div>
       )}
     </div>
@@ -378,44 +370,6 @@ function Item({ children }: { children?: React.ReactNode }) {
   return (
     <div className='absolute z-10 flex w-24 items-center space-x-2 overflow-visible pr-4'>
       {children}
-    </div>
-  );
-}
-
-function WindowControls() {
-  return (
-    <div className='absolute right-0 top-0 flex space-x-2'>
-      <div id='min-button'>
-        <img
-          src='icons/min-w-10.png 1x, icons/min-w-12.png 1.25x, icons/min-w-15.png 1.5x, icons/min-w-15.png 1.75x, icons/min-w-20.png 2x, icons/min-w-20.png 2.25x, icons/min-w-24.png 2.5x, icons/min-w-30.png 3x, icons/min-w-30.png 3.5x'
-          draggable='false'
-          alt='minimize Window'
-        />
-      </div>
-
-      <div id='max-button'>
-        <img
-          src='icons/max-w-10.png 1x, icons/max-w-12.png 1.25x, icons/max-w-15.png 1.5x, icons/max-w-15.png 1.75x, icons/max-w-20.png 2x, icons/max-w-20.png 2.25x, icons/max-w-24.png 2.5x, icons/max-w-30.png 3x, icons/max-w-30.png 3.5x'
-          draggable='false'
-          alt='maximize Window'
-        />
-      </div>
-
-      <div id='restore-button'>
-        <img
-          src='icons/restore-w-10.png 1x, icons/restore-w-12.png 1.25x, icons/restore-w-15.png 1.5x, icons/restore-w-15.png 1.75x, icons/restore-w-20.png 2x, icons/restore-w-20.png 2.25x, icons/restore-w-24.png 2.5x, icons/restore-w-30.png 3x, icons/restore-w-30.png 3.5x'
-          draggable='false'
-          alt='restore window size'
-        />
-      </div>
-
-      <div id='close-button'>
-        <img
-          src='icons/close-w-10.png 1x, icons/close-w-12.png 1.25x, icons/close-w-15.png 1.5x, icons/close-w-15.png 1.75x, icons/close-w-20.png 2x, icons/close-w-20.png 2.25x, icons/close-w-24.png 2.5x, icons/close-w-30.png 3x, icons/close-w-30.png 3.5x'
-          draggable='false'
-          alt='close window'
-        />
-      </div>
     </div>
   );
 }

@@ -44,15 +44,15 @@ export class Navidrome implements SourceInterface {
   }
 
   async play(): Promise<void> {
-    this.platform.play();
+    await this.platform.play();
   }
 
   async pause(): Promise<void> {
-    this.platform.pause();
+    await this.platform.pause();
   }
 
-  playSong(trackId: string): void {
-    this.platform.playSong(trackId);
+  async playSong(trackId: string): Promise<void> {
+    await this.platform.playSong(trackId);
   }
 
   getAllPlaylists(): void {
@@ -71,8 +71,7 @@ export class Navidrome implements SourceInterface {
     this.platform.onTimeUpdate(callback);
   }
   async seek(time: number): Promise<void> {
-    this.platform.seek(time);
-    console.log(time);
+    await this.platform.seek(time);
   }
 
   onPlayPause(
