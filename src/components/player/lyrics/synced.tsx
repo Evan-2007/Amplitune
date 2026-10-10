@@ -1,13 +1,15 @@
-// LyricsDisplay.tsx
+// SyncedLyrics.tsx
 import React, { useEffect, useState } from 'react';
-import { useQueueStore } from '@/lib/queue';
-import { SourceManager } from '@/lib/sources/source-manager';
-import { useRouter } from 'next/router';
+import {
+  useLyrics,
+  useSourceTimeUpdate,
+  useSourceControls,
+  useCurrentSong,
+} from '@/lib/hooks';
+import { NormalLyrics } from '@/lib/sources/types';
+import { useSpringLyricScroll } from '@/lib/hooks/useSpringLyricsScroll';
 
-export interface LyricLine {
-  start?: number;
-  value: string;
-}
+type LyricLine = NormalLyrics['lines'][number];
 
 interface LyricsDisplayProps {
   isMobile: boolean;
@@ -20,128 +22,63 @@ export function SyncedLyrics({
   containerRef,
   isMouseMoving,
 }: LyricsDisplayProps) {
-  const currentQueue = useQueueStore((state) => state.queue);
-  const sourceManager = SourceManager.getInstance();
+  const { songData, currentSong } = useCurrentSong();
+  const { position } = useSourceTimeUpdate();
+  const { seek, play } = useSourceControls();
 
-  const [lyrics, setLyrics] = useState<LyricLine[] | null>(null);
+  const { lyrics, synced, error } = useLyrics(currentSong?.track?.id);
+
   const [currentLine, setCurrentLine] = useState<number>(0);
-  const [error, setError] = useState<string | null>(null);
-  const [synced, setSynced] = useState<boolean>(false);
 
-  const songData = useQueueStore((state) => state.queue.currentSong?.track);
-
-  // Update current lyric line based on the song position
-  useEffect(() => {
-    if (containerRef.current && synced) {
-      const container = containerRef.current;
-      const currentLineElement = container.querySelector(`[data-line="1"]`);
-      if (currentLineElement) {
-        currentLineElement.scrollIntoView({ block: 'center' });
-      }
+  const { scrollToLine, setLineRef, reset, pause, resume } = useSpringLyricScroll(
+    containerRef,
+    lyrics?.length || 0,
+    {
+      anchorPosition: isMobile ? 0.2 : 0.5,
     }
-    const handleTimeUpdate = () => {
-      const currentTime = sourceManager.getPosition();
-      if (currentTime && lyrics) {
-        const milliseconds = currentTime * 1000;
-        const currentLineIndex = lyrics.findIndex(
-          //@ts-ignore
-          (line) => line.start > milliseconds
-        );
-        setCurrentLine(currentLineIndex - 1);
-      }
-    };
+  );
 
-    const removeEventListener = sourceManager.onTimeUpdate(handleTimeUpdate);
-    return () => {
-      removeEventListener();
-    };
-  }, [lyrics]);
-
-  // Fetch lyrics when the song changes and scroll to top
+  // Pause spring scroll when user is interacting, resume when they stop
   useEffect(() => {
-    setTimeout(() => {
-      fetchLyrics();
-      setCurrentLine(0);
-    }, 300);
-  }, [songData]);
-
-  // Scroll effect when the container is available and lyrics are synced
-  useEffect(() => {
-    if (containerRef.current && synced) {
-      const container = containerRef.current;
-      const currentLineElement = container.querySelector(
-        `[data-line="${currentLine}"]`
-      );
-      if (currentLineElement && isMobile) {
-        const elementRect = currentLineElement.getBoundingClientRect();
-        const containerRect = container.getBoundingClientRect();
-        const targetOffset = window.innerHeight * 0.2; // 20vh
-        container.scrollTop =
-          container.scrollTop +
-          (elementRect.top - containerRect.top) -
-          targetOffset;
-      } else if (currentLineElement) {
-        currentLineElement.scrollIntoView({ block: 'center' });
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMobile]);
-
-  // Smooth scroll when the current line or mouse state changes
-  useEffect(() => {
-    if (containerRef.current && !isMouseMoving) {
-      const container = containerRef.current;
-      const currentLineElement = container.querySelector(
-        `[data-line="${currentLine}"]`
-      );
-      if (currentLineElement && isMobile) {
-        const elementRect = currentLineElement.getBoundingClientRect();
-        const containerRect = container.getBoundingClientRect();
-        const targetOffset = window.innerHeight * 0.23; // 23vh
-        container.scrollTo({
-          top:
-            container.scrollTop +
-            (elementRect.top - containerRect.top) -
-            targetOffset,
-          behavior: 'smooth',
-        });
-      } else if (currentLineElement) {
-        currentLineElement.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-        });
-      }
-    }
-  }, [currentLine, isMouseMoving, isMobile, containerRef]);
-
-  async function fetchLyrics() {
-    const lyricsResponse = await sourceManager.getLyrics(
-      currentQueue.currentSong.track.id
-    );
-    if ((lyricsResponse as any).error) {
-      console.error('An error occurred:', (lyricsResponse as any).error);
-      setLyrics(null);
-      setError(`An error occurred: ${(lyricsResponse as any).error}`);
+    if (isMouseMoving) {
+      pause();
     } else {
-      if ('lines' in lyricsResponse && 'synced' in lyricsResponse) {
-        setLyrics(lyricsResponse.lines);
-        setSynced(lyricsResponse.synced);
-        setError(null);
-      } else {
-      }
+      resume();
     }
-  }
+  }, [isMouseMoving, pause, resume]);
+
+  // Update current lyric line based on song position
+  useEffect(() => {
+    if (position && lyrics) {
+      const milliseconds = position * 1000;
+      const currentLineIndex = lyrics.findIndex(
+        (line: LyricLine) => (line.start ?? 0) > milliseconds
+      );
+      setCurrentLine(currentLineIndex - 1);
+    }
+  }, [position, lyrics]);
+
+  // Reset on song change
+  useEffect(() => {
+    setCurrentLine(0);
+    reset();
+  }, [songData, reset]);
+
+  // Spring scroll when current line changes (only when user isn't scrolling)
+  useEffect(() => {
+    if (!isMouseMoving && synced) {
+      scrollToLine(currentLine);
+    }
+  }, [currentLine, isMouseMoving, synced, scrollToLine]);
 
   function handleLyricClick(index: number) {
     const line = lyrics?.[index];
     if (line) {
-      if (!synced || !line.start) {
-        return;
-      }
+      if (!synced || !line.start) return;
       const seconds = line.start / 1000;
-      sourceManager.seek(seconds);
+      seek(seconds);
       setCurrentLine(index);
-      sourceManager.play();
+      play();
     }
   }
 
@@ -154,8 +91,13 @@ export function SyncedLyrics({
       )}
       {lyrics ? (
         synced ? (
-          lyrics.map((line, index) => (
-            <button key={index} onClick={() => handleLyricClick(index)}>
+          lyrics.map((line: LyricLine, index: number) => (
+            <button
+              key={index}
+              onClick={() => handleLyricClick(index)}
+              ref={setLineRef(index)}
+              style={{ willChange: 'transform' }}
+            >
               <p
                 data-line={index}
                 className={`z-40 animate-[fade-in] text-wrap px-10 pb-6 text-center text-3xl font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] transition-all duration-1000 ease-in-out md:px-16 md:pb-12 md:text-6xl ${
@@ -183,7 +125,7 @@ export function SyncedLyrics({
           ))
         ) : (
           <div className='mb-[30vh] flex h-full w-full flex-col items-center justify-start'>
-            {lyrics.map((line, index) => (
+            {lyrics.map((line: LyricLine, index: number) => (
               <div key={index}>
                 <p className='mt-6 text-center text-4xl font-bold text-gray-400 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]'>
                   {line.value}
